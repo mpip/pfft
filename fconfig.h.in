@@ -1,0 +1,34 @@
+! fconfig.h.in.  Written manually, not generated.
+! This contains only defines needed for Fortran.
+
+! The size of `int *', as computed by sizeof.
+#undef SIZEOF_INT_P
+
+! Fortran type that matches a C pointer.
+#define FCS_PTR integer*SIZEOF_INT_P
+
+! Define to the MPI datatype that corresponds to the floating type to use for
+! FCS.
+#undef FCS_MPI_REAL
+
+! Define to the MPI datatype that corresponds to the integer type to use for
+! FCS.
+#undef FCS_MPI_INTEGER
+
+! Define to the Fortran floating type to use for FCS.
+#undef fcs_real
+
+! Define to the Fortran integer type to use for FCS.
+#undef fcs_integer
+
+! Define to the kind of fcs_real.
+#undef fcs_real_kind
+
+! Define to the kind of fcs_integer.
+#undef fcs_integer_kind
+
+! Define if info output is enabled.
+#undef FCS_ENABLE_INFO
+
+! Define if debug output is enabled.
+#undef FCS_ENABLE_DEBUG

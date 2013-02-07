@@ -1,0 +1,32 @@
+
+PFFT 1.0.6-alpha
+
+* Update documentation. 
+
+
+PFFT 1.0.5-alpha
+
+* Added more natural modulation of pruned FFT.
+* Added support of single and long double precision.
+
+
+PFFT 1.0.4-alpha
+
+* Added support of arbitrary multi-dimensional process meshs.
+* Added r2c, c2r, r2r FFTs.
+
+
+PFFT 1.0.3-alpha
+
+* Added configure script.
+
+
+PFFT 1.0.2-alpha
+
+* Added new interface for arbitrary multi-dimensional parallel FFT.
+* Added Fortran interface.
+
+
+PFFT 1.0.1-alpha
+
+* First release of PFFT.

@@ -1,0 +1,3 @@
+- check all files for correct licence header and clearify which files are based on FFTW code (nearly all of them)
+- correct coding standard of all PFFT files corresponding to CONVENTIONS
+

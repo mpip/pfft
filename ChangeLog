@@ -1,0 +1,101 @@
+2012-14-25  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* util/utils.c: bugfix in creation of 1d-sub-communicators
+
+2011-11-28  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* 3rdparty/: remove fftw-mpi code
+
+2011-11-21  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* tests: added several oversampling tests
+
+2011-11-02  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* kernel/procmesh.c: bugfix remap of 3d cart. comm. into 2d cart. comm
+
+	* gcell/gcells_sendrecv.c: bugfix copy/paste error in gcell reduction
+
+2011-10-21  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* tests/Makefile.am: add targets for new r2c checks
+
+2011-10-20  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* bugfix: fixed 3dto2d remap for r2c trafos
+
+	* tests/: added r2c checks
+	* tests/fortran: added r2c checks for Fortran interface
+
+2011-09-27  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* kernel/sertrafo.c: do not combine r2r trafo and transposition
+
+	* tests/: added several new checks
+
+2011-09-27  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* pfft.h, gctimer.c, timer.c, util.c, configure.ac: ommit usage of restrict keyword
+
+2011-06-14  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* 3rdparty: added MPI part of FFTW3_3alpha1 source code
+
+2011-04-28  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* dft-parallel.c, dft-serial.c, transpose.c: implement new interface
+	* embed.c, trunc.c: split embed and trunc from serial trafo
+
+2011-04-27  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* dft-parallel.c, dft-serial.c, transpose.c: implement new interface
+
+2011-04-26  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* dft-parallel.c, dft-serial.c, transpose.c: implement new interface
+
+2011-04-21  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* many files: implement new interface
+
+2011-04-20  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* kernel/dft-parallel.c: implement new interface
+
+2011-04-08  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* configure.ac: removed commented lines
+
+2011-04-07  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* m4/ax_lib_fftw3.m4: fixed bug while trying libfftw3_threads
+
+	* api/pfft.h: fixed included headers
+
+	* configure.ac: add fftw flags to CPPFLAGS and LDFLAGS 
+
+2011-04-06  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* Synchronized configure.ac with ScaFaCoS changes
+
+2011-03-24  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* Makefile.am: fixed order of SUBDIRS
+
+2011-03-23  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* added Libtool support for PFFT
+
+2011-03-22  Michael Pippig  <michael.pippig@mathematik.tu-chemnitz.de>
+
+	* A ChangeLog, AUTHORS, NEWS
+
+	* Set DISTCHECK_CONFIGURE_FLAGS in configure.ac insteadf of Makefile.am
+
+	* Fixed GPL Header in configure.ac 
+
+	* Cleanup directory structure
+	* A api/
+	* mv api-* fortran-* fortran-api.c api/
+
+
