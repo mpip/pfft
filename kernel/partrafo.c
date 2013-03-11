@@ -679,7 +679,7 @@ void PX(rmplan)(
   free(ths->global_remap);
 
   free(ths->ni); free(ths->n); free(ths->no);
-  free(ths->iblock); free(ths->oblock);
+  free(ths->iblock); free(ths->mblock); free(ths->oblock);
 
   MPI_Comm_free(&ths->comm_cart);
   for(int t=0; t<ths->rnk_pm; t++)
