@@ -248,7 +248,7 @@ void PX(execute_gtransp)(
     if(ths->plan != NULL)
       for(INT k=0; k<n_total; k++)
         lsum += fabs(ths->dbg->in[k]);
-  MPI_Reduce(&lsum, &gsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(ths != NULL)
     if(ths->plan != NULL)
       if(!myrank) fprintf(stderr, "PFFT_DBG_GTRANSP: counter = %d, Checksum(in) = %e\n", counter, gsum);
@@ -268,7 +268,7 @@ void PX(execute_gtransp)(
     if(ths->plan != NULL)
       for(INT k=0; k<n_total; k++)
         lsum += fabs(ths->dbg->out[k]);
-  MPI_Reduce(&lsum, &gsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(ths != NULL)
     if(ths->plan != NULL)
       if(!myrank) fprintf(stderr, "PFFT_DBG_GTRANSP: counter = %d, Checksum(out) = %e\n", counter, gsum);
@@ -286,7 +286,7 @@ void PX(execute_gtransp)(
 //       lsums[t] = 0;
 //     lsums[ ths->dbg->local_N1_start/ths->dbg->blk1 ] = lsum;
 //           
-//     MPI_Allreduce(lsums, gsums, np, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+//     MPI_Allreduce(lsums, gsums, np, PFFT_MPI_REAL_TYPE, MPI_SUM, MPI_COMM_WORLD);
 // 
 //     for(int t=0; t<np; t++){
 //       if(!myrank)
@@ -300,7 +300,7 @@ void PX(execute_gtransp)(
 //     MPI_Barrier(MPI_COMM_WORLD);
 //     
 //     /* calculate vertical checksums */
-//     MPI_Reduce(&lsum, &gsum, 1, MPI_DOUBLE, MPI_SUM, 0, ths->dbg->comm);
+//     MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, ths->dbg->comm);
 //     if(!rnk) fprintf(stderr, "local_N1 = %td, local_N1_start = %td, vertical gsum = %e\n",
 //        ths->dbg->local_N1, ths->dbg->local_N1_start, gsum);
 //   }

@@ -1078,7 +1078,7 @@ void PX(execute_sertrafo)(
   if(ths->plan[0] != NULL)
     for(INT k=0; k<n_total; k++)
       lsum += fabs(ths->dbg[0]->in[k]);
-  MPI_Reduce(&lsum, &gsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(ths->plan[0] != NULL)
     if(!myrank) fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, Checksum(in0) = %e\n", counter, gsum);
 
@@ -1129,7 +1129,7 @@ void PX(execute_sertrafo)(
   if(ths->plan[0] != NULL)
     for(INT k=0; k<n_total; k++)
       lsum += fabs(ths->dbg[0]->out[k]);
-  MPI_Reduce(&lsum, &gsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(ths->plan[0] != NULL)
     if(!myrank) fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, Checksum(out0) = %e - Value may change\n", counter, gsum);
 
@@ -1188,7 +1188,7 @@ void PX(execute_sertrafo)(
   if(ths->plan[1] != NULL)
     for(INT k=0; k<n_total; k++)
       lsum += fabs(ths->dbg[1]->in[k]);
-  MPI_Reduce(&lsum, &gsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(ths->plan[1] != NULL)
     if(!myrank) fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, Checksum(in1) = %e - Value may change.\n", counter, gsum);
     
@@ -1201,7 +1201,7 @@ void PX(execute_sertrafo)(
   if(ths->plan[1] != NULL)
     for(INT k=0; k<n_total; k++)
       lsum += fabs(ths->dbg[1]->out[k]);
-  MPI_Reduce(&lsum, &gsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(ths->plan[1] != NULL)
     if(!myrank) fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, Checksum(out1) = %e\n", counter, gsum);
   

@@ -203,7 +203,7 @@ static void exchange_gcells_above_along_one_dim(
       }
     }
   }
-  MPI_Reduce(&rsum, &grsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&rsum, &grsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(!myrank) fprintf(stderr, "PFFT GC-Send Above: dim = %d, Sum of initial data: %e\n", dim, grsum);
 #endif
 
@@ -225,7 +225,7 @@ static void exchange_gcells_above_along_one_dim(
       }
     }
   }
-  MPI_Reduce(&rsum, &grsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&rsum, &grsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(!myrank) fprintf(stderr, "PFFT GC-Send Above: dim = %d, Sum of data before gcsend: %e\n", dim, grsum);
 #endif
 #if PFFT_DEBUG_GHOSTCELLS
@@ -283,7 +283,7 @@ static void exchange_gcells_above_along_one_dim(
       }
     }
   }
-  MPI_Reduce(&rsum, &grsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&rsum, &grsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(!myrank) fprintf(stderr, "PFFT GC-Send Above: dim = %d, Sum of data after gcsend: %e\n", dim, grsum);
 #endif
 #if PFFT_DEBUG_GHOSTCELLS
@@ -340,7 +340,7 @@ static void exchange_gcells_below_along_one_dim(
       }
     }
   }
-  MPI_Reduce(&rsum, &grsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&rsum, &grsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(!myrank) fprintf(stderr, "PFFT GC-Send Below: dim = %d, Sum of initial data: %e\n", dim, grsum);
 #endif
 
@@ -362,7 +362,7 @@ static void exchange_gcells_below_along_one_dim(
       }
     }
   }
-  MPI_Reduce(&rsum, &grsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&rsum, &grsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(!myrank) fprintf(stderr, "PFFT GC-Send Below: dim = %d, Sum of data before gcsend: %e\n", dim, grsum);
 #endif
 #if PFFT_DEBUG_GHOSTCELLS
@@ -410,7 +410,7 @@ static void exchange_gcells_below_along_one_dim(
       }
     }
   }
-  MPI_Reduce(&rsum, &grsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&rsum, &grsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(!myrank) fprintf(stderr, "PFFT GC-Send Below: dim = %d, Sum of data after gcsend: %e\n", dim, grsum);
 #endif
 #if PFFT_DEBUG_GHOSTCELLS
