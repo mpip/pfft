@@ -1012,12 +1012,12 @@ static void print_dbg(
   }
   fprintf(stderr, "\n");
   
-  fprintf(stderr, "PFFT_DBG_SERTRAFO: dims_rnk = %td, ", ths->dims_rnk);
+  fprintf(stderr, "PFFT_DBG_SERTRAFO: dims_rnk = %d, ", ths->dims_rnk);
   for(int t=0; t<ths->dims_rnk; t++)
     fprintf(stderr, "dims[%d] = [n=%td, is=%td, os=%td], ", t, ths->dims[t].n, ths->dims[t].is, ths->dims[t].os);
   fprintf(stderr, "\n");
   
-  fprintf(stderr, "PFFT_DBG_SERTRAFO: howmany_rnk = %td, ", ths->howmany_rnk);
+  fprintf(stderr, "PFFT_DBG_SERTRAFO: howmany_rnk = %d, ", ths->howmany_rnk);
   for(int t=0; t<ths->howmany_rnk; t++)
     fprintf(stderr, "howmany_dims[%d] = [n=%td, is=%td, os=%td], ", t, ths->howmany_dims[t].n, ths->howmany_dims[t].is, ths->howmany_dims[t].os);
   fprintf(stderr, "\n");
@@ -1063,12 +1063,13 @@ void PX(execute_sertrafo)(
       fprintf(stderr, "PFFT_DBG_SERTRAFO: !!! Attention: checksums for out0 and in1 may differ between different runs, since the order of FFT and remap may change on all processes. Use FFTW_ESTIMATE to be sure that FFT is performed first on all processes. !!!\n");
 
   if(!myrank) fprintf(stderr, "\n");
-  if(!myrank)
+  if(!myrank){
     if(ths->plan[0] != NULL){
       fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, plan0\n", counter);
       print_dbg(ths->dbg[0]);
     } else
       fprintf(stderr, "PFFT_DBG_SERTRAFO: nothing to do for FFTW plan0\n");
+  }
 
   n_total = calc_n_total(ths->dbg[0]); 
  
@@ -1174,12 +1175,13 @@ void PX(execute_sertrafo)(
 // #endif
   
   if(!myrank) fprintf(stderr, "\n");
-  if(!myrank)
+  if(!myrank){
     if(ths->plan[1] != NULL){
       fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, plan1\n", counter);
       print_dbg(ths->dbg[1]);
     } else
       fprintf(stderr, "PFFT_DBG_SERTRAFO: nothing to do for FFTW plan1\n");
+  }
   
   n_total = calc_n_total(ths->dbg[1]); 
   
