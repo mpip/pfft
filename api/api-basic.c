@@ -129,7 +129,7 @@ void PX(init_input_c2c)(
     vector_index(rnk_n, k, local_n, kvec_loc);
     PX(vadd_INT)(rnk_n, kvec_loc, local_start, kvec_glob);
 
-    /* take care of fftshift, e.g., index runs from -n/2 to n/2-1 */
+    /* take care of possible fftshift, e.g., index runs from -n/2 to n/2-1 */
     for(int t=0; t<rnk_n; t++)
       if(kvec_glob[t] < 0)
         kvec_glob[t] += n[t];
