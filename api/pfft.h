@@ -427,15 +427,9 @@ typedef FFTW_MANGLE_PREFIX(fftw_r2r_kind) pfft_r2r_kind;
 typedef FFTW_MANGLE_PREFIX(fftwf_r2r_kind) pfftf_r2r_kind;
 typedef FFTW_MANGLE_PREFIX(fftwl_r2r_kind) pfftl_r2r_kind;
 
-PFFT_DEFINE_API(
-    PFFT_MANGLE_DOUBLE, FFTW_MANGLE_DOUBLE,
-    double, pfft_complex, ptrdiff_t)
-PFFT_DEFINE_API(
-    PFFT_MANGLE_FLOAT, FFTW_MANGLE_FLOAT,
-    float, pfftf_complex, ptrdiff_t)
-PFFT_DEFINE_API(
-    PFFT_MANGLE_LONG_DOUBLE, FFTW_MANGLE_LONG_DOUBLE,
-    long double, pfftl_complex, ptrdiff_t)
+PFFT_DEFINE_API(PFFT_MANGLE_DOUBLE, FFTW_MANGLE_DOUBLE, double, pfft_complex, ptrdiff_t)
+PFFT_DEFINE_API(PFFT_MANGLE_FLOAT, FFTW_MANGLE_FLOAT, float, pfftf_complex, ptrdiff_t)
+PFFT_DEFINE_API(PFFT_MANGLE_LONG_DOUBLE, FFTW_MANGLE_LONG_DOUBLE, long double, pfftl_complex, ptrdiff_t)
 
 //#define FFTW(name) FFTW_MANGLE_DOUBLE(name)
 

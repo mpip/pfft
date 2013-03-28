@@ -1,0 +1,42 @@
+! Generated automatically.  DO NOT EDIT!
+
+! integers
+
+! unsigned
+  integer(C_INT), parameter :: PFFT_TRANSPOSED_NONE = 0
+  integer(C_INT), parameter :: PFFT_MEASURE = 0
+  integer(C_INT), parameter :: PFFT_NO_TUNE = 0
+  integer(C_INT), parameter :: FPFFT_DEFAULT_BLOCKS = -1
+  integer(C_INT), parameter :: FPFFT_NO_GCELLS = -1
+  integer(C_INT), parameter :: PFFT_INT = 1
+  integer(C_INT), parameter :: PFFT_PTRDIFF_T = 2
+  integer(C_INT), parameter :: PFFT_FLOAT = 3
+  integer(C_INT), parameter :: PFFT_DOUBLE = 4
+  integer(C_INT), parameter :: PFFT_UNSIGNED = 5
+  integer(C_INT), parameter :: PFFT_GC_NONTRANSPOSED = 0
+
+! shifted unsigned
+  integer(C_INT), parameter :: PFFT_TRANSPOSED_IN = 1
+  integer(C_INT), parameter :: PFFT_TRANSPOSED_OUT = 2
+  integer(C_INT), parameter :: PFFT_SHIFTED_IN = 4
+  integer(C_INT), parameter :: PFFT_SHIFTED_OUT = 8
+  integer(C_INT), parameter :: PFFT_ESTIMATE = 16
+  integer(C_INT), parameter :: PFFT_PATIENT = 32
+  integer(C_INT), parameter :: PFFT_EXHAUSTIVE = 64
+  integer(C_INT), parameter :: PFFT_TUNE = 128
+  integer(C_INT), parameter :: PFFT_PRESERVE_INPUT = 256
+  integer(C_INT), parameter :: PFFT_DESTROY_INPUT = 512
+  integer(C_INT), parameter :: PFFT_BUFFERED_INPLACE = 1024
+  integer(C_INT), parameter :: PFFT_GC_TRANSPOSED = 1
+  integer(C_INT), parameter :: PFFT_GC_SENDRECV = 2
+  integer(C_INT), parameter :: PFFT_GC_RMA = 4
+
+! redirections
+
+
+  interface
+  end interface
+
+
+  interface
+  end interface

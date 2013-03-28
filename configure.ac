@@ -369,6 +369,17 @@ fi
 AC_CHECK_SIZEOF([ptrdiff_t])
 AC_SUBST([PTRDIFF_T_KIND], ["$ac_cv_sizeof_ptrdiff_t"])
 
+AC_CHECK_SIZEOF(MPI_Fint, [], [#include <mpi.h>])
+if test 0 = $ac_cv_sizeof_MPI_Fint; then
+   AC_MSG_WARN([sizeof(MPI_Fint) test failed]);
+   dnl As a backup, assume Fortran integer == C int
+   AC_CHECK_SIZEOF(int) 
+   if test 0 = $ac_cv_sizeof_int; then AC_MSG_ERROR([sizeof(int) test failed]); fi
+   ac_cv_sizeof_MPI_Fint=$ac_cv_sizeof_int
+fi
+C_MPI_FINT=C_INT`expr $ac_cv_sizeof_MPI_Fint \* 8`_T
+AC_SUBST(C_MPI_FINT)
+
 # We need the math library.
 AC_SEARCH_LIBS([log], [m])
 
@@ -409,12 +420,15 @@ AC_CONFIG_HEADERS([fconfig.h],
 AC_CONFIG_FILES(Makefile \
                 pfft.pc \
                 api/pfft.f \
+                api/pfft.f03 \
+                api/pfftl.f03 \
 		kernel/Makefile \
 		util/Makefile \
 		api/Makefile \
 		gcell/Makefile \
 		tests/Makefile \
-		tests/fortran/Makefile)
+		tests/fortran/Makefile \
+		tests/f03/Makefile)
 
 
 AC_OUTPUT
