@@ -3,7 +3,7 @@ SUBDIRS =
 
 # Enable Fortran subdirectory only on request.
 if ENABLE_FORTRAN
-SUBDIRS += fortran
+SUBDIRS += fortran f03
 endif
 
 # Directory of ipfft.h
