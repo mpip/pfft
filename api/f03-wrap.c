@@ -24,14 +24,14 @@ PFFT_EXTERN INT PX(local_size_many_r2r_f03)(int rnk_n, const INT * Nos, const IN
 PFFT_EXTERN PX(plan) PX(plan_dft_3d_f03)(const INT * Nos, C * in, C * out, MPI_Fint f_comm_cart, int sign, unsigned pfft_flags);
 PFFT_EXTERN PX(plan) PX(plan_dft_r2c_3d_f03)(const INT * Nos, R * in, C * out, MPI_Fint f_comm_cart, int sign, unsigned pfft_flags);
 PFFT_EXTERN PX(plan) PX(plan_dft_c2r_3d_f03)(const INT * Nos, C * in, R * out, MPI_Fint f_comm_cart, int sign, unsigned pfft_flags);
-PFFT_EXTERN PX(plan) PX(plan_r2r_3d_f03)(const INT * Nos, R * in, R * out, MPI_Fint f_comm_cart, PX(r2r_kind) * kinds, unsigned pfft_flags);
+PFFT_EXTERN PX(plan) PX(plan_r2r_3d_f03)(const INT * Nos, R * in, R * out, MPI_Fint f_comm_cart, const PX(r2r_kind) * kinds, unsigned pfft_flags);
 PFFT_EXTERN PX(plan) PX(plan_dft_f03)(int rnk, const INT * Nos, C * in, C * out, MPI_Fint f_comm_cart, int sign, unsigned pfft_flags);
 PFFT_EXTERN PX(plan) PX(plan_dft_r2c_f03)(int rnk_n, const INT * Nos, R * in, C * out, MPI_Fint f_comm_cart, int sign, unsigned pfft_flags);
 PFFT_EXTERN PX(plan) PX(plan_dft_c2r_f03)(int rnk_n, const INT * Nos, C * in, R * out, MPI_Fint f_comm_cart, int sign, unsigned pfft_flags);
 PFFT_EXTERN PX(plan) PX(plan_many_dft_f03)(int rnk, const INT * Nos, const INT * ni, const INT * no, INT howmany, const INT * iblock, const INT * oblock, C * in, C * out, MPI_Fint f_comm_cart, int sign, unsigned pfft_flags);
 PFFT_EXTERN PX(plan) PX(plan_many_dft_r2c_f03)(int rnk_n, const INT * Nos, const INT * ni, const INT * no, INT howmany, const INT * iblock, const INT * oblock, R * in, C * out, MPI_Fint f_comm_cart, int sign, unsigned pfft_flags);
 PFFT_EXTERN PX(plan) PX(plan_many_dft_c2r_f03)(int rnk_n, const INT * Nos, const INT * ni, const INT * no, INT howmany, const INT * iblock, const INT * oblock, C * in, R * out, MPI_Fint f_comm_cart, int sign, unsigned pfft_flags);
-PFFT_EXTERN PX(plan) PX(plan_many_r2r_f03)(int rnk_n, const INT * Nos, const INT * ni, const INT * no, INT howmany, const INT * iblock, const INT * oblock, R * in, R * out, MPI_Fint f_comm_cart, PX(r2r_kind) * kinds, unsigned pfft_flags);
+PFFT_EXTERN PX(plan) PX(plan_many_r2r_f03)(int rnk_n, const INT * Nos, const INT * ni, const INT * no, INT howmany, const INT * iblock, const INT * oblock, R * in, R * out, MPI_Fint f_comm_cart, const PX(r2r_kind) * kinds, unsigned pfft_flags);
 PFFT_EXTERN PX(plan) PX(plan_many_dft_skipped_f03)(int rnk, const INT * Nos, const INT * ni, const INT * no, INT howmany, const INT * iblock, const INT * oblock, const int * skip_trafos, C * in, C * out, MPI_Fint f_comm_cart, int sign, unsigned pfft_flags);
 PFFT_EXTERN void PX(print_average_timer_f03)(const PX(plan) ths, MPI_Fint f_comm);
 PFFT_EXTERN void PX(print_average_timer_adv_f03)(const PX(plan) ths, MPI_Fint f_comm);
@@ -241,7 +241,7 @@ PX(plan) PX(plan_dft_c2r_3d_f03)(const INT * Nos, C * in, R * out, MPI_Fint f_co
   return ret;
 }
 
-PX(plan) PX(plan_r2r_3d_f03)(const INT * Nos, R * in, R * out, MPI_Fint f_comm_cart, PX(r2r_kind) * kinds, unsigned pfft_flags)
+PX(plan) PX(plan_r2r_3d_f03)(const INT * Nos, R * in, R * out, MPI_Fint f_comm_cart, const PX(r2r_kind) * kinds, unsigned pfft_flags)
 {
   MPI_Comm comm_cart;
 
@@ -304,7 +304,7 @@ PX(plan) PX(plan_many_dft_c2r_f03)(int rnk_n, const INT * Nos, const INT * ni, c
   return ret;
 }
 
-PX(plan) PX(plan_many_r2r_f03)(int rnk_n, const INT * Nos, const INT * ni, const INT * no, INT howmany, const INT * iblock, const INT * oblock, R * in, R * out, MPI_Fint f_comm_cart, PX(r2r_kind) * kinds, unsigned pfft_flags)
+PX(plan) PX(plan_many_r2r_f03)(int rnk_n, const INT * Nos, const INT * ni, const INT * no, INT howmany, const INT * iblock, const INT * oblock, R * in, R * out, MPI_Fint f_comm_cart, const PX(r2r_kind) * kinds, unsigned pfft_flags)
 {
   MPI_Comm comm_cart;
 

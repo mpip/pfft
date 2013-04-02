@@ -32,6 +32,8 @@ perl -pe 'if (/#define +([A-Z0-9_]+) +\(([0-9]+)U? *<< *([0-9]+)\)/) { print "\n
 echo
 echo "! redirections"
 perl -pe 'if (/#define +([A-Z0-9_]+) +\(\(([A-Z0-9_| ]+)\)\)/) { print "\n  integer\(C_INT\), parameter :: $1 = $2\n"; }' < pfft.h | grep 'integer(C_INT)' | sed 's/| / \&\n      + /g'
+perl -pe 'if (/#define +(PFFT_[A-Z0-9_]+) +(FFTW_[A-Z0-9_]+)/) { print "\n  integer\(C_INT\), parameter :: $1 = $2\n"; }' < pfft.h | grep 'integer(C_INT)' | sed 's/| / \&\n      + /g'
+
 
 # Extract function declarations
 for p in $*; do
@@ -46,7 +48,7 @@ for p in $*; do
 
     echo
     echo "  interface"
-    mpicc -E pfft.h -I${FFTW_INC} |grep 'pfft${p}_init' |tr ';' '\n' |grep -v 'pfft${p}_get_args' |grep -v 'printf' |perl genf03-api.pl
+    mpicc -E pfft.h -I${FFTW_INC} |grep "pfft${p}_init" |tr ';' '\n' |grep -v "pfft${p}_get_args" |grep -v "printf" |perl genf03-api.pl
     echo "  end interface"
 
 done

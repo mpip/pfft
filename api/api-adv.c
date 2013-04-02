@@ -135,7 +135,7 @@ PX(plan) PX(plan_many_r2r)(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock, const INT *oblock,
     R *in, R *out, MPI_Comm comm_cart,
-    PX(r2r_kind) *kinds, unsigned pfft_flags
+    const PX(r2r_kind) *kinds, unsigned pfft_flags
     )
 {
   int sign=0;

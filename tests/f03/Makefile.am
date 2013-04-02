@@ -18,10 +18,7 @@ check_PROGRAMS =
 #if ENABLE_COMMON_PNFFT
 # do not compile checks
 #else
-# check_PROGRAMS += \
-# 	pfft_test 
+check_PROGRAMS += \
+	simple_check_c2c
 #endif
 
-# mostlyclean-local:
-# 	-rm -f subs.mod
-# 	-rm -f pfftmod.mod

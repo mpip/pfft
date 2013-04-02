@@ -219,7 +219,7 @@ BEGIN_C_DECLS
       int sign, unsigned pfft_flags);                                                   \
   PFFT_EXTERN PX(plan) PX(plan_r2r_3d)(                                                 \
       const INT *n, R *in, R *out, MPI_Comm comm_cart,                                  \
-      PX(r2r_kind) *kinds, unsigned pfft_flags);                                        \
+      const PX(r2r_kind) *kinds, unsigned pfft_flags);                                  \
                                                                                         \
   PFFT_EXTERN PX(plan) PX(plan_dft)(                                                    \
       int rnk, const INT *n, C *in, C *out, MPI_Comm comm_cart,                         \
@@ -232,7 +232,7 @@ BEGIN_C_DECLS
       int sign, unsigned pfft_flags);                                                   \
   PX(plan) PX(plan_r2r)(                                                                \
     int rnk_n, const INT *n, R *in, R *out, MPI_Comm comm_cart,                         \
-    PX(r2r_kind) *kinds, unsigned pfft_flags);                                          \
+    const PX(r2r_kind) *kinds, unsigned pfft_flags);                                    \
                                                                                         \
   PFFT_EXTERN PX(plan) PX(plan_many_dft)(                                               \
       int rnk, const INT *n, const INT *ni, const INT *no,                              \
@@ -253,7 +253,7 @@ BEGIN_C_DECLS
       int rnk_n, const INT *n, const INT *ni, const INT *no,                            \
       INT howmany, const INT *iblock, const INT *oblock,                                \
       R *in, R *out, MPI_Comm comm_cart,                                                \
-      PX(r2r_kind) *kinds, unsigned pfft_flags);                                        \
+      const PX(r2r_kind) *kinds, unsigned pfft_flags);                                  \
                                                                                         \
   PFFT_EXTERN PX(plan) PX(plan_many_dft_skipped)(                                       \
       int rnk, const INT *n, const INT *ni, const INT *no,                              \

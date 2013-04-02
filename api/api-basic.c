@@ -625,7 +625,7 @@ PX(plan) PX(plan_dft_c2r_3d)(
 
 PX(plan) PX(plan_r2r_3d)(
     const INT *n, R *in, R *out, MPI_Comm comm_cart,
-    PX(r2r_kind) *kinds, unsigned pfft_flags
+    const PX(r2r_kind) *kinds, unsigned pfft_flags
     )
 {
   int rnk_n = 3;
@@ -732,7 +732,7 @@ PX(plan) PX(plan_dft_c2r)(
 
 PX(plan) PX(plan_r2r)(
     int rnk_n, const INT *n, R *in, R *out, MPI_Comm comm_cart,
-    PX(r2r_kind) *kinds, unsigned pfft_flags
+    const PX(r2r_kind) *kinds, unsigned pfft_flags
     )
 {
   INT howmany = 1;
