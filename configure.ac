@@ -167,21 +167,20 @@ if test "x$enable_fortran" = xyes; then
 
   # Get it to accept long source file lines.
   AC_FC_LINE_LENGTH
-
   # Find out how to link against Fortran libraries.
   AC_FC_LIBRARY_LDFLAGS
-
   # Bugfix for BlueGene xlf2003: remove spurious -link entry.
   ACX_FC_LIBRARY_LDFLAGS_FIX
-
   # Get the Fortran compiler to accept free-form source.
   AC_FC_FREEFORM
-
   # Accept preprocessed source files names ending in ".F90".
   AC_FC_PP_SRCEXT([F90])
-
   # Get the flag to use for setting Fortran defines on the command line.
   AC_FC_PP_DEFINE
+  # Find out how to add to the Fortran include path.
+  AC_FC_MODULE_FLAG
+  # Find out the Fortran module file extension.
+  AC_FC_MODULE_EXTENSION
 
   # Set FCDEFS and adjust -D flag if needed.
   FCDEFS="$DEFS -DHAVE_FCONFIG_H"
