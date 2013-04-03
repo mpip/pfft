@@ -596,8 +596,6 @@ PX(plan) PX(plan_dft_3d)(
     )
 {
   int rnk_n = 3;
- 
-fprintf(stderr, "in = %p, out = %p\n", in, out);
 
   return PX(plan_dft)(rnk_n, n, in, out,
       comm_cart, sign, pfft_flags);

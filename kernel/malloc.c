@@ -34,11 +34,7 @@ R *PX(alloc_real)(size_t n){
 }
 
 C *PX(alloc_complex)(size_t n){
-  C *ret;
-
-  ret = X(alloc_complex)(n);
-  fprintf(stderr, "pointer = %p\n", ret);
-  return ret;
+  return X(alloc_complex)(n);
 }
   
 void PX(free)(void *p){

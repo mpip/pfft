@@ -218,7 +218,6 @@ PX(plan) PX(plan_dft_3d_f03)(const INT * Nos, C * in, C * out, MPI_Fint f_comm_c
 {
   MPI_Comm comm_cart;
 
-fprintf(stderr, "wrapper: in = %p, out = %p\n", in, out);
   comm_cart = MPI_Comm_f2c(f_comm_cart);
   PX(plan) ret = PX(plan_dft_3d)(Nos, in, out, comm_cart, sign, pfft_flags);
   return ret;
