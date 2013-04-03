@@ -26,7 +26,7 @@ program main
   call MPI_Comm_rank(MPI_COMM_WORLD, myrank, ierror)
 
   ! Create two-dimensional process grid of size np(1) x np(2), if possible
-  ierror =  pfft_create_procmesh(2, MPI_COMM_WORLD, np, comm_cart_2d)
+  ierror =  pfft_create_procmesh_2d(MPI_COMM_WORLD, np(1), np(2), comm_cart_2d)
   if (ierror .ne. 0) then
     if(myrank .eq. 0) then
       write(*,*) "Error: This test file only works with ", np(1)*np(2), " processes"

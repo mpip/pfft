@@ -19,6 +19,7 @@ check_PROGRAMS =
 # do not compile checks
 #else
 check_PROGRAMS += \
-	simple_check_c2c
+	simple_check_c2c \
+	simple_check_ousam_c2c_4d_on_3d
 #endif
 
