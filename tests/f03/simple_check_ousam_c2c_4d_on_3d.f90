@@ -6,8 +6,8 @@
 
 program main
   use, intrinsic :: iso_c_binding
+  use mpi
   implicit none
-  include "mpif.h"
   include "fftw3-mpi.f03"
   include "pfft.f03"
 
