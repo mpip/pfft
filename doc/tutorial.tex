@@ -19,10 +19,14 @@ Since the PFFT interface was written as close as possible to the FFTW interface,
 
 Furthermore, you should be familiar with the usage of the FFTW software library,
 
+Following the MPI standard~\cite{MPI-2.2} we use the term process to denote the smallest
+processing unit of a parallel machine.
 
-The MPI standard introduces the term process to indicate a \\
+will adapt to the MPI standard and use the term process to indicate the smallest \\
+
+
+We stick to the term MPI standard introduces the term process to indicate a \\
 The term process abstracts form the widely used terms processors and nodes. \\
-Throughout this manual we will adapt to the MPI standard and use the term process to indicate the smallest \\
 Note that the term process abstracts the code development from the real physical architecture. For example we can \\
 At first glance, it seems to be artificial to \\
 \emph{An MPI program consists of autonomous processes, executing their own code, in an MIMD style.}
@@ -32,35 +36,37 @@ At first glance, it seems to be artificial to \\
   \item plan
 \end{compactitem}
 
+\section{A first parallel transform}
 
+We explain the basic steps for computing a parallel FFT with the PFFT library at the example
+of the short test program given by Listing~\ref{lst:min_c2c}. This test computes a three-dimensional c2c-FFT on
+a two-dimensional process mesh. The source code can also be found in directory \code{tests/}
+of the library's source code tree. 
+\lstinputlisting[float, caption={Minimal PFFT test program.}, label=lst:min_c2c]{code/manual_min_c2c.c}
 
-After initializing MPI and before calling any PFFT routine PFFT must be initialized via
+After initializing MPI with \code{MPI_Init} and before calling any PFFT routine we need to initialize
+the parallel computations via
 \begin{lstlisting}
 void pfft_init(void);
 \end{lstlisting}
-However, this is nothing else than a wrapper to the \code{fftw\_mpi\_init} routine.
-
-PFFT uses a two-dimensional data decomposition on a two-dimensional process grid.
-
-MPI introduces the concept of communicators
-to store all the topological information of the physical process layout. PFFT assumes to be called
-on a two-dimensional process mesh that corresponds to a periodic, two-dimensional Cartesian
-communicator. We assist the user in creating such communicator with the following routine
+MPI introduces the concept of communicators to store all the topological information of the physical process layout.
+PFFT requires to be called on a process mesh that corresponds to a periodic, Cartesian communicator.
+We assist the user in creating such a communicator with the following routine
 \begin{lstlisting}
 int pfft_create_procmesh_2d(
     MPI_Comm comm, int np0, int np1,
     MPI_Comm *comm_cart_2d);
 \end{lstlisting}
 This routine uses the processes within the communicator \code{comm} to create a two-dimensional process
-grid of size \code{np0} x \code{np1} and stores it into the Cartesian communicator
-\code{comm\_cart\_2d}. Since \code{comm\_cart\_2d} is allocated by the routine, the user has to provide
+grid of size \code{np0} x \code{np1} and stores it into the Cartesian communicator \code{comm\_cart\_2d}.
+Since \code{comm\_cart\_2d} is allocated by the routine, the user has to provide
 the pointer to a non-allocated communicator. Otherwise we end up with a memory leak.
-Most users will choose \code{comm} as \code{MPI\_COMM\_WORLD}, which implies that the DFT is computed
+Most users will choose \code{comm} as \code{MPI\_COMM\_WORLD}, which implies that the FFT is computed
 on all available processes. Nevertheless, it's important to note, that we follow the principles of MPI
-by allowing \code{comm} to be any arbitrary communicator and therefore any subset of the available processes.
+by allowing \code{comm} to be any arbitrary communicator and therefore any subset of all available processes.
 
 At the next step we need to know the data decomposition of the input and output array, that depends on
-the array sizes, the process grid and the parallel algorithm.
+the array sizes, the process grid and the chosen parallel algorithm. Therefore, we call
 \begin{lstlisting}
 ptrdiff_t pfft_local_size_3d(
     ptrdiff_t *n, MPI_Comm comm_cart_2d, unsigned pfft_flags,
@@ -68,10 +74,11 @@ ptrdiff_t pfft_local_size_3d(
     ptrdiff_t *local_no, ptrdiff_t *local_o_start);
 \end{lstlisting}
 This function returns the size of the local complex array that needs to be allocated by every process to
-execute PFFT. In most cases, this coincides with the product of the local array sizes, but according to the FFTW
-manual it may be bigger, if the parallel algorithm needs some extra storage to be executed.
-Since the data layout of the input and output array differ, the algorithm differ for forward and backward
-DFTs. \emph{Unterschied zu FFTW forward und backward deutlich machen}
+execute PFFT. In most cases, this coincides with the product of the local array sizes, but in some cases
+it may be bigger, whenever the parallel algorithm needs some extra storage to be executed.
+
+
+
 
 Next the input and output arrays must be allocated. For performance reasons this should be done using
 \begin{lstlisting}
@@ -124,7 +131,7 @@ Use
 \begin{lstlisting}
 void fftw_free(void *ptr);
 \end{lstlisting}
-to free memory allocated by \code{fftw\_malloc}.
+to free memory allocated by \code{fftw_malloc}.
 
 \subsubsection*{ToDo}
 \begin{compactitem}
@@ -135,12 +142,11 @@ to free memory allocated by \code{fftw\_malloc}.
   \item adjust line numbers in code fracments(?)
 \end{compactitem}
 
-\emph{Install and usage:} (separate chapter)
-\begin{compactitem}
-  \item 
-  \item[\mybox] make shure that the preprocessor can find \code{fftw3.h} and \code{fftw3-mpi.h}
-  \item[\mybox] use a MPI compiler wrapper, or make mpi libraries and header available
-\end{compactitem}
+Since the data layout of the input and output array differ, the algorithm differ for forward and backward
+DFTs. \emph{Unterschied zu FFTW forward und backward deutlich machen}
+
+
+
 
 
 
@@ -339,91 +345,6 @@ plan[_internal, _guru, _many][_dft, _gc][_3d, _2d]
 \end{lstlisting}
 No need for \lstinline{local_size[_dft, _rdft]}, since we put the physical dimensions into local size.
 
-
-\newpage
-\emph{Interface Layer Specification - Local Size:}
-\begin{lstlisting}
-
-C-types: int, const INT *, const PX(truncation) *, const PX(profile) *, const PX(permutation) *,
-         R, C, INT, INT *, MPI_Comm, unsigned
-F-types:
-
-GetParam_LAYER(RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM)
-
-GetParam_Internal(RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM){
-  /* Set all parameters for the most abstract layer */
-  RNK_N = {int rnk, const INT *n}
-  TRC = {const PX(truncation) *trc}
-  PRF_PERM = {const PX(profile) *prf, const PX(permutation) *perm}
-  HOWMANY_BLOCKS = {INT howmany, const INT *iblock, const INT *oblock}
-  DATA =
-  COMM = {int rnk_comm, MPI_Comm comms_1d}
-  SIGN =
-  FLAGS =
-  OUT_LOCN = {INT *local_ni, INT *local_i_start,\n  INT *local_no, INT *local_o_start}
-  OUT_PERM =
-}
-
-GetParam_Guru, RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM){
-  /* Get the parameters of the above layer */
-  GetParam_Internal(RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM)
-
-  /* Change Parameters according to the current layer */
-  Subst(TRC, {const PX(truncation) *trc}, {const INT *ni, const INT *no})
-  Subst(COMM, {int rnk_comm, MPI_Comm comms_1d}, {MPI_Comm comm_cart})
-  OUT_PERM = {PX(permutation) *perm_out}
-}
-
-GetParam_Adv(RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM){
-  /* Get the parameters of the above layer */
-  GetParam_Guru(RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM)
-
-  /* Change Parameters according to the current layer */
-  Free(PRF_PERM, {const PX(profile) *prf, const PX(permutation) *perm})
-  Free(OUT_PERM, {PX(permutation) *perm_out})
-  (*@\color{red}/* use second arg of Free for check */@*)
-}
-
-GetParam_Basic(RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM){
-  /* Get the parameters of the above layer */
-  GetParam_Adv(RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM)
-
-  /* Change Parameters according to the current layer */
-  Free(TRC, {const INT *ni, const INT *no});
-  Free(HOWMANY_BLOCKS,
-    {INT howmany, const INT *iblock, const INT *oblock});
-}
-
-GetParam_3d(RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM){
-  /* Get the parameters of the above layer */
-  GetParam_Basic(RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM)
-
-  /* Change Parameters according to the current layer */
-  Subst(RNK_N, {int rnk, const INT *n}, {INT n0, INT n1, INT n2})
-  Subst(OUT_LOCN,
-    {INT *local_ni, INT *local_i_start,
-     INT *local_no, INT *local_o_start},
-    {INT *local_n0, INT *local_0_start,
-     INT *local_n1, INT *local_1_start})
-}
-
-GetParam_2d(RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM){
-  /* Get the parameters of the above layer */
-  GetParam_Basic(RNK_N, TRC, PRF_PERM, HOWMANY_BLOCKS, DATA, COMM, SIGN, FLAGS, OUT_LOCN, OUT_PERM)
-
-  /* Change Parameters according to the current layer */
-  Subst(RNK_N, {int rnk, const INT *n}, {INT n0, INT n1})
-  Subst(OUT_LOCN,
-    {INT *local_ni, INT *local_i_start,
-     INT *local_no, INT *local_o_start},
-    {INT *local_n0, INT *local_0_start})
-}
-
-
-
-\end{lstlisting}
-
-
 \newpage
 \emph{New PFFT GCell Interface: local size (Basic, Advanced)}
 \begin{lstlisting}
@@ -484,202 +405,7 @@ PX(gcplan) PX(plan_gc)(
 \end{lstlisting}
 
 
-
-\emph{Tasks:}
-\begin{compactitem}
-  \item generate the headers from PFFT interface layer specification automatically
-  \item generate pfft.h
-  \begin{compactitem}
-    \item Header: add \verb+PFFT_EXTERN+
-    \item Header: add \verb+\+ at end of line
-  \end{compactitem}
-  \item where to put in the layer specific functions?
-  \begin{compactitem}
-    \item \verb+void pfft_init(void)+
-    \item \verb+void pfft_cleanup(void)+
-  \end{compactitem}
-\end{compactitem}
-
-
-
-
 \newpage
-\emph{Old PFFT interface: local size (Internal, Guru, Adv, Basic, 3d)}
-\begin{verbatim}
-INT PX(local_size_dft_3d_internal)(
-    const INT *n, const PX(profile) *prf,
-    const PX(truncation) *trc, const PX(permutation) *perm,
-    INT howmany, const INT *block_col, const INT *block_row,
-    MPI_Comm comm_col, MPI_Comm comm_row,
-    INT *local_ni, INT *local_i_start,
-    INT *local_no, INT *local_o_start);
-
-INT PX(local_size_guru)(
-    int rank, const INT *n, const INT *ni, const INT *no,
-    const PX(profile) *prf, const PX(permutation) *perm,
-    INT howmany, const INT *block_col, const INT *block_row,
-    MPI_Comm comm_cart,
-    INT *local_ni, INT *local_i_start,
-    INT *local_no, INT *local_o_start,
-    PX(permutation)* perm_out);
-
-INT PX(local_size_many)(
-    int rank, const INT *n, const INT *ni, const INT *no,
-    INT howmany, const INT *block_col, const INT *block_row,
-    MPI_Comm comm_cart_2d,
-    unsigned pfft_flags,
-    INT *local_ni, INT *local_i_start,
-    INT *local_no, INT *local_o_start);
-
-INT PX(local_size)(
-    int rank, const INT *n, MPI_Comm comm_cart_2d, unsigned pfft_flags,
-    INT *local_ni, INT *local_i_start,
-    INT *local_no, INT *local_o_start);
-
-INT PX(local_size_3d)(
-    const INT *n, MPI_Comm comm_cart_2d, unsigned pfft_flags,
-    INT *local_ni, INT *local_i_start,
-    INT *local_no, INT *local_o_start);
-\end{verbatim}
-
-\emph{Old PFFT interface: plan (Internal, Guru, Adv, Basic, 3d)}
-\begin{verbatim}
-PX(plan) PX(plan_guru_dft)(
-    int rank, const INT *n, const INT *ni, const INT *no,
-    const PX(profile) *prf, const PX(permutation) *perm,
-    INT howmany, const INT *block_col, const INT *block_row,
-    C *data_in, C *data_out,
-    MPI_Comm comm_cart_2d,
-    int sign, unsigned fftw_flags);
-
-PX(plan) PX(plan_many_dft)(
-    int rank, const INT *n, const INT *ni, const INT *no,
-    INT howmany, const INT *block_col, const INT *block_row,
-    C *data_in, C *data_out,
-    MPI_Comm comm_cart_2d,
-    int sign, unsigned pfft_flags, unsigned fftw_flags);
-
-PX(plan) PX(plan_dft)(
-    int rank, const INT *n, C *data_in, C *data_out,
-    MPI_Comm comm_cart_2d,
-    int sign, unsigned pfft_flags, unsigned fftw_flags);
-
-PX(plan) PX(plan_dft_3d)(
-    const INT *n, C *data_in, C *data_out,
-    MPI_Comm comm_cart_2d,
-    int sign, unsigned pfft_flags, unsigned fftw_flags);
-\end{verbatim}
-
-\emph{Old PFFT GCell interface: local size (3d, Basic, Advanced, Guru, Internal)}
-\begin{verbatim}
-INT PX(local_size_gcells_3d)(
-    const INT *local_n, const INT *local_start, INT alloc_local,
-    const INT *num_gcells_below, const INT *num_gcells_above,
-    INT *local_ngc, INT *local_gc_start);
-INT PX(local_size_gcells)(
-    int rank, const INT *local_n, const INT *local_start, INT alloc_local,
-    const INT *num_gcells_below, const INT *num_gcells_above,
-    INT *local_ngc, INT *local_gc_start);
-INT PX(local_size_many_gcells)(
-    int rank, const INT *local_n, const INT *local_start, INT alloc_local,
-    INT howmany, const INT *num_gcells_below, const INT *num_gcells_above,
-    INT *local_ngc, INT *local_gc_start);
-INT PX(local_size_gcells_guru)(
-    int rank, const INT *local_n, const INT *local_start, INT alloc_local,
-    INT howmany, const INT *num_gcells_below, const INT *num_gcells_above,
-    INT *local_ngc, INT *local_gc_start);
-INT PX(local_size_gcells_internal)(
-    const INT *localArraySize, INT tupleSize,
-    const INT *numGhostCellsBelow, const INT *numGhostCellsAbove);
-\end{verbatim}
-
-\emph{Old PFFT GCell interface: plan}
-\begin{verbatim}
-PX(gcplan) PX(plan_gcells_3d)(
-    const INT *n,
-    const INT *num_gcells_below, const INT *num_gcells_above,
-    C *data, MPI_Comm comm_cart_2d, unsigned pfft_flags);
-PX(gcplan) PX(plan_gcells)(
-    int rank, const INT *n,
-    const INT *num_gcells_below, const INT *num_gcells_above,
-    C *data, MPI_Comm comm_cart_2d, unsigned pfft_flags);
-PX(gcplan) PX(plan_many_gcells)(
-    int rank, const INT *n,
-    INT howmany, const INT *block_col, const INT *block_row,
-    const INT *num_gcells_below, const INT *num_gcells_above,
-    C *data, MPI_Comm comm_cart_2d, unsigned pfft_flag);
-PX(gcplan) PX(plan_gcells_guru)(
-    int rank, const INT *n, const PX(permutation) *perm,
-    INT howmany, const INT *block_col, const INT *block_row,
-    const INT *num_gcells_below, const INT *num_gcells_above,
-    C *data, MPI_Comm comm_cart_2d, unsigned alg_flags);
-PX(gcplan) PX(plan_gcells_internal)(
-    const INT *n, const PX(permutation) *perm,
-    INT tuple_size, const INT *block_col, const INT *block_row,
-    const INT *gcells_below, const INT *gcells_above,
-    R *data, MPI_Comm comm_col, MPI_Comm comm_row, MPI_Comm comm_cart_2d,
-    unsigned alg_flag);
-\end{verbatim}
-
-
-\newpage
-\emph{FFTW Advanced interface:}
-\begin{verbatim}
-ptrdiff_t XM(local_size_many_transposed)
-     (int rnk, const ptrdiff_t *n,
-      ptrdiff_t howmany, ptrdiff_t block0, ptrdiff_t block1,
-      MPI_Comm comm,
-      ptrdiff_t *local_n0, ptrdiff_t *local_0_start,
-      ptrdiff_t *local_n1, ptrdiff_t *local_1_start);
-ptrdiff_t XM(local_size_many)
-     (int rnk, const ptrdiff_t *n, ptrdiff_t howmany,
-      ptrdiff_t block0, MPI_Comm comm,
-      ptrdiff_t *local_n0, ptrdiff_t *local_0_start);
-\end{verbatim}
-\emph{FFTW Basic interface:}
-\begin{verbatim}
-ptrdiff_t XM(local_size_transposed)
-     (int rnk, const ptrdiff_t *n, MPI_Comm comm,
-      ptrdiff_t *local_n0, ptrdiff_t *local_0_start,
-      ptrdiff_t *local_n1, ptrdiff_t *local_1_start);
-ptrdiff_t XM(local_size)
-     (int rnk, const ptrdiff_t *n, MPI_Comm comm,
-      ptrdiff_t *local_n0, ptrdiff_t *local_0_start);
-\end{verbatim}
-\emph{FFTW 2d and 3d Basic interface:}
-\begin{verbatim}
-FFTW_EXTERN ptrdiff_t XM(local_size_2d)(
-     ptrdiff_t n0, ptrdiff_t n1, MPI_Comm comm,
-     ptrdiff_t *local_n0, ptrdiff_t *local_0_start);
-FFTW_EXTERN ptrdiff_t XM(local_size_2d_transposed)(
-     ptrdiff_t n0, ptrdiff_t n1, MPI_Comm comm,
-     ptrdiff_t *local_n0, ptrdiff_t *local_0_start,
-     ptrdiff_t *local_n1, ptrdiff_t *local_1_start);
-FFTW_EXTERN ptrdiff_t XM(local_size_3d)(
-     ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, MPI_Comm comm,
-     ptrdiff_t *local_n0, ptrdiff_t *local_0_start);
-FFTW_EXTERN ptrdiff_t XM(local_size_3d_transposed)(
-     ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, MPI_Comm comm,
-     ptrdiff_t *local_n0, ptrdiff_t *local_0_start,
-     ptrdiff_t *local_n1, ptrdiff_t *local_1_start);
-\end{verbatim}
-\emph{FFTW 1d Basic Interface (not included in PFFT):}
-\begin{verbatim}
-ptrdiff_t XM(local_size_many_1d)(                   \
-     ptrdiff_t n0, ptrdiff_t howmany,                           \
-     MPI_Comm comm, int sign, unsigned flags,                   \
-     ptrdiff_t *local_ni, ptrdiff_t *local_i_start,             \
-     ptrdiff_t *local_no, ptrdiff_t *local_o_start);            \
-ptrdiff_t XM(local_size_1d)(                        \
-     ptrdiff_t n0, MPI_Comm comm, int sign, unsigned flags,     \
-     ptrdiff_t *local_ni, ptrdiff_t *local_i_start,             \
-     ptrdiff_t *local_no, ptrdiff_t *local_o_start);            \
-\end{verbatim}
-
-
-
-
-
 Transposed $d$-dimensional array distributed on $c$-dimensional process mesh ($c<d$)
 \begin{equation*}
   \frac{n_1}{P_0} \times \frac{n_2}{P_1} \times \hdots \times \frac{n_c}{P_{c-1}}  \times n_0 \times n_{c+1} \times \hdots \times n_{d-1}
@@ -699,7 +425,6 @@ Comparision of non-transposed (left) and transposed (right) $d$-dimensional arra
 % \code{n}
 % \code{comm\_cart\_2d}
 
-\lstinputlisting[float, caption={Minimal PFFT test program.}, label=lst:min_c2c]{code/manual_min_c2c.c}
 
 
 
@@ -909,6 +634,9 @@ Last step need more general interface to serial FFT module!
 \end{figure}
 
 
+\begin{compactitem}
+  \item[\mybox] \verb+#include <complex.h> #include <pfft.h>+
+\end{compactitem}
 
 
 

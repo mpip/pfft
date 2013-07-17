@@ -2,17 +2,15 @@
 \chapter{Introduction}\label{chap:intro}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 This user manual describes the usage of PFFT~\pfftversion, a parallel software library for the
-computation of equispaced fast Fourier transforms on paralllel distributed memory architectures.
+computation of equispaced fast Fourier transforms on parallel, distributed memory architectures.
+Although the well known FFTW software library~\cite{fftw, FFTW05} already supports parallel FFT
+on distributed memory architectures, its one-dimensional data decomposition limits the usage on
+massively parallel machines. PFFT can be understood as a generalization of the MPI algorithms
+from FFTW to data decompositions of arbitrary dimension.
+We refer to the publication~\cite{Pi13} for a closer look on the
+different data decompositions and the underlying algorithms of the PFFT library.
 
-Although FFTW already supports parallel FFT on distributed memory architectures, the one dimensional
-data decomposition limits the usage on massively parallel machines.
 
-Similar to FFTW the PFFT interface splits into the following three layers
-\begin{compactitem}
-  \item The basic interface computes a single DFT in parallel.
-  \item The advanced interface computes DFTs of multiple arrays.
-  \item The guru interface allows to influence the combination of algorithmic steps to yield a parallel DFT.
-\end{compactitem}
 
 We suppose that the reader is at least familiar with basic usage of FFTW. Since our implementation is based on
 MPI, the reader should also know about the basics of distributed memory parallelism and the usage of MPI for parallel

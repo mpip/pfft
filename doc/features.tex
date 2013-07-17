@@ -2,12 +2,26 @@
 \chapter{Advanced Features}\label{chap:feat}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+\section{Supported kinds of FFT}
+
+\subsection{c2c-FFT}
+FFT of Complex inputs with complex outputs
+
+\subsection{r2c-FFT and c2r-FFT}
+FFT of real inputs with Hermitian symmetric complex outputs
+
+\subsection{r2r-FFT}
+FFT of real inputs with real outputs
+
+
+
 \begin{compactitem}
-  \item how to do inplace transforms
+  \item how to do in place transforms
 \end{compactitem}
 
 
-
+\section{Reduction of communication by transposed data layouts}
 By providing \code{pfft\_flags} the user can choose between three different data layouts of the output
 array. Table~\ref{tab:pfft_flags} shows the flags and their corresponding decompositions.
 \begin{table}[h]
@@ -36,7 +50,16 @@ for(int k0=0; k0<local_ni[0]; k0++)
 %------------------------------------------------------------------------------
 \section{How to Deal with FFT Shifts in Parallel}
 %------------------------------------------------------------------------------
-A common problem is the computation of FFT with shifted index sets, i.e., assume $k_s,l_s\in\Z$ and compute
+A common problem is that the index of the FFT inputs runs between $-N/2,\hdots,N/2-1$, but the FFT library
+requires them to run between $0,\hdots,N-1$. With serial program execution one can easily remap the data suitable
+for the library, which is also known as \code{fftshift}, e.g., in Matlab.
+In contrast, with distributed memory the data movement is more complex and results in a global communication.
+Fortunately, this communication can be avoided at the cost of some extra computations, which is often the better
+choice on massively parallel, distributed memory architectures.
+At the end of the section we present two PFFT library functions that perform the necessary pre- and postprocessing
+for shifted input and output index sets.
+
+In a more general setting, we are interested in the computation of FFTs with shifted index sets, i.e., assume $k_s,l_s\in\Z$ and compute
 \begin{equation*}
   g_l = \sum_{k=k_s}^{n_i+k_s-1} \hat g_k \eim{kl/n},
   \quad l=l_s,\hdots,n_o+l_s-1\,.

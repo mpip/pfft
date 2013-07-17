@@ -60,24 +60,23 @@
 \newcommand{\nfftversionsl}{\textsl{\nfftversion}}
 
 \newcommand{\fftw}{\textsf{FFTW}}
-\newcommand{\fftwversion}{\textsf{3.3.2}}
+\newcommand{\fftwversion}{3.3.3}
+\newcommand{\fftwversionsf}{\textsf{\fftwversion}}
 \newcommand{\fftwversionsl}{\textsl{\fftwversion}}
 
 \newcommand{\pfft}{\textsf{PFFT}}
-\newcommand{\pfftversion}{1.0.5-alpha}
+\newcommand{\pfftversion}{1.0.7-alpha}
+\newcommand{\pfftversionsf}{\textsf{\pfftversion}}
 \newcommand{\pfftversionsl}{\textsl{\pfftversion}}
 
 \newcommand{\pnfft}{\textsf{PNFFT}}
 \newcommand{\pnfftversion}{1.0.3-alpha}
 \newcommand{\pnfftversionsl}{\textsl{\pnfftversion}}
 
-\newcommand{\fftwaversion}{3.3alpha1}
-\newcommand{\fftwaversionsl}{\textsl{\fftwaversion}}
-
-\newcommand{\ppnfft}{\textsf{P$^2$NFFT}}
-\newcommand{\ppnfftcap}{\texorpdfstring{\ppnfft}{\textsf{P\texttwosuperior NFFT}}}
-\newcommand{\pppm}{\textsf{P$^3$M}}
-\newcommand{\pppmcap}{\texorpdfstring{\pppm}{\textsf{P\textthreesuperior M}}}
+\newcommand{\ppnfft}{\textsf{P$^2$NFFT}\xspace}
+\newcommand{\ppnfftcap}{\texorpdfstring{\ppnfft}{\textsf{P\texttwosuperior NFFT}\xspace}}
+\newcommand{\pppm}{\textsf{P$^3$M}\xspace}
+\newcommand{\pppmcap}{\texorpdfstring{\pppm}{\textsf{P\textthreesuperior M}\xspace}}
 
 \newcommand{\mybox}{$\Box$}
 \newcommand{\myxbox}{{\Large\Crossedbox}}
@@ -85,6 +84,11 @@
 \newcommand{\myitem}{\item[\mybox]}
 \newcommand{\myxitem}{\item[\myxbox]}
 \newcommand{\mycitem}{\item[\mycbox]}
+
+\newcommand{\mpipurl}{www.tu-chemnitz.de/~mpip}
+\newcommand{\webmpip}{\url{\mpipurl}\xspace}
+\newcommand{\websoft}{\url{\mpipurl/software.php}\xspace}
+
 
 \newcommand{\red}[1]{\textcolor{red}{#1}}
 
@@ -162,8 +166,8 @@
   %       numbers=none,
   %       belowskip= -2ex}
   % 
-  \newcommand{\code}[1]{\linebreak[2]{\ttfamily #1}}
-%   \newcommand{\code}[1]{\lstinline!#1!}
+%   \newcommand{\code}[1]{\linebreak[2]{\ttfamily #1}}
+  \newcommand{\code}[1]{\lstinline!#1!}
 }
 
 %% own enviroment for case differentiation

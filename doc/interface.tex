@@ -1,0 +1,21 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Interface layers of the PFFT library}\label{chap:api}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Similar to FFTW the PFFT interface splits into the following two layers
+\begin{compactitem}
+  \item The basic interface computes a single FFT in parallel.
+  \item The advanced interface computes FFTs of multiple arrays, gives a more sophisticated possibility
+        to influence the parallel data distribution and adds support of over- and undersampling.
+%   \item The guru interface allows to influence the combination of algorithmic steps to yield a parallel FFT.
+\end{compactitem}
+From basic to advanced the flexibility of the parallel algorithms increases but also the risk to set up the
+parallel execution in a wrong way. Users should stick to the basic interface layer as long as it is sufficiently
+flexible for their application.
+
+\section{Basic interface layer}
+
+
+
+\section{Advanced interface layer}
+
