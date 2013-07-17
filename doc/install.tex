@@ -1,0 +1,71 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Installation}\label{chap:inst}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+In the simplest case, your hardware platform will be recognized by the PFFT configure script automatically,
+so all we have to do is
+\begin{lstlisting}[escapechar=§]
+wget http://www.tu-chemnitz.de/~mpip/software/pfft-§\pfftversionsl§.tar.gz
+tar xzvf pfft-§\pfftversion§.tar.gz
+cd pfft-§\pfftversion§
+./configure
+make
+\end{lstlisting}
+
+If the \fftw\fftwversion{} software library is already installed on your system but not found by the configure script,
+you can provide the FFTW installation directory \code{\$FFTWHOME} to configure by
+\begin{lstlisting}
+./configure --with-fftw3=$FFTWHOME
+\end{lstlisting}
+or specify the FFTW include directory \code{\$FFTWINC} and FFTW library directory \code{\$FFTWLIB} separately via
+\begin{lstlisting}
+./configure --with-fftw3-includedir=$FFTWINC --with-fftw3-libdir=$FFTWLIB
+\end{lstlisting}
+To install PFFT in a user specified directory \code{\$PFFTINSTDIR} call configure with the option
+\begin{lstlisting}
+./configure --prefix=$PFFTINSTDIR
+\end{lstlisting}
+
+
+\section{Install the Latest Official Release of FFTW}
+
+\begin{lstlisting}[escapechar=§]
+wget http://www.fftw.org/fftw-§\fftwversionsl§.tar.gz
+tar xzvf fftw-§\fftwversion§.tar.gz
+cd fftw-§\fftwversion§
+./configure --enable-mpi --prefix=$HOME/local/fftw3_mpi
+make
+make install
+\end{lstlisting}
+
+\begin{lstlisting}[escapechar=§]
+wget http://www.tu-chemnitz.de/~mpip/software/pfft-§\pfftversionsl§.tar.gz
+tar xzvf pfft-§\pfftversion§.tar.gz
+cd pfft-§\pfftversion§
+./configure --with-fftw3=$HOME/local/fftw3_mpi
+make
+\end{lstlisting}
+
+
+
+
+\begin{lstlisting}
+../configure --with-fftw3=$FFTWDIR
+\end{lstlisting}
+where \code{FFTWDIR} stands for the install directory of FFTW. This is eqivalent to
+\begin{lstlisting}
+../configure --with-fftw3-libdir=$FFTWDIR/lib --with-fftw3-includedir=$FFTWDIR/include
+\end{lstlisting}
+but the second call gives the flexibility to declare arbitrary include and lib directories.
+
+
+\begin{compactitem}
+  \item[\mybox] describe complete install procedure with shell (like I did for Heraeus summer school and Joseba Alberdi)
+  \item[\mybox] explain usage of configure script
+  \item[\mybox] make shure that the preprocessor can find \code{fftw3.h} and \code{fftw3-mpi.h}
+  \item[\mybox] \verb+#include <complex.h> #include <pfft.h>+
+  \item[\mybox] use a MPI compiler wrapper, or make mpi libraries and header available
+\end{compactitem}

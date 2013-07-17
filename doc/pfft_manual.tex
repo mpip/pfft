@@ -1,0 +1,161 @@
+
+\documentclass[a4paper,11pt,final,openright,headsepline]{scrreprt}
+% parskip: no indentation of paragraphs, german style
+%\usepackage{layout} % show layout boarders
+
+\usepackage[english]{babel} % wordbreaks
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[fixlanguage]{babelbib} % easily change bib language
+
+%% Vector fonts for PDF
+% \usepackage{ae} % deprecated package, use lmodern instead
+\usepackage{lmodern} %standard latex font
+
+%\usepackage{makeidx} % automatic index generation, required for nomencl.sty
+%\usepackage{nomencl} % important symbols in a table at the beginning of document
+
+%% AMSMath-packages
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+% \usepackage{amsrefs}
+% \usepackage{textcmds}
+\usepackage{exscale} % Correct font scaling in formulas
+
+\usepackage{subfigure}
+% \usepackage{graphicx} % Graphics for figures
+\usepackage[svgnames, table, hyperref]{xcolor} %
+\usepackage{paralist} % compact itemize, enumerate, ...
+\usepackage{listings} % source code in LaTeX
+% \usepackage{multirow} % combine multiple rows in arrays
+
+%% improvements of LaTeX enviroments
+\usepackage{scrhack} % avoid warning of scrreprt when loading float package
+% \usepackage{float}
+% \usepackage{verbatim}
+% \usepackage{array}
+
+% \usepackage{url} % provides \url command for bibtex
+\usepackage{hyperref} % provides \url command for bibtex and links to jump within documents
+\hypersetup{plainpages=false, pdfpagelabels, colorlinks, linkcolor=black, citecolor=black, urlcolor=blue,
+pdftitle={PFFT Users Manual},
+pdfauthor={Michael Pippig}, pdfstartview={FitBH}}
+
+%% adjust numbering
+\numberwithin{figure}{chapter}
+\numberwithin{table}{chapter}
+\numberwithin{equation}{chapter}
+
+%% activate for algorithms
+\usepackage{algpseudocode}
+\usepackage[chapter]{algorithm}
+\usepackage{algorithmicx}
+% \floatname{algorithm}{Algorithmus} % use german title for algorithms
+% \numberwithin{algorithm}{chapter}
+
+%% activate for compact page layout
+\usepackage{geometry}
+\geometry{top=30.4mm, left=30.4mm, text={155mm,240mm}, headheight=10mm, headsep=5mm, includemp, marginparwidth=15.4mm}
+
+%% activate for headline with chapter information on every page
+\usepackage{scrpage2}
+\pagestyle{scrheadings}
+\automark[section]{chapter}
+\clearscrheadings
+\lehead{\pagemark}
+\rehead{\leftmark}
+\rohead{\pagemark}
+\lohead{\rightmark}
+\ofoot[]{}
+\cfoot[]{}
+\ifoot[]{}
+
+%% the quotchap document style redeﬁnes the \chapter and \chapter* commands to
+%% create fancy chapter head pages with huge chapter numbers (possibly greyed) and
+%% provides commands for adding quotations in the upper left corner of these pages.
+% \usepackage[grey]{quotchap}
+
+
+%% very special purpose packages
+% \usepackage{faktor} % provides a symbol for factor groups
+% \usepackage{slashbox} % diagonaly divide an array field
+
+
+%% experimental
+% \usepackage[color]{showkeys} % show all reference keys
+% \definecolor{refkey}{gray}{.75}
+% \definecolor{labelkey}{gray}{0.75}
+% \usepackage{epstopdf} % include .eps files with pdflatex
+% \usepackage{marginnote}
+%\usepackage{pgf}
+%\usepackage{jkpgf}
+%\usepackage{pstricks}
+%% make pdf-indexfile for inverse search - needs compatible pdf viewer
+% \synctex=1
+% \usepackage{pdfsync} % deprecated package, use synctex instead
+
+\hyphenation{equi-spaced non-equi-spaced}
+
+\input{../../share/def/shortcuts.tex} % Shortcuts for math symbols
+
+\pagestyle{scrheadings}
+
+\automark[section]{chapter} % auto
+\clearscrheadings
+\lehead{\pagemark}
+\rehead{\leftmark}
+\rohead{\pagemark}
+\lohead{\rightmark}
+\ofoot[]{}
+\cfoot[]{}
+\ifoot[]{}
+
+% \includeonly{intro} % work on single chapters
+
+\begin{document}
+  \setcounter{equation}{0}
+
+%   \thispagestyle{empty}
+  \begin{titlepage}
+    \begin{center}
+      \vspace*{3cm}
+      {\Huge {\textbf{\textsf{PFFT Users Manual\\}}}}
+
+      \vspace*{1cm}
+      for version \pfftversion\, \today
+
+      \vspace*{3cm}
+%       \begin{tabular}{l}
+        Michael Pippig\\
+        Chemnitz University of Technology\\
+        Department of Mathematics\\
+        09107 Chemnitz, Germany
+%       \end{tabular}
+
+      \vspace*{3cm}
+      Download Parallel Fast Fourier Transform Software Library at \\
+      {\large \url{http://www.tu-chemnitz.de/~mpip/software.php}}
+    \end{center}
+    \vfill
+    michael.pippig@mathematik.tu-chemnitz.de
+  \end{titlepage}
+
+  \tableofcontents
+ 
+
+
+  %\input{intro} % ohne Seitenumbrueche
+  \include{intro} % mit Seitenumbruechen
+  \include{tutorial} % mit Seitenumbruechen
+  \include{install} % mit Seitenumbruechen
+  \include{features} % mit Seitenumbruechen
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % \selectbiblanguage{english}
+  \bibliographystyle{bababbrv-fl}
+  % \bibliographystyle{abbrv}
+  \bibliography{../../../../../../nfft/doc/paper/references/references}
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}

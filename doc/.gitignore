@@ -1,0 +1,18 @@
+# temporary Latex files  #
+##########################
+*.aux
+*.bbl
+*.blg
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.out
+*.pdf
+*.synctex.gz
+*.tdo
+*.toc
+*.tex.backup
+
