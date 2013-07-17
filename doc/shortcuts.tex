@@ -1,0 +1,181 @@
+\makeatletter
+\providecommand{\IfPackageLoaded}[2]{\@ifpackageloaded{#1}{#2}{}}
+\providecommand{\IfPackageNotLoaded}[2]{\@ifpackageloaded{#1}{}{#2}}
+\providecommand{\IfElsePackageLoaded}[3]{\@ifpackageloaded{#1}{#2}{#3}}
+\makeatother
+
+
+% Shortcuts for math symbols.
+\newcommand{\N}{\ensuremath{\mathbb{N}}}
+\newcommand{\T}{\ensuremath{\mathbb{T}}}
+\renewcommand{\S}{\ensuremath{\mathbb{S}}}
+\newcommand{\NZ}{\ensuremath{\mathbb{N}_{0}}}
+\newcommand{\Z}{\ensuremath{\mathbb{Z}}}
+\newcommand{\R}{\ensuremath{\mathbb{R}}}
+\newcommand{\Rp}{\ensuremath{\mathbb{R}_{+}}}
+\newcommand{\Rn}{\ensuremath{\mathbb{R}^n}} 
+\newcommand{\Rnn}{\ensuremath{\mathbb{R}^{n \times n}}}
+\newcommand{\C}{\ensuremath{\mathbb{C}}}
+\newcommand{\cO}{\ensuremath{\mathcal{O}}}
+\newcommand{\tT}{\ensuremath{\text{\tiny{T}}}}
+\newcommand{\ti}{\ensuremath{\text{\scriptsize{i}}}}
+\newcommand{\e}{{\ensuremath{\mathrm{e}}}}
+\newcommand{\eim}[1]{\ensuremath{\mathrm{e}^{-2\pi{\ti} #1}}}
+\newcommand{\eip}[1]{\ensuremath{\mathrm{e}^{+2\pi{\ti} #1}}}
+\renewcommand{\mathbf}[1]{\ensuremath{\boldsymbol{#1}}}
+\newcommand{\ds}{\displaystyle}
+\newcommand{\sinc}{{\rm sinc}}
+\newcommand{\dist}{{\rm dist}}
+\newcommand{\erf}{{\rm erf}}
+\newcommand{\erfc}{{\rm erfc}}
+\newcommand{\adj}{{\vdash \hspace*{-1.72mm} \dashv}}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\dd}{d}
+\newcommand{\bend}
+{
+  \hspace*{0ex} \hfill 
+  \hbox{\vrule height 1.5ex \vbox{\hrule width 1.4ex \vskip
+  1.4ex\hrule  width 1.4ex} \vrule height 1.5ex}
+}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\BIGOP}[1]{\mathop{\mathchoice%
+{\raise-0.22em\hbox{\huge $#1$}}%
+{\raise-0.05em\hbox{\Large $#1$}}{\hbox{\large $#1$}}{#1}}}
+\newcommand{\bigtimes}{\BIGOP{\times}}
+\def\invisible#1{\textcolor{white}{#1}}
+\newcommand{\Vect}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\Mat}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\Cal}[1]{\ensuremath{\mathcal{#1}}}
+\newcommand{\fft}{\textsf{FFT}}
+
+\newcommand{\ousetarrow}[2]{\overset{\textsf{#1}}{\underset{\textsf{#2}}{\rightarrow}}}
+\newcommand{\osetarrow}[1]{\overset{\textsf{#1}}{\rightarrow}}
+\newcommand{\usetarrow}[1]{\underset{\textsf{#1}}{\rightarrow}}
+\newcommand{\fftarrow}[2]{\overset{\textsf{FFT#1}}{\underset{\textsf{#2}}{\rightarrow}}}
+\newcommand{\transposearrow}[1]{\overset{\textsf{T}}{\underset{\textsf{#1}}{\rightarrow}}}
+
+\newcommand{\nfft}{\textsf{NFFT}}
+\newcommand{\nfftversion}{3.2.0}
+\newcommand{\nfftversionsl}{\textsl{\nfftversion}}
+
+\newcommand{\fftw}{\textsf{FFTW}}
+\newcommand{\fftwversion}{\textsf{3.3.2}}
+\newcommand{\fftwversionsl}{\textsl{\fftwversion}}
+
+\newcommand{\pfft}{\textsf{PFFT}}
+\newcommand{\pfftversion}{1.0.5-alpha}
+\newcommand{\pfftversionsl}{\textsl{\pfftversion}}
+
+\newcommand{\pnfft}{\textsf{PNFFT}}
+\newcommand{\pnfftversion}{1.0.3-alpha}
+\newcommand{\pnfftversionsl}{\textsl{\pnfftversion}}
+
+\newcommand{\fftwaversion}{3.3alpha1}
+\newcommand{\fftwaversionsl}{\textsl{\fftwaversion}}
+
+\newcommand{\ppnfft}{\textsf{P$^2$NFFT}}
+\newcommand{\ppnfftcap}{\texorpdfstring{\ppnfft}{\textsf{P\texttwosuperior NFFT}}}
+\newcommand{\pppm}{\textsf{P$^3$M}}
+\newcommand{\pppmcap}{\texorpdfstring{\pppm}{\textsf{P\textthreesuperior M}}}
+
+\newcommand{\mybox}{$\Box$}
+\newcommand{\myxbox}{{\Large\Crossedbox}}
+\newcommand{\mycbox}{{\Large\Checkedbox}}
+\newcommand{\myitem}{\item[\mybox]}
+\newcommand{\myxitem}{\item[\myxbox]}
+\newcommand{\mycitem}{\item[\mycbox]}
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+
+\newcommand{\algname}{Alg.}
+\newcommand{\eqname}{Eq.}
+\newcommand{\figname}{Fig.}
+
+% \theoremstyle{plain}
+%% german
+% \newtheorem{Satz}{Satz}[section] % define Satz enviroment for german docs
+% \newtheorem{Def}[Satz]{Definition}
+% \newtheorem{Lemma}[Satz]{Lemma}
+% \newtheorem{Kor}[Satz]{Korollar}
+% \newtheorem{Beh}[Satz]{Behauptung}
+% \newtheorem{Bsp}[Satz]{Beispiel}
+% \newtheorem{Bem}[Satz]{Bemerkung}
+% \newenvironment{Beweis}
+% {\begin{proof}[Beweis:]}
+% {\begin{proof}[\bfseries\upshape Beweis:]}
+% {\end{proof}}
+
+%% english ???
+%? \newtheorem{Satz}{Satz}[chapter]
+%? \newtheorem{Def}[Satz]{Definition}
+%? \newtheorem{Lemma}[Satz]{Lemma}
+%? \newtheorem{Kor}[Satz]{Korollar}
+%? \newtheorem{Beh}[Satz]{Behauptung} 
+%? \newtheorem{Bsp}[Satz]{Beispiel} 
+%? \newtheorem{Bem}[Satz]{Bemerkung} 
+%? \newenvironment{Beweis}
+%? % {\begin{proof}[Beweis:]}
+%? {\begin{proof}[\bfseries\upshape Beweis:]}
+%? {\end{proof}}
+
+% \renewcommand{\qedsymbol}{\#}
+
+
+%% German commands for algorithms
+% \renewcommand{\algorithmicrequire}{\textbf{Eingabe:}}
+% \renewcommand{\algorithmicensure}{\textbf{Ausgabe:}}
+
+% activate for listings enviroment
+\IfPackageLoaded{listings}
+{
+  \renewcommand{\ttdefault}{pcr}
+  % \renewcommand{\lstlistingname}{\bfseries Quelltext}
+  \lstset{language = C,
+	morekeywords={ptrdiff_t, fftw_complex, pfft_plan, pfft_gcplan, MPI_Comm, size_t, INT,
+	              PX, R, C, X, XM, complex, nfplan},
+%         morekeywords={ptrdiff_t, nfft_mpi_plan, nfft_mpi_init_guru, nfft_mpi_init_nodes, MPI_Init,
+%           fftw_mpi_init, MPI_Comm_size, nfft_trafo_par3d, nfft_adjoint_par3d, fftw_mpi_cleanup, MPI_Finalize, nfft_mpi_finalize, main},
+	basicstyle = \ttfamily\small,
+	commentstyle = \slshape,
+	keywordstyle = {\bfseries},
+	backgroundcolor = \color{LightGray!40},
+	numbers = left,
+	breaklines = true,
+  %   	xleftmargin = 3em,
+  %   	prebreak = {...},
+	breakatwhitespace = true,
+	showstringspaces = false,
+	float, % Listings are float objects, doesn't work for unknown reason
+	escapeinside = {(*@}{@*)}}
+  % 
+  % \lstdefinestyle{txt}{language= C, 
+  %       basicstyle = \sffamily\small,
+  %       breaklines = true,
+  %       backgroundcolor = \color{LightGray!0},
+  %       numbers=none,
+  %        xleftmargin = 0em,
+  %       showstringspaces = false}
+  % 
+  % \lstdefinestyle{head}{
+  %       backgroundcolor = \color{LightGray!0},
+  %       numbers=none,
+  %       belowskip= -2ex}
+  % 
+  \newcommand{\code}[1]{\linebreak[2]{\ttfamily #1}}
+%   \newcommand{\code}[1]{\lstinline!#1!}
+}
+
+%% own enviroment for case differentiation
+% \newenvironment{FUS}%
+% { \renewcommand{\theenumi}{\arabic{enumi}}
+%   \renewcommand{\labelenumi}{\itshape Fall \theenumi:}
+%   \renewcommand{\theenumii}{\arabic{enumii}}
+%   \renewcommand{\labelenumii}{\itshape Fall \theenumi.\theenumii:}
+%   \renewcommand{\theenumiii}{\arabic{enumiii}}
+%   \renewcommand{\labelenumiii}{\itshape Fall \theenumi.\theenumii.\theenumiii:}
+%   \setlength{\labelsep}{1em}
+%   \begin{compactenum}
+% }
+% {\end{compactenum}}
+% \settowidth{\labelwidth}{\textit{Fall 44:}}

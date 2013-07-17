@@ -390,6 +390,40 @@ DISTCHECK_CONFIGURE_FLAGS="CPPFLAGS=\"$CPPFLAGS\" LDFLAGS=\"$LDFLAGS\""
 
 AC_SUBST(DISTCHECK_CONFIGURE_FLAGS)
 
+
+
+################################################################################
+# DOCUMENTATION
+################################################################################
+AC_ARG_ENABLE([doc],
+ [AS_HELP_STRING([--disable-doc],[disable build of documents (PDF manual etc.)])],,
+ [enable_doc=yes])
+
+if test "x$enable_doc" != xno -a ! -d "$srcdir/doc"; then
+  AC_MSG_WARN([disabling doc as it is not present in source tree])
+  enable_doc=no
+fi
+
+if test "x$enable_doc" != xno ; then
+  AC_PATH_PROG(PDFLATEX,pdflatex,no)
+  AC_PATH_PROG(MAKEINDEX,makeindex,no)
+  AC_PATH_PROG(BIBTEX,bibtex,no)
+else
+  AC_MSG_NOTICE([disable build of documents])
+fi
+
+AM_CONDITIONAL(ENABLE_DOC,[test "x$enable_doc" != xno])
+AM_CONDITIONAL(HAVE_LATEX,
+	[test "x$PDFLATEX" != xno && 
+	test "x$MAKEINDEX" != xno && 
+	test "x$BIBTEX" != xno])
+
+if test "x$enable_doc" != xno ; then
+  AC_CONFIG_FILES([doc/Makefile doc/latexinc.sh])
+  AC_CONFIG_LINKS([doc/latex-manual.sh:doc/latex-manual.sh])
+fi
+
+
 ################################################################################
 # create output files
 ################################################################################

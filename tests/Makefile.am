@@ -17,7 +17,6 @@ LDADD = $(top_builddir)/lib@PFFT_PREFIX@pfft@PREC_SUFFIX@.la $(fftw3_mpi_LIBS) $
 
 # These programs are built by 'make check' and may be tested afterwards.
 check_PROGRAMS = \
-	minimal_test \
 	minimal_check_c2c minimal_check_c2c_transposed
 
 check_PROGRAMS += \
@@ -25,6 +24,8 @@ check_PROGRAMS += \
 	simple_check_r2c simple_check_r2c_transposed \
 	simple_check_r2r simple_check_r2r_transposed
 
+check_PROGRAMS += \
+	manual_min_c2c 
 
 
 #if ENABLE_COMMON_PFFT

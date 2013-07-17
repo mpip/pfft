@@ -1,0 +1,1 @@
+../../tests/manual_min_c2c.c
