@@ -20,10 +20,12 @@ int main(int argc, char **argv){
   pfft_init();
 
   /* Create two-dimensional process grid of size np[0] x np[1] */
-  pfft_create_procmesh_2d(MPI_COMM_WORLD, np[0], np[1], &comm_cart_2d);
+  pfft_create_procmesh_2d(MPI_COMM_WORLD, np[0], np[1],
+      &comm_cart_2d);
 
   /* Get parameters of data distribution */
-  alloc_local = pfft_local_size_dft_3d(n, comm_cart_2d, PFFT_TRANSPOSED_OUT,
+  alloc_local = pfft_local_size_dft_3d(
+      n, comm_cart_2d, PFFT_TRANSPOSED_NONE,
       local_ni, local_i_start, local_no, local_o_start);
 
   /* Allocate memory */
@@ -32,7 +34,7 @@ int main(int argc, char **argv){
 
   /* Plan parallel forward FFT */
   plan = pfft_plan_dft_3d(n, in, out, comm_cart_2d,
-      PFFT_FORWARD, PFFT_TRANSPOSED_OUT| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+      PFFT_FORWARD, PFFT_TRANSPOSED_NONE);
 
   /* Initialize input with random numbers */
   pfft_init_input_c2c_3d(n, local_ni, local_i_start,

@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}\label{chap:intro}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-This user manual describes the usage of PFFT~\pfftversion, a parallel software library for the
+This user manual describes the usage of PFFT~\pfftversion~\cite{Pi13,pfft}, a parallel software library for the
 computation of equispaced fast Fourier transforms on parallel, distributed memory architectures.
 Although the well known FFTW software library~\cite{fftw, FFTW05} already supports parallel FFT
 on distributed memory architectures, its one-dimensional data decomposition limits the usage on
@@ -10,51 +10,35 @@ from FFTW to data decompositions of arbitrary dimension.
 We refer to the publication~\cite{Pi13} for a closer look on the
 different data decompositions and the underlying algorithms of the PFFT library.
 
-
-
+The design of PFFT was inspired in many ways by the glorious FFTW library~\cite{fftw,FFTW05} and,
+indeed, we tried to implement the PFFT interface as close as possible to the FFTW-MPI interface.
 We suppose that the reader is at least familiar with basic usage of FFTW. Since our implementation is based on
 MPI, the reader should also know about the basics of distributed memory parallelism and the usage of MPI for parallel
 programming.
 
 
-
-
-\section{Comparison with other parallel FFT implementations}
-
-There have been several FFT implementations that aim to circumvent the scalability bottle neck
-for at least three dimensional input data by using two-dimensional decomposition approach.
-Nevertheless these implementations are often fitted to special problems and where not published
-as a stand alone software library. Remarkable exceptions are the S.~Plimpton~\cite{libsandiafft},
-the P3DFFT~\cite{libp3dfft} software library by D.~Pekurovsky and the \mbox{2DECOMP\&FFT} software library~\cite{Li2010, lib2decompfft}.
-% \cite{Pi2012, pfft}
+The PFFT library was designed for distributed memory architectures and was implemented based on the Message Passing Interface (MPI).
+We assume that the user of PFFT is at least familiar with the basics of the MPI programming paradigm.
+Nevertheless, we explain some of the basic MPI concepts whenever they are important to understand
+the design of the PFFT library. We tried to hide most of the parallel coding details from the user,
+but of course this is limited by the fact that PFFT itself is a parallel software library.
+For more details on the MPI programming language we refer to the MPI Standard~\cite{MPI-2.2}, see also \cite{GrLuTh99} for detailed explanations.
+Since the PFFT interface was written as close as possible to the FFTW interface, the user will benefit from
 
 
 
-\section{Why to implement parallel FFT again?}
-As there are several software libraries that deal with the scalability bottleneck, one could ask why we implemented the two-dimensional data decomposition again.
-The answer lies in the usability and flexibility of the available software libraries in comparison to FFTW.
-Our vision is to implement a parallel FFT library, that adepts to the FFTW interface as much as possible
-and preserves most of the nice features that FFTW provides, e.g, high portability, self adapting runtime optimization and in place transforms.
-
-\section{Comparision to P3DFFT}
-In this section we compare the features and runtimes of PFFT to the P3DFFT software library.
-To get a fair comparison, the P3DFFT feature list has to be up to date. If there is any feature missing, please contact us.
-
-\section{About the name PFFT}
-Since we are not the first people who came up with a parallel FFT implementation, it was hard
-to find a short and unique abbreviation for our library. To append a single P (for parallel)
-to the FFT seems to be very natural and fits perfect in our naming conventions for generalized
-FFT, i.e., the N for nonequispaced in the abbreviation NFFT or an S for spherical in NSFFT and so on.
-As one can imagine we are not the first who came up with this idea. Therefore, we apologize
-to all the libraries, that already used the same name. Especially the first hit on most search engines
-leads to the PFFT library ... As this library seems to be outdated and does not work an any current
-machine we decided to reuse its name.
-
-If you have concerns that the PFFT name struggles your interests, please contact us.
 
 
-One could argue, that PFFT sounds very general and therefore is somehow \emph{anma\ss{}end}.
-That's true and we are aware of this
+
+% \section{Why to implement parallel FFT again?}
+% As there are several software libraries that deal with the scalability bottleneck, one could ask why we implemented the two-dimensional data decomposition again.
+% The answer lies in the usability and flexibility of the available software libraries in comparison to FFTW.
+% Our vision is to implement a parallel FFT library, that adepts to the FFTW interface as much as possible
+% and preserves most of the nice features that FFTW provides, e.g, high portability, self adapting runtime optimization and in place transforms.
+% 
+% \section{Comparision to P3DFFT}
+% In this section we compare the features and runtimes of PFFT to the P3DFFT software library.
+% To get a fair comparison, the P3DFFT feature list has to be up to date. If there is any feature missing, please contact us.
 
 
 The need of a highly scalable parallel FFT software library can not be over estimated. 
@@ -77,20 +61,36 @@ PFFT aims to provide a highly scalable FFT implementation
   \item c2c FFTs
 \end{compactitem}
 
-Summarize sections:
+\section{Some Comments on MPI}
+
+Following the MPI standard~\cite{MPI-2.2} we use the term process to denote the smallest
+processing unit of a parallel machine.
+
+will adapt to the MPI standard and use the term process to indicate the smallest \\
+
+We stick to the term MPI standard introduces the term process to indicate a \\
+The term process abstracts form the widely used terms processors and nodes. \\
+Note that the term process abstracts the code development from the real physical architecture. For example we can \\
+At first glance, it seems to be artificial to \\
+\emph{An MPI program consists of autonomous processes, executing their own code, in an MIMD style.}
+( MPI: A Message-Passing Interface Standard, page 27)
 \begin{compactitem}
-  \item Section 1: Tutorial
+  \item process (identified in most cases with processors/nodes/cores)
+  \item plan
 \end{compactitem}
 
 
+
+\section{Advertisements}
+\subsection{Other parallel FFT implementations}
+There have been several FFT implementations that aim to circumvent the scalability bottle neck
+for at least three dimensional input data by using two-dimensional decomposition approach.
+Nevertheless, these implementations are often fitted to special problems and where not published
+as a stand alone software library. Remarkable exceptions are the parallel FFT software library by S.~Plimpton~\cite{Pl97,sandiafft},
+the P3DFFT software library by D.~Pekurovsky~\cite{Pe12,p3dfft} and the \mbox{2DECOMP\&FFT} software library by N.~Li~\cite{Li2010, 2decompfft}.
+
+\subsection{Parallel nonequispaced FFT}
 If your are interested in a parallel implementation of nonequispaced fast Fourier
-transforms, you should have a look at the PNFFT software library. It is also available
-at \url{http://www.tu-chemnitz.de/~mpip/software}.
+transforms for distributed memory architectures, you should have a look at our PNFFT software library~\cite{pnfft, PiPo13}.
+It is also available at \websoft.
 
-
-MPI strictly distinguishes between processes and processors. 
-
-%------------------------------------------------------------------------------
-\section{something}
-%------------------------------------------------------------------------------
-some text
