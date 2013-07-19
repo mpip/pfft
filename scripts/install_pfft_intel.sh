@@ -1,8 +1,8 @@
 #!/bin/sh -e
 
 myprefix=$HOME/local
-PFFT_VERSION=1.0.5-alpha
-FFTW_VERSION=3.3.2
+PFFT_VERSION=1.0.6-alpha
+FFTW_VERSION=3.3.3
 INSTDIR=$myprefix/pfft-$PFFT_VERSION
 FFTWDIR=$myprefix/fftw-$FFTW_VERSION
 TMP="tmp-pfft-$PFFT_VERSION"

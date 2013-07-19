@@ -20,8 +20,13 @@ if [ -d $TMP ]; then
 fi
 
 mkdir $TMP && cd $TMP
-cd ../.. && ./bootstrap.sh && cd -
-../../configure --prefix=$INSTDIR --with-fftw3=$FFTWDIR --enable-debug --disable-shared
+cd ../../ && ./bootstrap.sh && cd -
+
+../../configure --build=powerpc64-bgq-linux-gnu --host=powerpc64-bgq-linux \
+--prefix=$INSTDIR --with-fftw3=$FFTWDIR --enable-debug --disable-shared \
+MPICC=mpixlc_r MPIFC=mpixlf90_r MPICXX=mpixlcxx_r \
+CFLAGS='-O0 -g -qfullpath -qdbxextra -qcheck' \
+FCFLAGS='-O0 -g -qfullpath'
 
 make -j 4
 make install
