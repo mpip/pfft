@@ -136,8 +136,16 @@
   \renewcommand{\ttdefault}{pcr}
   % \renewcommand{\lstlistingname}{\bfseries Quelltext}
   \lstset{language = C,
-	morekeywords={ptrdiff_t, fftw_complex, pfft_plan, pfft_gcplan, MPI_Comm, size_t, INT,
-	              PX, R, C, X, XM, complex, nfplan},
+	morekeywords={ptrdiff_t, fftw_complex, pfft_plan, pfft_gcplan, pfft_timer, pfft_complex, MPI_Comm, size_t, INT,
+	              PX, R, C, X, XM,
+	              MPI_Init, MPI_Finalize, MPI_Comm_free,
+	              pfft_init, pfft_destroy_plan, pfft_free,
+	              pfft_execute,
+	              pfft_init_input_c2c_3d,
+	              pfft_plan_dft_3d,
+	              pfft_alloc_complex,
+	              pfft_create_procmesh_2d, pfft_create_procmesh,
+	              pfft_local_size_dft_3d},
 %         morekeywords={ptrdiff_t, nfft_mpi_plan, nfft_mpi_init_guru, nfft_mpi_init_nodes, MPI_Init,
 %           fftw_mpi_init, MPI_Comm_size, nfft_trafo_par3d, nfft_adjoint_par3d, fftw_mpi_cleanup, MPI_Finalize, nfft_mpi_finalize, main},
 	basicstyle = \ttfamily\small,
