@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Installation}\label{chap:inst}
+\chapter{Installation and linking}\label{chap:inst}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The install of PFFT is based on the Autotools and follows the typical workflow
@@ -12,7 +12,7 @@ make install
 
 \section{Install of the Latest Official FFTW Release}\label{sec:fftw_inst}
 PFFT depends on Release~\fftwversion{} of the FFTW library~\cite{fftw}.
-For sake of completeness, we show the command line based install procedure in the following.
+For the sake of completeness, we show the command line based install procedure in the following.
 However, note that we provide install scripts on \websoft that simplify the install a lot.
 We highly recommend to use these install scripts, since they additionally apply several
 performance patches and bugfixes that have been submitted to the FFTW developers but
@@ -29,7 +29,7 @@ The MPI algorithms of FFTW must be build with a MPI C compiler. Add the statemen
 at the end of line~\ref{lst:fftw:conf} if the \code{configure} script fails to determine the right
 MPI C compiler \code{\$MPICCOMP}. Similarly, the MPI Fortran compiler \code{\$MPIFCOMP} is set by \code{MPIFC=\$MPIFCOMP}.
 
-\section{Install of the PFFT library}
+\section{Install of the PFFT library}\label{sec:pfft-inst}
 In the simplest case, the hardware platform and the \fftw-\fftwversion{} library are
 recognized by the PFFT configure script automatically, so all we have to do is
 \begin{lstlisting}[escapechar=§]
@@ -60,7 +60,40 @@ To install PFFT in a user specified directory \code{\$PFFTINSTDIR} call configur
 This mandatory whenever you do not have root permissions on your machine, since the default install paths of 
 \code{configure} are not accessible by normal users.
 The PFFT library must be build with a MPI compiler. In Section~\ref{sec:fftw_inst} we describe how to hand the right compilers to the \code{configure} script.
+Some more options are
+\begin{compactitem}
+  \item \code[keywords=]{--enable-float}: Produces a single-precision version of PFFT (float) instead of the default double-precision (double); see \ref{sec:prec}.
+  \item \code[keywords=]{--enable-long-double}: Produces a long-double precision version of PFFT (long double) instead of the default double-precision (double); see \ref{sec:prec}.
+  \item \code{--disable-fortran}: Disables inclusion of Fortran wrapper routines in the standard PFFT libraries.
+\end{compactitem}
 For more details on the options of the \code{configure} script call
 \begin{lstlisting}
 ./configure --help
 \end{lstlisting}
+
+
+\section{Building and linking your program}
+All programs using PFFT should include its header file
+\begin{lstlisting}
+#include <pfft.h>
+\end{lstlisting}
+This header includes the FFTW headers \code{fftw.h}, \code{fftw-mpi.h} automatically. Make sure that the compiler can find them by setting
+the include flags appropriately.
+
+You must also link to the PFFT, FFTW and FFTW-MPI libraries. On Unix, this means adding \code{-lpfft -lfftw3_mpi -lfftw3 -lm} at the end of the link command.
+
+For example, to build \code{pfft_test.c} use the following compiler invocation
+\begin{lstlisting}[prebreak = {\textbackslash}]
+mpicc pfft_test.c -I$PFFTINC -I$FFTWINC -L$PFFTLIB -L$FFTWLIB -lpfft -lfftw3_mpi -lfftw3 -lm
+\end{lstlisting}
+Substitute \code{mpicc} by any other MPI C compiler if you like.
+\code{\$PFFTINC}, \code{\$FFTWINC}, \code{\$PFFTLIB}, and \code{\$FFTWLIB} denote the PFFT and FFTW include and library paths, respectively.
+If you use the install scripts mentioned in Sect.~\ref{sec:pfft-inst}, these paths will be
+\begin{lstlisting}[escapechar=§,numbers=none]
+PFFTINC = $HOME/local/pfft-§\pfftversion§/include
+FFTWINC = $HOME/local/fftw-§\fftwversion§/include
+PFFTINC = $HOME/local/pfft-§\pfftversion§/lib
+FFTWINC = $HOME/local/fftw-§\fftwversion§/lib
+\end{lstlisting}
+
+

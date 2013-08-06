@@ -1,0 +1,592 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{PFFT reference}\label{chap:ref}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Generalization to arbitrary dimensions of the FFT}
+The following arrays are of length three for every functions ending with \code{_3d}
+\begin{compactitem}
+  \item \code{n,  local_n,  local_n_start}
+  \item \code{ni, local_ni, local_i_start}
+  \item \code{no, local_no, local_o_start}
+\end{compactitem}
+For all other functions the length of these arrays is given by the integer \code{rnk_n}.
+
+\section{Generalization to arbitrary dimensions of the parallel decomposition}
+The dimension of the parallel data decomposition is given by the communicator.
+Simply use the functions described in Sect.~\ref{sec:create-comm} to create an communicator of arbitrary dimension
+and the data decomposition will be adopted automatically.
+
+
+
+\section{Using parallel plans}
+The following functions directly correspond to their FFTW counterparts. Documentation is kept to a minimum with appropriate references to the FFTW documentation.
+
+Before calling any PFFT function use
+\begin{lstlisting}
+void pfft_init(void);
+\end{lstlisting}
+to initialize the library. PFFT accumulates a small amount of persistent data during initialization and execution. Use
+\begin{lstlisting}
+void pfft_cleanup(void);
+\end{lstlisting}
+to release all of that. These two functions call \code{fftw_mpi_init} and \code{fftw_mpi_cleanup}; see also \cite{fftw-mpi-init}.
+Especially, take care of the following fact analogously quoted from \cite{fftw-mpi-init}:
+\begin{quote}
+  After calling \code{pfft_cleanup}, all existing plans become undefined, and you should not attempt
+  to execute or destroy them. You must call \code{pfft_init} again after \code{pfft_cleanup} if you want to resume using the PFFT routines.
+\end{quote}
+Execute any parallel FFT plan \code{fftplan} with
+\begin{lstlisting}
+void pfft_execute(pfft_plan fftplan);
+\end{lstlisting}
+and release the memory of a parallel FFT plan that is not needed anymore with
+\begin{lstlisting}
+void pfft_destroy_plan(pfft_plan fftplan);
+\end{lstlisting}
+Usage of these two functions is similar to their FFTW counterparts; see \cite{fftw-plans}.
+
+
+\section{Memory allocation}
+\begin{lstlisting}
+void *pfft_malloc(size_t n);
+void pfft_free(void *p);
+\end{lstlisting}
+These functions are a wrappers to \code{fftw_malloc}, \code{fftw_free} and are substitutes to the standard C functions \code{malloc}, \code{free}; see also \cite{fftw-malloc} for details.
+Alternatively, use the shortcuts
+\begin{lstlisting}
+double *pfft_alloc_real(size_t n);
+pfft_complex *pfft_alloc_complex(size_t n);
+\end{lstlisting}
+Hereby, the calls
+\begin{lstlisting}
+data_real = (double*) pfft_malloc(sizeof(double) * n);
+data_cmpl = (pfft_complex*) pfft_malloc(sizeof(pfft_complex) * n);
+\end{lstlisting}
+are equivalent to
+\begin{lstlisting}
+data_real = pfft_malloc(n);
+data_cmpl = pfft_malloc(n);
+\end{lstlisting}
+
+\section{Helper functions}
+The following functions are useful tools but are not necessarily needed to perform parallel FFTs.
+
+\section{Three-dimensional parallel FFT}
+\subsection{Initializing inputs and checking outputs}\label{sec:init-data-3d}
+To fill a complex array \code{data} with reproducible, complex values use one of the functions
+\begin{lstlisting}
+void pfft_init_input_c2c_3d(
+    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
+    pfft_complex *data);
+void pfft_init_input_c2c(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    pfft_complex *data);
+\end{lstlisting}
+Hereby, the arrays \code{n}, \code{local_n} and \code{local_n_start} give the size of the FFT, the local array size and the local array offset;
+see \cite{sec:par-data-decomp} for details on the parallel data decomposition.
+The functions
+\begin{lstlisting}
+double pfft_check_output_c2c_3d(
+    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
+    const pfft_complex *data, MPI_Comm comm);
+double pfft_check_output_c2c(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    const pfft_complex *data, MPI_Comm comm);
+\end{lstlisting}
+compute the $l_1$-norm between the elements of array \code{data} and values produced by \code{pfft_init_input_c2c_3d}, \code{pfft_init_input_c2c}.
+
+Note, that these functions can be combined for a quick consistency check of the FFT.
+Since a forward FFT followed by a backward FFT reproduces the inputs up to a scaling factor, the following code snippet should give a result equal to zero up to machine precision.
+\begin{lstlisting}
+/* Initialize input with random numbers */
+pfft_init_input_c2c_3d(n, local_ni, local_i_start,
+    in);
+
+/* execute parallel forward FFT */
+pfft_execute(plan_forw);
+
+/* execute parallel backward FFT */
+pfft_execute(plan_back);
+
+/* Scale data */
+for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
+  in[l] /= (n[0]*n[1]*n[2]);
+
+/* Print error of back transformed data */
+err = pfft_check_output_c2c_3d(n, local_ni, local_i_start, in, comm_cart_2d);
+pfft_printf(comm_cart_2d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]);
+pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
+\end{lstlisting}
+
+
+
+
+\section{Generalization to arbitrary dimensions}
+
+\begin{lstlisting}
+void pfft_init_input_r2c_3d(
+    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
+    double *data);
+void pfft_init_input_r2c(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    double *data);
+\end{lstlisting}
+
+\begin{lstlisting}
+void pfft_init_input_r2r_3d(
+    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
+    double *data);
+void pfft_init_input_r2r(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    double *data);
+\end{lstlisting}
+
+
+\begin{lstlisting}
+double pfft_check_output_c2r_3d(
+    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
+    const double *data, MPI_Comm comm);
+double pfft_check_output_c2r(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    const double *data, MPI_Comm comm);
+\end{lstlisting}
+
+\begin{lstlisting}
+double pfft_check_output_r2r_3d(
+    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
+    const double *data, MPI_Comm comm);
+double pfft_check_output_r2r(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    const double *data, MPI_Comm comm);
+\end{lstlisting}
+
+\begin{lstlisting}
+ptrdiff_t pfft_local_size_dft_3d(
+    const ptrdiff_t *n, MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+ptrdiff_t pfft_local_size_dft_r2c_3d(
+    const ptrdiff_t *n, MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+ptrdiff_t pfft_local_size_dft_c2r_3d(
+    const ptrdiff_t *n, MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+ptrdiff_t pfft_local_size_r2r_3d(
+    const ptrdiff_t *n, MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start, ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+\end{lstlisting}
+
+\begin{lstlisting}
+ptrdiff_t pfft_local_size_dft(
+    int rnk, const ptrdiff_t *n,
+    MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+ptrdiff_t pfft_local_size_dft_r2c(
+    int rnk, const ptrdiff_t *n,
+    MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+ptrdiff_t pfft_local_size_dft_c2r(
+    int rnk, const ptrdiff_t *n,
+    MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+ptrdiff_t pfft_local_size_r2r(
+    int rnk_n, const ptrdiff_t *n,
+    MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+\end{lstlisting}
+
+\begin{lstlisting}
+ptrdiff_t pfft_local_size_many_dft(
+    int rnk, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+ptrdiff_t pfft_local_size_many_dft_r2c(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+ptrdiff_t pfft_local_size_many_dft_c2r(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+ptrdiff_t pfft_local_size_many_r2r(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+\end{lstlisting}
+
+\begin{lstlisting}
+pfft_plan pfft_plan_dft_3d(
+    const ptrdiff_t *n, pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_dft_r2c_3d(
+    const ptrdiff_t *n, double *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_dft_c2r_3d(
+    const ptrdiff_t *n, pfft_complex *in, double *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_r2r_3d(
+    const ptrdiff_t *n, double *in, double *out, MPI_Comm comm_cart,
+    const pfft_r2r_kind *kinds, unsigned pfft_flags);
+\end{lstlisting}
+
+\begin{lstlisting}
+pfft_plan pfft_plan_dft(
+    int rnk, const ptrdiff_t *n, pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_dft_r2c(
+    int rnk_n, const ptrdiff_t *n, double *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_dft_c2r(
+    int rnk_n, const ptrdiff_t *n, pfft_complex *in, double *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_r2r(
+    int rnk_n, const ptrdiff_t *n, double *in, double *out, MPI_Comm comm_cart,
+    const pfft_r2r_kind *kinds, unsigned pfft_flags);
+\end{lstlisting}
+
+\begin{lstlisting}
+pfft_plan pfft_plan_many_dft(
+    int rnk, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_many_dft_r2c(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    double *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_many_dft_c2r(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    pfft_complex *in, double *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_many_r2r(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    double *in, double *out, MPI_Comm comm_cart,
+    const pfft_r2r_kind *kinds, unsigned pfft_flags);
+\end{lstlisting}
+
+\begin{lstlisting}
+pfft_plan pfft_plan_many_dft_skipped(
+    int rnk, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    const int *skip_trafos, pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+\end{lstlisting}
+
+\begin{lstlisting}
+ptrdiff_t pfft_prod_ptrdiff_t(
+    int d, const ptrdiff_t *vec);
+ptrdiff_t pfft_sum_ptrdiff_t(
+    int d, const ptrdiff_t *vec);
+int pfft_equal_ptrdiff_t(
+    int d, const ptrdiff_t *vec1, const ptrdiff_t *vec2);
+void pfft_vcopy_ptrdiff_t(
+    int d, const ptrdiff_t *vec1,
+    ptrdiff_t *vec2);
+void pfft_vadd_ptrdiff_t(
+    int d, const ptrdiff_t *vec1, const ptrdiff_t *vec2,
+    ptrdiff_t *sum);
+void pfft_vsub_ptrdiff_t(
+    int d, const ptrdiff_t *vec1, const ptrdiff_t *vec2,
+    ptrdiff_t *sum);
+\end{lstlisting}
+
+\begin{lstlisting}
+void pfft_apr_complex_3d(
+    const pfft_complex *data, const ptrdiff_t *local_n,
+    const ptrdiff_t *local_start, const char *name, MPI_Comm comm);
+void pfft_apr_complex_permuted_3d(
+    const pfft_complex *data, const ptrdiff_t *local_n,
+    const ptrdiff_t *local_start,
+    int perm0, int perm1, int perm2, const char *name, MPI_Comm comm);
+\end{lstlisting}
+
+\begin{lstlisting}
+void pfft_get_args(
+    int argc, char **argv, const char *name,
+    int neededArgs, unsigned type,
+    void *parameter);
+\end{lstlisting}
+
+\begin{lstlisting}
+void pfft_vfprintf(
+    MPI_Comm comm, FILE *stream, const char *format, va_list ap);
+void pfft_fprintf(
+    MPI_Comm comm, FILE *stream, const char *format, ...);
+void pfft_printf(
+    MPI_Comm comm, const char *format, ...);
+\end{lstlisting}
+These functions are similar to the standard C function \code{vfprintf}, \code{fprintf} and \code{printf} with the exception,
+that all messages are restricted to the process of rank $0$ within the given communicator \code{comm}.
+
+\section{Generating periodic Cartesian communicators}\label{sec:create-comm}
+\begin{lstlisting}
+int pfft_create_procmesh_2d(
+    MPI_Comm comm, int np0, int np1,
+    MPI_Comm *comm_cart_2d);
+\end{lstlisting}
+This function uses the process group of a given communicator \code{comm} to create and allocate a
+two-dimensional, periodic, Cartesian communicator \code{comm_cart_2d} of size \code{np0*np1}.
+The memory of the generated communicator can be released with \code{MPI_Comm_free}.
+\begin{lstlisting}
+int pfft_create_procmesh(
+    int rnk, MPI_Comm comm, const int *np,
+    MPI_Comm *comm_cart);
+\end{lstlisting}
+Use the process group of a given communicator \code{comm} to create and allocate a
+\code{rnk}-dimensional, periodic, Cartesian communicator of size \code{np[0]*np[1]*...*np[rnk-1]}.
+Hereby, \code{np} is an array of size \code{rnk}.
+The memory of the generated communicator should be released with \code{MPI_Comm_free} after usage.
+
+\subsection{Parallel data decomposition}\label{sec:par-data-decomp}
+
+
+
+\section{PFFT timers}
+PFFT offers an easy way to perform run time measurements and print/write the results.
+
+\subsection{Basis run time measurements}
+PFFT-plans automatically accumulate the local run times of every call to \code{pfft_execute}.
+For most applications it is sufficient to print run time of a plan \code{ths} averaged over all runs with
+\begin{lstlisting}
+void pfft_print_average_timer(
+    const pfft_plan ths, MPI_Comm comm);
+\end{lstlisting}
+Note, that the maximum of all local times is computed on the first process (rank 0) of communicator \code{comm}.
+Therefore, a call to \code{MPI_Reduce} is performed and the output is only printed on this process.
+The following function works in the same way but prints more verbose output
+\begin{lstlisting}
+void pfft_print_average_timer_adv(
+    const pfft_plan ths, MPI_Comm comm);
+\end{lstlisting}
+
+To write the averaged run time of plan \code{ths} into a file called \code{name} use
+\begin{lstlisting}
+void pfft_write_average_timer(
+    const pfft_plan ths, const char *name, MPI_Comm comm);
+void pfft_write_average_timer_adv(
+    const pfft_plan ths, const char *name, MPI_Comm comm);
+\end{lstlisting}
+The output is only written on the first rank of communicator \code{comm}.
+
+Discard all the recorded run times with
+\begin{lstlisting}
+void pfft_reset_timer(
+    pfft_plan ths);
+\end{lstlisting}
+This function is called per default when a new plan is created.
+
+\subsection{Advanced timer manipulation}
+In order to access the run times directly a new typedef \code{pfft_timer} is introduced.
+The following function returns a copy of the timer corresponding to plan \code{ths}
+\begin{lstlisting}
+pfft_timer pfft_get_timer(
+    const pfft_plan ths);
+\end{lstlisting}
+Whenever a timer is created as the return value, you must release it's memory with
+\begin{lstlisting}
+void pfft_destroy_timer(
+    pfft_timer ths);
+\end{lstlisting}
+as soon as the timer is not needed anymore. 
+
+In the following we introduce some routines to perform basic operations on timers.
+Create a copy of a PFFT-timer \code{orig} with
+\begin{lstlisting}
+pfft_timer pfft_copy_timer(
+    const pfft_timer orig);
+\end{lstlisting}
+Compute the average, local time over all runs of a timer \code{ths} with
+\begin{lstlisting}
+void pfft_average_timer(
+    pfft_timer ths);
+\end{lstlisting}
+Create a new timer that contains the sum of two timers \code{sum1} and \code{sum2} with
+\begin{lstlisting}
+pfft_timer pfft_add_timers(
+    const pfft_timer sum1, const pfft_timer sum2);
+\end{lstlisting}
+Create a timer that contains the maximum times of all the timers \code{ths} from all processes belonging to communicator \code{comm} with
+\begin{lstlisting}
+pfft_timer pfft_reduce_max_timer(
+    const pfft_timer ths, MPI_Comm comm);
+\end{lstlisting}
+Since this function calls \code{MPI_Reduce}, only the first process (rank 0) of \code{comm} will get the desired data while all
+the other processes have timers with undefined values.
+
+Note, that you can not access the elements of a timer directly, since it is only a pointer to a \code{struct}.
+However, PFFT offers a routine that creates an array and copies all the entries of the timer into it
+\begin{lstlisting}
+double* pfft_convert_timer2vec(
+    const pfft_timer ths);
+\end{lstlisting}
+The entries of the returned array are ordered as follows:
+\begin{compactitem}
+  \item dimension of the process mesh \code{rnk_pm}
+  \item number of serial trafos \code{rnk_trafo}
+  \item number of global remaps \code{rnk_remap}
+  \item number of \code{pfft_execute} runs \code{iter}
+  \item local run time of all runs
+  \item \code{rnk_n} local times of the serial trafos
+  \item \code{rnk_remap} local times of the global remaps
+  \item 2 times of the global remaps that are only necessary for three-dimensional FFTs on three-dimensional process meshes
+\end{compactitem}
+
+The complementary function
+\begin{lstlisting}
+pfft_timer pfft_convert_vec2timer(
+    const double *times);
+\end{lstlisting}
+creates a timer and fills it's entries with the data from array \code{times}.
+
+
+\section{Ghost cells}
+
+\subsection{Determine the parallel ghost cell layout}
+
+Similarly to the
+
+In general, local ghost cell layout is characterized by the local array size $local_ngc[rnk_n]$ and
+the local offset \code{local_gc_start[rnk_n]}. Every process gets the data
+
+A process owns the local array data
+\code{data[k[0],k[1],k[2]]} with \code{local_start[t] <= k[t] < local_start[t] + local_n[t]},
+add the ghost cells below and above, such that
+\code{data[k[0],k[1],k[2]]} with \code{gc_below + local_start[t] <= k[t] < local_start[t] + local_n[t]},
+
+Hereby, \code{local_gc_start[t] = local_start[t] - gc_below[t]} and \code{local_ngc[t] = local_n[t] + local_gc_below[t] + local_gc_above[t]}.
+
+\code{data[k[0],k[1],k[2]]} with \code{local_gc_start[t] <= k[t] < local_gc_start[t] + local_ngc[t]}
+
+The output arrays \code{local_ngc} and \code{local_gc_start} give the size and the offset of the local array plus ghost cells, i.e.,
+every process owns the data \code{data[k[0],k[1],k[2]]} with
+\begin{lstlisting}
+local_gc_start[t] <= k[t] < local_gc_start[t] + local_ngc[t]
+\end{lstlisting}
+for \code{t=0,...,rnk-1}.
+Hereby, the index \code{k} wraps periodically modulo \code{n} such that \code{0 <= k[t] < n[t]}.
+
+\begin{lstlisting}
+ptrdiff_t pfft_local_size_gc_3d(
+    const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    ptrdiff_t alloc_local, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    ptrdiff_t *local_ngc, ptrdiff_t *local_gc_start);
+\end{lstlisting}
+For a given local array of size \code{local_n} with offset \code{local_n_start} compute the
+local array plus ghost cell size \code{local_ngc} and offset \code{local_gc_start}.
+The number of ghost cells below and above the local array are given by
+Return value is the necessary memory to store the array plus ghost cells.
+Hereby, \code{alloc_local} should be the return value of an appropriate
+call of a \code{pff_local_size} function, see \ref{sec:local-size}.
+
+\begin{lstlisting}
+ptrdiff_t pfft_local_size_gc(
+    int rnk_n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    ptrdiff_t alloc_local, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    ptrdiff_t *local_ngc, ptrdiff_t *local_gc_start);
+\end{lstlisting}
+Generalize the three-dimensional interface to \code{rnk} dimensions.
+\begin{lstlisting}
+ptrdiff_t pfft_local_size_many_gc(
+    int rnk_n, const ptrdiff_t *local_n, const ptrdiff_t *local_start, ptrdiff_t alloc_local,
+    ptrdiff_t howmany, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    ptrdiff_t *local_ngc, ptrdiff_t *local_gc_start);
+\end{lstlisting}
+
+\begin{lstlisting}
+pfft_gcplan pfft_plan_rgc_3d(
+    const ptrdiff_t *n, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    double *data, MPI_Comm comm_cart, unsigned gc_flags);
+pfft_gcplan pfft_plan_cgc_3d(
+    const ptrdiff_t *n, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    pfft_complex *data, MPI_Comm comm_cart, unsigned gc_flags);
+pfft_gcplan pfft_plan_rgc(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    double *data, MPI_Comm comm_cart, unsigned gc_flags);
+pfft_gcplan pfft_plan_cgc(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    pfft_complex *data, MPI_Comm comm_cart, unsigned gc_flags);
+pfft_gcplan pfft_plan_many_rgc(
+    int rnk_n, const ptrdiff_t *n, ptrdiff_t howmany, const ptrdiff_t *block,
+    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above, double *data, MPI_Comm comm_cart,
+    unsigned gc_flags);
+pfft_gcplan pfft_plan_many_cgc(
+    int rnk_n, const ptrdiff_t *n, ptrdiff_t howmany, const ptrdiff_t *block,
+    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above, pfft_complex *data, MPI_Comm comm_cart,
+    unsigned gc_flags);
+\end{lstlisting}
+
+\begin{lstlisting}
+void pfft_exchange(
+    pfft_gcplan ths);
+void pfft_reduce(
+    pfft_gcplan ths);
+void pfft_destroy_gcplan(
+    pfft_gcplan ths);
+\end{lstlisting}
+
+\subsection{Ghost cell timers}
+\begin{lstlisting}
+void pfft_reset_gctimers(
+    pfft_gcplan ths);
+pfft_gctimer pfft_get_gctimer_exg(
+    const pfft_gcplan ths);
+pfft_gctimer pfft_get_gctimer_red(
+    const pfft_gcplan ths);
+void pfft_print_average_gctimer(
+    const pfft_gcplan ths, MPI_Comm comm);
+void pfft_print_average_gctimer_adv(
+    const pfft_gcplan ths, MPI_Comm comm);
+void pfft_write_average_gctimer(
+    const pfft_gcplan ths, const char *name, MPI_Comm comm);
+void pfft_write_average_gctimer_adv(
+    const pfft_gcplan ths, const char *name, MPI_Comm comm);
+\end{lstlisting}
+
+\begin{lstlisting}
+pfft_gctimer pfft_copy_gctimer(
+    const pfft_gctimer orig);
+void pfft_average_gctimer(
+    pfft_gctimer ths);
+pfft_gctimer pfft_add_gctimers(
+    const pfft_gctimer sum1, const pfft_gctimer sum2);
+pfft_gctimer pfft_reduce_max_gctimer(
+    const pfft_gctimer ths, MPI_Comm comm);
+void pfft_convert_gctimer2vec(
+    const pfft_gctimer ths, double *times);
+pfft_gctimer pfft_convert_vec2gctimer(
+    const double *times);
+void pfft_destroy_gctimer(
+    pfft_gctimer ths);
+\end{lstlisting}
+
+\begin{lstlisting}
+typedef struct {
+  int iter;
+  double whole;
+  double pad_zeros;
+  double exchange;
+} PX(gctimer_s);
+typedef PX(gctimer_s) *PX(gctimer);
+\end{lstlisting}
+
+
+
+% use this line in gvim to substitute PX(func_name_01) by pfft_func_name_01
+%s/PX(\([a-z_0-9]*\))/pfft_\1/gc

@@ -1,4 +1,4 @@
-
+\PassOptionsToPackage{pdfpagelabels=true}{hyperref}
 \documentclass[a4paper,11pt,final,openright,headsepline]{scrreprt}
 % parskip: no indentation of paragraphs, german style
 %\usepackage{layout} % show layout boarders
@@ -9,7 +9,7 @@
 \usepackage[fixlanguage]{babelbib} % easily change bib language
 
 %% Vector fonts for PDF
-% \usepackage{ae} % deprecated package, use lmodern instead
+%% \usepackage{ae} % deprecated package, use lmodern instead
 \usepackage{lmodern} %standard latex font
 
 %\usepackage{makeidx} % automatic index generation, required for nomencl.sty
@@ -39,8 +39,8 @@
 
 % \usepackage{url} % provides \url command for bibtex
 \usepackage{hyperref} % provides \url command for bibtex and links to jump within documents
-\hypersetup{plainpages=false, pdfpagelabels, colorlinks, linkcolor=black, citecolor=black, urlcolor=blue,
-pdftitle={PFFT Users Manual},
+\hypersetup{plainpages=false, colorlinks, linkcolor=black, citecolor=black, urlcolor=blue,
+pdftitle={PFFT User Manual},
 pdfauthor={Michael Pippig}, pdfstartview={FitBH}}
 
 %% adjust numbering
@@ -58,13 +58,13 @@ pdfauthor={Michael Pippig}, pdfstartview={FitBH}}
 \usepackage{xspace}
 
 %% activate for compact page layout
-\usepackage{geometry}
-\geometry{top=30.4mm, left=30.4mm, text={155mm,240mm}, headheight=10mm, headsep=5mm, includemp, marginparwidth=15.4mm}
+% \usepackage{geometry}
+% \geometry{top=30.4mm, left=30.4mm, text={155mm,240mm}, headheight=10mm, headsep=5mm, includemp, marginparwidth=15.4mm}
 
 %% activate for headline with chapter information on every page
 \usepackage{scrpage2}
 \pagestyle{scrheadings}
-\automark[section]{chapter}
+\automark{chapter}
 \clearscrheadings
 \lehead{\pagemark}
 \rehead{\leftmark}
@@ -73,6 +73,9 @@ pdfauthor={Michael Pippig}, pdfstartview={FitBH}}
 \ofoot[]{}
 \cfoot[]{}
 \ifoot[]{}
+
+
+\renewcommand*{\thefootnote}{\fnsymbol{footnote}}
 
 %% the quotchap document style redeﬁnes the \chapter and \chapter* commands to
 %% create fancy chapter head pages with huge chapter numbers (possibly greyed) and
@@ -102,46 +105,36 @@ pdfauthor={Michael Pippig}, pdfstartview={FitBH}}
 
 \input{shortcuts.tex} % Shortcuts for math symbols
 
-\pagestyle{scrheadings}
-
-\automark[section]{chapter} % auto
-\clearscrheadings
-\lehead{\pagemark}
-\rehead{\leftmark}
-\rohead{\pagemark}
-\lohead{\rightmark}
-\ofoot[]{}
-\cfoot[]{}
-\ifoot[]{}
-
 % \includeonly{intro} % work on single chapters
+
+% \title{PFFT User Manual\thanks{This work was partly supported by the BMBF grant 01IH08001B.}}
+% \date{\today}
+% \author{Michael Pippig\footnote{}}
+
 
 \begin{document}
   \setcounter{equation}{0}
-
-%   \thispagestyle{empty}
   \begin{titlepage}
     \begin{center}
       \vspace*{3cm}
-      {\Huge {\textbf{\textsf{PFFT Users Manual\\}}}}
+      {\Huge {\textbf{\textsf{PFFT User Manual\footnote{This work was partly supported by the BMBF grant 01IH08001B.}\\}}}}
+
+      \vspace*{0.5cm}
+      for version \pfftversion
 
       \vspace*{1cm}
-      for version \pfftversion\, \today
-
+      \today
+      
       \vspace*{3cm}
-%       \begin{tabular}{l}
         Michael Pippig\\
-        Chemnitz University of Technology\\
-        Department of Mathematics\\
+        Technische Universit\"at Chemnitz\\
+        Faculty of Mathematics\\
         09107 Chemnitz, Germany
-%       \end{tabular}
 
-      \vspace*{3cm}
+    \vspace*{3cm}
       Download \textbf{\Large P}arallel \textbf{\Large F}ast \textbf{\Large F}ourier \textbf{\Large T}ransform Software Library at \\
       {\large \websoft}\\
     \end{center}
-    \vfill
-    michael.pippig@mathematik.tu-chemnitz.de
   \end{titlepage}
 
   \tableofcontents
@@ -154,6 +147,7 @@ pdfauthor={Michael Pippig}, pdfstartview={FitBH}}
   \include{install} % mit Seitenumbruechen
   \include{features} % mit Seitenumbruechen
   \include{interface} % mit Seitenumbruechen
+  \include{reference} % mit Seitenumbruechen
 %   \include{develop} % mit Seitenumbruechen
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

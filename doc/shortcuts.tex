@@ -136,29 +136,29 @@
   \renewcommand{\ttdefault}{pcr}
   % \renewcommand{\lstlistingname}{\bfseries Quelltext}
   \lstset{language = C,
-	morekeywords={ptrdiff_t, fftw_complex, pfft_plan, pfft_gcplan, pfft_timer, pfft_complex, MPI_Comm, size_t, INT,
-	              PX, R, C, X, XM,
-	              MPI_Init, MPI_Finalize, MPI_Comm_free,
-	              pfft_init, pfft_destroy_plan, pfft_free,
-	              pfft_execute,
-	              pfft_init_input_c2c_3d,
-	              pfft_plan_dft_3d,
-	              pfft_alloc_complex,
-	              pfft_create_procmesh_2d, pfft_create_procmesh,
-	              pfft_local_size_dft_3d},
-%         morekeywords={ptrdiff_t, nfft_mpi_plan, nfft_mpi_init_guru, nfft_mpi_init_nodes, MPI_Init,
-%           fftw_mpi_init, MPI_Comm_size, nfft_trafo_par3d, nfft_adjoint_par3d, fftw_mpi_cleanup, MPI_Finalize, nfft_mpi_finalize, main},
-	basicstyle = \ttfamily\small,
-	commentstyle = \slshape,
-	keywordstyle = {\bfseries},
+        morekeywords={ptrdiff_t, fftw_complex, pfft_plan, pfft_gcplan, pfft_timer, pfft_complex, MPI_Comm, size_t, INT},
+% 	morekeywords={ptrdiff_t, fftw_complex, pfft_plan, pfft_gcplan, pfft_timer, pfft_complex, MPI_Comm, size_t, INT,
+% 	              PX, R, C, X, XM,
+% 	              MPI_Init, MPI_Finalize, MPI_Comm_free,
+% 	              pfft_init, pfft_destroy_plan, pfft_free,
+% 	              pfft_execute,
+% 	              pfft_init_input_c2c_3d,
+% 	              pfft_plan_dft_3d,
+% 	              pfft_alloc_complex,
+% 	              pfft_create_procmesh_2d, pfft_create_procmesh,
+% 	              pfft_local_size_dft_3d},
+        deletekeywords={sizeof,return},
+        basicstyle = \ttfamily\small,
+	identifierstyle=,
+	commentstyle = \slshape\footnotesize,
+ 	keywordstyle = \bfseries,
 	backgroundcolor = \color{LightGray!40},
-	numbers = left,
+% 	numbers = left,
 	breaklines = true,
   %   	xleftmargin = 3em,
   %   	prebreak = {...},
 	breakatwhitespace = true,
 	showstringspaces = false,
-	float, % Listings are float objects, doesn't work for unknown reason
 	escapeinside = {(*@}{@*)}}
   % 
   % \lstdefinestyle{txt}{language= C, 
@@ -175,7 +175,7 @@
   %       belowskip= -2ex}
   % 
 %   \newcommand{\code}[1]{\linebreak[2]{\ttfamily #1}}
-  \newcommand{\code}[1]{\lstinline!#1!}
+  \newcommand{\code}[2][\empty]{\ifthenelse{\equal{#1}{\empty}}{\lstinline!#2!}{\lstinline[#1]!#2!}}
 }
 
 %% own enviroment for case differentiation
