@@ -160,6 +160,11 @@ double pfft_check_output_r2r(
     const double *data, MPI_Comm comm);
 \end{lstlisting}
 
+
+\subsection{Planning parallel FFTs}
+
+\subsubsection{Basic interface}
+The \code{_3d} interface is the simplest interface layer. It is suitable for the planning of three-dimensional FFTs.
 \begin{lstlisting}
 ptrdiff_t pfft_local_size_dft_3d(
     const ptrdiff_t *n, MPI_Comm comm_cart, unsigned pfft_flags,
@@ -177,7 +182,23 @@ ptrdiff_t pfft_local_size_r2r_3d(
     const ptrdiff_t *n, MPI_Comm comm_cart, unsigned pfft_flags,
     ptrdiff_t *local_ni, ptrdiff_t *local_i_start, ptrdiff_t *local_no, ptrdiff_t *local_o_start);
 \end{lstlisting}
+\begin{lstlisting}
+pfft_plan pfft_plan_dft_3d(
+    const ptrdiff_t *n, pfft_complex *in, pfft_complex *out,
+    MPI_Comm comm_cart, int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_dft_r2c_3d(
+    const ptrdiff_t *n, double *in, pfft_complex *out,
+    MPI_Comm comm_cart, int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_dft_c2r_3d(
+    const ptrdiff_t *n, pfft_complex *in, double *out,
+    MPI_Comm comm_cart, int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_r2r_3d(
+    const ptrdiff_t *n, double *in, double *out,
+    MPI_Comm comm_cart, const pfft_r2r_kind *kinds,
+    unsigned pfft_flags);
+\end{lstlisting}
 
+The basic interface generalizes the \code{_3d} interface to FFTs of arbitrary dimension \code{rnk}.
 \begin{lstlisting}
 ptrdiff_t pfft_local_size_dft(
     int rnk, const ptrdiff_t *n,
@@ -200,7 +221,27 @@ ptrdiff_t pfft_local_size_r2r(
     ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
     ptrdiff_t *local_no, ptrdiff_t *local_o_start);
 \end{lstlisting}
+\begin{lstlisting}
+pfft_plan pfft_plan_dft(
+    int rnk, const ptrdiff_t *n, pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_dft_r2c(
+    int rnk_n, const ptrdiff_t *n, double *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_dft_c2r(
+    int rnk_n, const ptrdiff_t *n, pfft_complex *in, double *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_plan pfft_plan_r2r(
+    int rnk_n, const ptrdiff_t *n, double *in, double *out, MPI_Comm comm_cart,
+    const pfft_r2r_kind *kinds, unsigned pfft_flags);
+\end{lstlisting}
+Therefore, \code{n} and \code{kinds} become arrays of length \code{rnk_n}.
 
+\subsubsection{Advanced interface}
+The advanced interface introduces the arrays \code{ni} and \code{no} of length \code{rnk_n}
+that give the pruned FFT input and output size.
+Furthermore, the arrays \code{iblock} and \code{oblock} of length \code{rnk_pm} (\code{rnk_pm} being the dimension of the process mesh)
+serve to adjust the block size of the input and output block decomposition.
 \begin{lstlisting}
 ptrdiff_t pfft_local_size_many_dft(
     int rnk, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
@@ -227,37 +268,6 @@ ptrdiff_t pfft_local_size_many_r2r(
     ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
     ptrdiff_t *local_no, ptrdiff_t *local_o_start);
 \end{lstlisting}
-
-\begin{lstlisting}
-pfft_plan pfft_plan_dft_3d(
-    const ptrdiff_t *n, pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
-    int sign, unsigned pfft_flags);
-pfft_plan pfft_plan_dft_r2c_3d(
-    const ptrdiff_t *n, double *in, pfft_complex *out, MPI_Comm comm_cart,
-    int sign, unsigned pfft_flags);
-pfft_plan pfft_plan_dft_c2r_3d(
-    const ptrdiff_t *n, pfft_complex *in, double *out, MPI_Comm comm_cart,
-    int sign, unsigned pfft_flags);
-pfft_plan pfft_plan_r2r_3d(
-    const ptrdiff_t *n, double *in, double *out, MPI_Comm comm_cart,
-    const pfft_r2r_kind *kinds, unsigned pfft_flags);
-\end{lstlisting}
-
-\begin{lstlisting}
-pfft_plan pfft_plan_dft(
-    int rnk, const ptrdiff_t *n, pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
-    int sign, unsigned pfft_flags);
-pfft_plan pfft_plan_dft_r2c(
-    int rnk_n, const ptrdiff_t *n, double *in, pfft_complex *out, MPI_Comm comm_cart,
-    int sign, unsigned pfft_flags);
-pfft_plan pfft_plan_dft_c2r(
-    int rnk_n, const ptrdiff_t *n, pfft_complex *in, double *out, MPI_Comm comm_cart,
-    int sign, unsigned pfft_flags);
-pfft_plan pfft_plan_r2r(
-    int rnk_n, const ptrdiff_t *n, double *in, double *out, MPI_Comm comm_cart,
-    const pfft_r2r_kind *kinds, unsigned pfft_flags);
-\end{lstlisting}
-
 \begin{lstlisting}
 pfft_plan pfft_plan_many_dft(
     int rnk, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
@@ -281,49 +291,117 @@ pfft_plan pfft_plan_many_r2r(
     const pfft_r2r_kind *kinds, unsigned pfft_flags);
 \end{lstlisting}
 
-\begin{lstlisting}
+\subsubsection{Preliminary: Skip selected serial transformations}
+The \code{_skipped} interface is based on the \code{many} interface but adds the possibility to skip selected serial FFTs.
+\begin{lstlisting}[escapechar=§]
 pfft_plan pfft_plan_many_dft_skipped(
-    int rnk, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
-    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
-    const int *skip_trafos, pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int rnk, const ptrdiff_t *n,
+    const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany,
+    const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    (red@const int *skip_trafos@red),
+    pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
     int sign, unsigned pfft_flags);
 \end{lstlisting}
+Hereby, \code{skip_trafos} is an integer array of length \code{rnk_pm+1} (\code{rnk_pm} being the dimension of the communicator \code{comm_cart}).
+For \code{t=0,...,rnk_pm} set \code{skip_trafos[t]=1} if the \code{t}-th serial transformation should be computed, otherwise set \code{skip_trafos[t]=0}.
+Note that the local transpositions are always performed.
 
+\section{Useful tools}
+\subsection{Operations on arrays of type \code{ptrdiff_t}}
+The following routines are shortcuts for the elementwise manipulation of \code{ptrdiff_t} arrays.
+In the following, all arrays  \code{vec}, \code{vec1}, and \code{vec2} are of length \code{d} and type \code{ptrdiff_t}.
 \begin{lstlisting}
 ptrdiff_t pfft_prod_ptrdiff_t(
     int d, const ptrdiff_t *vec);
+\end{lstlisting}
+Returns the product over all elements of \code{vec}.
+\begin{lstlisting}
 ptrdiff_t pfft_sum_ptrdiff_t(
     int d, const ptrdiff_t *vec);
+\end{lstlisting}
+Returns the sum over all elements of \code{vec}.
+\begin{lstlisting}
 int pfft_equal_ptrdiff_t(
     int d, const ptrdiff_t *vec1, const ptrdiff_t *vec2);
+\end{lstlisting}
+Returns 1 if both arrays have equal entries, 0 otherwise.
+\begin{lstlisting}
 void pfft_vcopy_ptrdiff_t(
     int d, const ptrdiff_t *vec1,
     ptrdiff_t *vec2);
+\end{lstlisting}
+Copies the elements of \code{vec1} into \code{vec2}.
+\begin{lstlisting}
 void pfft_vadd_ptrdiff_t(
     int d, const ptrdiff_t *vec1, const ptrdiff_t *vec2,
     ptrdiff_t *sum);
+\end{lstlisting}
+Fills \code{sum} with the componentwise sum of \code{vec1} and \code{vec2}.
+\begin{lstlisting}
 void pfft_vsub_ptrdiff_t(
     int d, const ptrdiff_t *vec1, const ptrdiff_t *vec2,
     ptrdiff_t *sum);
 \end{lstlisting}
+Fills \code{sum} with the componentwise difference of \code{vec1} and \code{vec2}.
 
+\subsection{Print three-dimensional arrays in parallel}
+Use the following routine to print the elements of a block decomposed three-dimensional array \code{data} in a nicely formatted way.
 \begin{lstlisting}
 void pfft_apr_complex_3d(
-    const pfft_complex *data, const ptrdiff_t *local_n,
-    const ptrdiff_t *local_start, const char *name, MPI_Comm comm);
-void pfft_apr_complex_permuted_3d(
-    const pfft_complex *data, const ptrdiff_t *local_n,
-    const ptrdiff_t *local_start,
-    int perm0, int perm1, int perm2, const char *name, MPI_Comm comm);
+    const pfft_complex *data,
+    const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    const char *name, MPI_Comm comm);
 \end{lstlisting}
+However, this makes only sense for arrays of moderate size.
+The block decomposition is given by \code{local_n}, \code{local_n_start} as described in see Section~\ref{sec:par-data-decomp}.
+Furthermore, some arbitrary string \code{name} can be added at the beginning of each output - typically this will be the name of the array.
+Communicator \code{comm} must be suitable to the block decomposition and is used to synchronize the outputs over all processes.
 
+A generalization for the case where the dimensions of the local arrays are permuted is given by
+\begin{lstlisting}
+void pfft_apr_complex_permuted_3d(
+    const pfft_complex *data,
+    const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    int perm0, int perm1, int perm2,
+    const char *name, MPI_Comm comm);
+\end{lstlisting}
+Hereby, \code{perm0}, \code{perm1}, and \code{perm2} give the array's permutation of dimension.
+
+\subsection{Reading command line arguments}
+The following function offers a simple way to read command line arguments into an array \code{parameter}.
 \begin{lstlisting}
 void pfft_get_args(
     int argc, char **argv, const char *name,
     int neededArgs, unsigned type,
     void *parameter);
 \end{lstlisting}
+Hereby, \code{argc} and \code{argv} are the standard argument of the \code{main} routine.
+Furthermore, \code{name}, \code{neededAgrs}, and \code{type} give the name, number of entries and the type of the command line argument.
+Supported types are \code{PFFT_INT}, \code{PFFT_PTRDIFF_T}, \code{PFFT_FLOAT}, \code{PFFT_DOUBLE}, and \code{PFFT_UNSIGNED},
+which denote the standard C type that is used for typecasting.
+The array \code{parameter} must be of sufficient size to hold \code{neededArgs} elements of the given data type.
 
+For example, a program \code{test.c} containing the following code snippet
+\begin{lstlisting}
+double x;
+pfft_get_args(argc, argv, "-pfft_x", 1, PFFT_DOUBLE, &x);
+int np[2];
+pfft_get_args(argc, argv, "-pfft_np", 2, PFFT_INT, np);
+ptrdiff_t n[3];
+pfft_get_args(argc, argv, "-pfft_n", 3, PFFT_PTRDIFF_T, n);
+\end{lstlisting}
+and run with
+\begin{lstlisting}
+./test -pfft_x 3.1 -pfft_np 2 3 -pfft_n 8 16 32
+\end{lstlisting}
+will read \code{x=3.1}, \code{np[2] = \{2,3\}}, and \code{n[3]=\{8,16,32\}}.
+The argument order of appearance in the command line is irrelevant.
+Take care of the address operator \code{&} in front of \code{x} in the second line!
+
+\subsection{Parallel substitutes for \code{vprintf}, \code{fprintf}, and \code{printf}}\label{sec:fprintf}
+The following functions are similar to the standard C function \code{vfprintf}, \code{fprintf} and \code{printf} with the exception,
+that all messages are restricted to the process of rank $0$ within the given communicator \code{comm}.
 \begin{lstlisting}
 void pfft_vfprintf(
     MPI_Comm comm, FILE *stream, const char *format, va_list ap);
@@ -332,8 +410,6 @@ void pfft_fprintf(
 void pfft_printf(
     MPI_Comm comm, const char *format, ...);
 \end{lstlisting}
-These functions are similar to the standard C function \code{vfprintf}, \code{fprintf} and \code{printf} with the exception,
-that all messages are restricted to the process of rank $0$ within the given communicator \code{comm}.
 
 \section{Generating periodic Cartesian communicators}\label{sec:create-comm}
 \begin{lstlisting}

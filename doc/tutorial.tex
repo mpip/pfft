@@ -129,11 +129,12 @@ int pfft_create_procmesh_2d(
     MPI_Comm comm, int np0, int np1,
     MPI_Comm *comm_cart_2d);
 \end{lstlisting}
-gives back an integer value, that has not been used in Listing~\ref{lst:min_c2c}.
-This integer is an error code that is equal to zero as long as the communicator was created
-without any errors. The most common error is that the number of processes within the input
+creates a two-dimensional, periodic, Cartesian communicator. The \code{int} return value
+(not used in Listing~\ref{lst:min_c2c}) is the forwarded error code of \code{MPI_Cart_create}.
+It is equal to zero if the communicator was created successfully.
+The most common error is that the number of processes within the input
 communicator \code{comm} does not fit \code{np0 x np1}. In this case the Cartesian communicator
-is not generated. Therefore, might look like
+is not generated and the return value is unequal to zero. Therefore, a typical sanity check might look like
 \begin{lstlisting}
 /* Create two-dimensional process grid of size np[0] x np[1],
    if possible */
@@ -147,13 +148,13 @@ if( pfft_create_procmesh_2d(MPI_COMM_WORLD, np[0], np[1],
   return 1;
 }
 \end{lstlisting}
-Hereby, we print the error message with the help of the PFFT library function
+Hereby, we print the error message with the help of the PFFT library function \code{pfft_fprintf}; see Section~\ref{sec:fprintf} for details.
 \begin{lstlisting}
 void pfft_fprintf(
     MPI_Comm comm, FILE *stream, const char *format, ...);
 \end{lstlisting}
 This function is similar to the standard C function \code{fprintf} with the exception, that all messages are restricted
-to the process of rank $0$ within the given communicator.
+to the process of rank $0$ within the given communicator \code{comm}.
 
 \subsection{Inplace transforms}
 Similar to FFTW, PFFT is able to compute parallel FFTs completely in place, which means that beside some

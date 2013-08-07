@@ -159,7 +159,11 @@
   %   	prebreak = {...},
 	breakatwhitespace = true,
 	showstringspaces = false,
-	escapeinside = {(*@}{@*)}}
+	escapeinside = {(*@}{@*)},
+	moredelim=**[is][\color{red}]{(red@}{@red)},
+        moredelim=**[is][\color{green}]{(gre@}{@gre)},
+        moredelim=**[is][\color{blue}]{(blu@}{@blu)},
+	}
   % 
   % \lstdefinestyle{txt}{language= C, 
   %       basicstyle = \sffamily\small,
