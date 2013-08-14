@@ -51,12 +51,12 @@ program main
   ! Get parameters of data distribution
   alloc_local_forw = pfft_local_size_many_dft(4, n, ni, n, howmany, &
       blocks, blocks, &
-      comm_cart_3d, PFFT_TRANSPOSED_NONE, &
+      comm_cart_3d, PFFT_TRANSPOSED_OUT, &
       local_ni, local_i_start, local_n, local_start)
 
   alloc_local_back = pfft_local_size_many_dft(4, n, n, no, howmany, &
       blocks, blocks, &
-      comm_cart_3d, PFFT_TRANSPOSED_NONE, &
+      comm_cart_3d, PFFT_TRANSPOSED_IN, &
       local_n, local_start, local_no, local_o_start)
 
   ! Allocate enough memory for both trafos
@@ -71,12 +71,12 @@ program main
   ! Plan parallel forward FFT
   plan_forw = pfft_plan_many_dft( &
       4, n, ni, n, howmany, blocks, blocks, &
-      in, out, comm_cart_3d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE + PFFT_MEASURE + PFFT_DESTROY_INPUT)
+      in, out, comm_cart_3d, PFFT_FORWARD, PFFT_TRANSPOSED_OUT + PFFT_MEASURE + PFFT_DESTROY_INPUT)
 
   ! Plan parallel backward FFT
   plan_back = pfft_plan_many_dft( &
       4, n, n, no, howmany, blocks, blocks, &
-      out, in, comm_cart_3d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE + PFFT_MEASURE + PFFT_DESTROY_INPUT)
+      out, in, comm_cart_3d, PFFT_BACKWARD, PFFT_TRANSPOSED_IN + PFFT_MEASURE + PFFT_DESTROY_INPUT)
 
   ! Initialize input with random numbers
   call pfft_init_input_c2c(4, ni, local_ni, local_i_start, &

@@ -20,6 +20,12 @@ check_PROGRAMS =
 #else
 check_PROGRAMS += \
 	simple_check_c2c \
-	simple_check_ousam_c2c_4d_on_3d
+	simple_check_c2c_transposed \
+	simple_check_r2c_4d_on_3d \
+	simple_check_r2c_4d_on_3d_transposed \
+	simple_check_ousam_c2c_4d_on_3d \
+	simple_check_ousam_c2c_4d_on_3d_transposed \
+	simple_check_ousam_r2c_4d_on_3d \
+	simple_check_ousam_r2c_4d_on_3d_transposed
 #endif
 
