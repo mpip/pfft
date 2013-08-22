@@ -62,6 +62,7 @@ check_PROGRAMS += \
 
 check_PROGRAMS += \
 	time_c2c_3d_on_3d_transposed \
+	time_c2c \
 	time_c2c_transposed
 #endif
 

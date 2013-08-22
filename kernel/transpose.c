@@ -373,6 +373,8 @@ static void print_parameters(
   fprintf(stderr, "PFFT_DBG_GTRANSP: local_N0 = %td; local_N0_start = %td; local_N1 = %td; local_N1_start = %td;\n",
      local_N0, local_N0_start, local_N1, local_N1_start);
   fprintf(stderr, "PFFT_DBG_GTRANSP: fftw_flags = 0");
+  if(fftw_flags & FFTW_PRESERVE_INPUT)
+    fprintf(stderr, "| FFTW_PRESERVE_INPUT");
   if(fftw_flags & FFTW_ESTIMATE)
     fprintf(stderr, "| FFTW_ESTIMATE");
   if(fftw_flags & FFTW_MEASURE)

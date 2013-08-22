@@ -58,7 +58,7 @@ static void measure_pfft(
   }
   
   /* Get parameters of data distribution */
-  alloc_local = pfft_local_size_dft_3d(n, comm_cart_2d, PFFT_TRANSPOSED_OUT,
+  alloc_local = pfft_local_size_dft_3d(n, comm_cart_2d, PFFT_TRANSPOSED_NONE,
       local_ni, local_i_start, local_no, local_o_start);
 
   /* Allocate memory */
@@ -68,13 +68,13 @@ static void measure_pfft(
   /* Plan parallel forward FFT */
   timer[0] = -MPI_Wtime();
   plan_forw = pfft_plan_dft_3d(
-      n, in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_OUT| pfft_opt_flags);
+      n, in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE| pfft_opt_flags);
   timer[0] += MPI_Wtime();
   
   /* Plan parallel backward FFT */
   timer[1] = -MPI_Wtime();
   plan_back = pfft_plan_dft_3d(
-      n, out, in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_IN| pfft_opt_flags);
+      n, out, in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| pfft_opt_flags);
   timer[1] += MPI_Wtime();
 
   /* Initialize input with random numbers */

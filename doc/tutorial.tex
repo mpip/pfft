@@ -477,3 +477,5 @@ According to the FFTW manual~\cite{fftw-cplx-num}:
 \end{quote}
 I.e., include \code{<complex.h>} \emph{before} \code{<pfft.h>}, \code{<fftw.h>} and \code{<fftw-mpi.h>} to be sure that \code{pfft_complex} is defined to be the native complex.
 
+\section{Measuring parallel run times}
+Use \code{MPI_Barrier} in front of every call to \code{pfft_} function to avoid unbalanced run times.
