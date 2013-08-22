@@ -399,11 +399,6 @@ AC_ARG_ENABLE([doc],
  [AS_HELP_STRING([--disable-doc],[disable build of documents (PDF manual etc.)])],,
  [enable_doc=yes])
 
-if test "x$enable_doc" != xno -a ! -d "$srcdir/doc"; then
-  AC_MSG_WARN([disabling doc as it is not present in source tree])
-  enable_doc=no
-fi
-
 if test "x$enable_doc" != xno ; then
   AC_PATH_PROG(PDFLATEX,pdflatex,no)
   AC_PATH_PROG(MAKEINDEX,makeindex,no)
@@ -417,12 +412,6 @@ AM_CONDITIONAL(HAVE_LATEX,
 	[test "x$PDFLATEX" != xno && 
 	test "x$MAKEINDEX" != xno && 
 	test "x$BIBTEX" != xno])
-
-if test "x$enable_doc" != xno ; then
-  AC_CONFIG_FILES([doc/Makefile doc/latexinc.sh])
-  AC_CONFIG_LINKS([doc/latex-manual.sh:doc/latex-manual.sh])
-fi
-
 
 ################################################################################
 # create output files
@@ -461,7 +450,9 @@ AC_CONFIG_FILES(Makefile \
 		gcell/Makefile \
 		tests/Makefile \
 		tests/fortran/Makefile \
-		tests/f03/Makefile)
+		tests/f03/Makefile \
+                doc/Makefile \
+                doc/latexinc.sh)
 
 
 AC_OUTPUT

@@ -11,14 +11,11 @@ libtool: $(LIBTOOL_DEPS)
 ACLOCAL_AMFLAGS = -I m4
 
 # Traverse these subdirectories, the current one first (for config.h).
-SUBDIRS = kernel gcell util api .
+SUBDIRS = kernel gcell util api . doc
+DIST_SUBDIRS = $(SUBDIRS) tests
 
 if ENABLE_TESTS
 SUBDIRS += tests
-endif
-
-if ENABLE_DOC
-SUBDIRS += doc
 endif
 
 EXTRA_DIST = bootstrap.sh CONVENTIONS pfft.pc.in
