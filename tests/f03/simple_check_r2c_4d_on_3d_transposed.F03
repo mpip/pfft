@@ -52,7 +52,7 @@ program main
 
   ! Convert data pointers to Fortran format
   call c_f_pointer(cin,  in,  [local_ni(4), local_ni(3), local_ni(2), local_ni(1)])
-  call c_f_pointer(cout, out, [local_no(4),  local_no(3), local_no(2), local_no(1)])
+  call c_f_pointer(cout, out, [local_no(4),  local_no(1), local_no(3), local_no(2)])
 
   ! Plan parallel forward FFT
   plan_forw = pfft_plan_dft_r2c( &
