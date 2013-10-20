@@ -376,8 +376,8 @@ void PX(reduce)(
 
 
 
-static void print_complex_array(
-     const R *data, const INT *n, const INT *start, const char *name
+static void print_array(
+     const R *data, const INT *n, const INT *start, const char *name, const int is_complex
      )
 {
   INT k0, k1, k2, l=0;
@@ -391,12 +391,31 @@ static void print_complex_array(
     for(k1 = 0; k1 < n[1]; k1++){
       printf("  ");
       for(k2 = 0; k2 < n[2]; k2++, l++){
-        printf("  %.2e + %.2ei,", (double) data[2*l], (double) data[2*l+1]);
+        if( is_complex )
+          printf("  %.2e + %.2ei,", (double) data[2*l], (double) data[2*l+1]);
+        else
+          printf("  %.2e,", (double) data[l]);
       }
       printf("\n");
     }
   }
   printf("\n");
+}
+
+
+static void print_complex_array(
+     const R *data, const INT *n, const INT *start, const char *name
+     )
+{
+  print_array(data, n, start, name, 1);
+}
+
+
+static void print_real_array(
+     const R *data, const INT *n, const INT *start, const char *name
+     )
+{
+  print_array(data, n, start, name, 0);
 }
 
 
@@ -415,6 +434,28 @@ void PX(apr_complex_3d)(
     if(proc_rank == t){
       printf("Rank %d:\n", proc_rank);
       print_complex_array((R*) data, local_n, local_start, name);
+      fflush(stdout);
+    }
+    MPI_Barrier(comm);
+  }
+}
+
+
+void PX(apr_real_3d)(
+     const R *data, const INT *local_n, const INT *local_start,
+     const char *name, MPI_Comm comm
+     )
+{
+  int num_procs, proc_rank;
+  
+  MPI_Comm_size(comm, &num_procs);
+  MPI_Comm_rank(comm, &proc_rank);
+
+  fflush(stdout);
+  for(int t=0; t<num_procs; t++){
+    if(proc_rank == t){
+      printf("Rank %d:\n", proc_rank);
+      print_real_array( data, local_n, local_start, name);
       fflush(stdout);
     }
     MPI_Barrier(comm);

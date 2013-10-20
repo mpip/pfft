@@ -335,6 +335,9 @@ BEGIN_C_DECLS
       const C *data, const INT *local_n,                                     		\
       const INT *local_start,                                                           \
       int perm0, int perm1, int perm2, const char *name, MPI_Comm comm);                \
+  void PX(apr_real_3d)(                                                                 \
+      const R *data, const INT *local_n,                                    		\
+      const INT *local_start, const char *name, MPI_Comm comm);                         \
                                                                                         \
   PFFT_EXTERN void PX(get_args)(                                                        \
       int argc, char **argv, const char *name,                                          \
