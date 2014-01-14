@@ -14,7 +14,7 @@ int main(int argc, char **argv)
   MPI_Comm comm_cart_2d;
   
   /* Set size of FFT and process mesh */
-  n[0] = 29; n[1] = 27; n[2] = 31;
+  n[0] = 29; n[1] = 27; n[2] = 32;
   np[0] = 2; np[1] = 2;
   
   /* Initialize MPI and PFFT */
@@ -43,6 +43,11 @@ int main(int argc, char **argv)
   /* Plan parallel backward FFT */
   plan_back = pfft_plan_dft_c2r_3d(
       n, out, in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+
+  int myrank;
+  MPI_Comm_rank(comm_cart_2d, &myrank);
+  fprintf(stderr, "myrank = %d, local_ni = [%td, %td, %td], local_i_start = [%td, %td, %td], local_no = [%td, %td, %td], local_o_start = [%td, %td, %td]\n", myrank, local_ni[0], local_ni[1], local_ni[2], local_i_start[0], local_i_start[1], local_i_start[2], local_no[0], local_no[1], local_no[2], local_o_start[0], local_o_start[1], local_o_start[2]);
+
 
   /* Initialize input with random numbers */
 //  m = 0;
