@@ -193,6 +193,27 @@ static INT local_size_ousam_1d(
   return mem;
 }
 
+static int work_on_r2c_input(
+    unsigned trafo_flag, unsigned ousam_flag
+    )
+{
+  if(trafo_flag & PFFTI_TRAFO_R2C)
+    if(ousam_flag & PFFTI_OUSAM_EMBED)
+      return 1;
+
+  return 0;
+}
+
+static int work_on_c2r_output(
+    unsigned trafo_flag, unsigned ousam_flag
+    )
+{
+  if(trafo_flag & PFFTI_TRAFO_C2R)
+    if(ousam_flag & PFFTI_OUSAM_TRUNC)
+      return 1;
+
+  return 0;
+}
 
 /* 1D embed/truncate:
  * n0 x n1i x h -> n0 x n1o x h */
@@ -211,9 +232,12 @@ static ousam_plan_1d plan_ousam_1d(
   INT pni, pno;
   ousam_plan_1d ths;
 
-  /* nothing to do and inplace */
+  /* Return empty plan if nothing to do and inplace.
+   * Attention: ousam generates the padding for r2c and c2r trafos also for n1i == n1o. */
   if( (n1i == n1o) && (in == out) )
-    return NULL;
+    if( !work_on_r2c_input(trafo_flag, ousam_flag) )
+      if( !work_on_c2r_output(trafo_flag, ousam_flag) )
+        return NULL;
   
   ths = ousam_1d_mkplan();
 
@@ -237,20 +261,42 @@ static ousam_plan_1d plan_ousam_1d(
   ths->N1i = pni;
   ths->N1o = pno;
 
-  /* calculate padding for r2c input and c2r output */
-  ths->Pi = padding_size(n1i, trafo_flag, ousam_flag);
-  ths->Po = padding_size(n1o, trafo_flag, ousam_flag);
+  ths->Pi = 0;
+  ths->Po = 0;
 
-  /* FIXME: Do not need Cr anymore */
-  if(ousam_flag & PFFTI_OUSAM_EMBED){
+  /* calculate padding for r2c input */
+  if( trafo_flag & PFFTI_TRAFO_R2C)
+    if( ousam_flag & PFFTI_OUSAM_EMBED )
+      ths->Po = padding_size(n1o, trafo_flag, ousam_flag);
+
+  /* calculate padding for c2r output */
+  if( trafo_flag & PFFTI_TRAFO_C2R)
+    if( ousam_flag & PFFTI_OUSAM_TRUNC )
+      ths->Pi = padding_size(n1i, trafo_flag, ousam_flag);
+
+  if(ousam_flag & PFFTI_OUSAM_EMBED)
+  {
     ths->Cl = pni - ths->Pi;
     ths->Cm = (pno - ths->Po) - (pni - ths->Pi);
     ths->Cr = 0;
-  } else {
+
+    if( trafo_flag &PFFTI_TRAFO_R2C )
+    {
+      R tmp = ths->Cl; ths->Cl = ths->Cr; ths->Cr = tmp;
+    }
+  }
+
+  if(ousam_flag & PFFTI_OUSAM_TRUNC)
+  {
     ths->Cl = pno - ths->Po;
     ths->Cm = (pni - ths->Pi) - (pno - ths->Po);
     ths->Cr = 0;
-  } 
+
+    if( trafo_flag &PFFTI_TRAFO_C2R )
+    {
+      R tmp = ths->Cl; ths->Cl = ths->Cr; ths->Cr = tmp;
+    }
+  }
 
   /* include howmany into parameters */
   ths->N1i *= howmany;
@@ -376,7 +422,7 @@ static void execute_embed(
       mi += Pi; mo += Po;
     }
   } else {
-    /* copy form last to first element to allow inplace execute */
+    /* copy from last to first element to allow inplace execute */
     mi = N0 * N1i - 1;
     mo = N0 * N1o - 1;
     
