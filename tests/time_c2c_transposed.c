@@ -78,7 +78,7 @@ static void measure_pfft(
   timer[1] += MPI_Wtime();
 
   /* Initialize input with random numbers */
-  pfft_init_input_c2c_3d(n, local_ni, local_i_start,
+  pfft_init_input_complex_3d(n, local_ni, local_i_start,
       in);
 
   pfft_reset_timer(plan_forw);
@@ -138,7 +138,7 @@ static void measure_pfft(
 
 
   /* Print error of back transformed data */
-  err = pfft_check_output_c2c_3d(n, local_ni, local_i_start, in, comm_cart_2d);
+  err = pfft_check_output_complex_3d(n, local_ni, local_i_start, in, comm_cart_2d);
   pfft_printf(comm_cart_2d, "Run %d loops of ", loops);
   if(inplace)
     pfft_printf(comm_cart_2d, "in-place");

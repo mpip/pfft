@@ -56,7 +56,7 @@ PFFT_VOIDFUNC FORT(destroy_plan, DESTROY_PLAN)(
   PX(destroy_plan)(*p);
 }
 
-PFFT_VOIDFUNC FORT(init_input_c2c_3d, INIT_INPUT_C2C_3D)(
+PFFT_VOIDFUNC FORT(init_input_complex_3d, INIT_INPUT_COMPLEX_3D)(
     const INT *n, const INT *local_n, const INT *local_start,
     C *data
     )
@@ -67,10 +67,10 @@ PFFT_VOIDFUNC FORT(init_input_c2c_3d, INIT_INPUT_C2C_3D)(
   revert_INT(3, local_n, local_n_rev);
   revert_and_sub_ones_INT(3, local_start, local_start_rev);
 
-  PX(init_input_c2c_3d)(n_rev, local_n_rev, local_start_rev, data);
+  PX(init_input_complex_3d)(n_rev, local_n_rev, local_start_rev, data);
 }
 
-PFFT_VOIDFUNC FORT(init_input_c2c, INIT_INPUT_C2C)(
+PFFT_VOIDFUNC FORT(init_input_complex, INIT_INPUT_COMPLEX)(
     int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     C *data
     )
@@ -80,13 +80,13 @@ PFFT_VOIDFUNC FORT(init_input_c2c, INIT_INPUT_C2C)(
   INT *local_start_rev = PX(malloc_INT)(*rnk_n);
   revert_and_sub_ones_INT(*rnk_n, local_start, local_start_rev);
 
-  PX(init_input_c2c)(*rnk_n, n_rev, local_n_rev, local_start_rev, data);
+  PX(init_input_complex)(*rnk_n, n_rev, local_n_rev, local_start_rev, data);
 
   free(n_rev); free(local_n_rev); free(local_start_rev);
 }
 
 
-PFFT_VOIDFUNC FORT(init_input_r2c_3d, INIT_INPUT_R2C_3D)(
+PFFT_VOIDFUNC FORT(init_input_real_3d, INIT_INPUT_REAL_3D)(
     const INT *n, const INT *local_n, const INT *local_start,
     R *data
     )
@@ -97,10 +97,10 @@ PFFT_VOIDFUNC FORT(init_input_r2c_3d, INIT_INPUT_R2C_3D)(
   revert_INT(3, local_n, local_n_rev);
   revert_and_sub_ones_INT(3, local_start, local_start_rev);
 
-  PX(init_input_r2c_3d)(n_rev, local_n_rev, local_start_rev, data);
+  PX(init_input_real_3d)(n_rev, local_n_rev, local_start_rev, data);
 }
 
-PFFT_VOIDFUNC FORT(init_input_r2c, INIT_INPUT_R2C)(
+PFFT_VOIDFUNC FORT(init_input_real, INIT_INPUT_REAL)(
     int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     R *data
     )
@@ -110,44 +110,13 @@ PFFT_VOIDFUNC FORT(init_input_r2c, INIT_INPUT_R2C)(
   INT *local_start_rev = PX(malloc_INT)(*rnk_n);
   revert_and_sub_ones_INT(*rnk_n, local_start, local_start_rev);
 
-  PX(init_input_r2c)(*rnk_n, n_rev, local_n_rev, local_start_rev, data);
+  PX(init_input_real)(*rnk_n, n_rev, local_n_rev, local_start_rev, data);
 
   free(n_rev); free(local_n_rev); free(local_start_rev);
 }
 
 
-PFFT_VOIDFUNC FORT(init_input_r2r_3d, INIT_INPUT_R2R_3D)(
-    const INT *n, const INT *local_n, const INT *local_start,
-    R *data
-    )
-{
-  INT n_rev[3], local_n_rev[3], local_start_rev[3];
-  
-  revert_INT(3, n, n_rev);
-  revert_INT(3, local_n, local_n_rev);
-  revert_and_sub_ones_INT(3, local_start, local_start_rev);
-
-  PX(init_input_r2r_3d)(n_rev, local_n_rev, local_start_rev, data);
-}
-
-PFFT_VOIDFUNC FORT(init_input_r2r, INIT_INPUT_R2R)(
-    int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
-    R *data
-    )
-{
-  INT *n_rev = malloc_and_revert_INT(*rnk_n, n);
-  INT *local_n_rev = malloc_and_revert_INT(*rnk_n, local_n);
-  INT *local_start_rev = PX(malloc_INT)(*rnk_n);
-  revert_and_sub_ones_INT(*rnk_n, local_start, local_start_rev);
-
-  PX(init_input_r2r)(*rnk_n, n_rev, local_n_rev, local_start_rev, data);
-
-  free(n_rev); free(local_n_rev); free(local_start_rev);
-}
-
-
-
-PFFT_VOIDFUNC FORT(check_output_c2c_3d, CHECK_OUTPUT_C2C_3D)(
+PFFT_VOIDFUNC FORT(check_output_complex_3d, CHECK_OUTPUT_COMPLEX_3D)(
     R *err, const INT *n, const INT *local_n, const INT *local_start,
     const C *data, MPI_Fint *comm
     )
@@ -158,11 +127,11 @@ PFFT_VOIDFUNC FORT(check_output_c2c_3d, CHECK_OUTPUT_C2C_3D)(
   revert_INT(3, local_n, local_n_rev);
   revert_and_sub_ones_INT(3, local_start, local_start_rev);
 
-  *err = PX(check_output_c2c_3d)(n_rev, local_n_rev, local_start_rev,
+  *err = PX(check_output_complex_3d)(n_rev, local_n_rev, local_start_rev,
       data, MPI_Comm_f2c(*comm));
 }
 
-PFFT_VOIDFUNC FORT(check_output_c2c, CHECK_OUTPUT_C2C)(
+PFFT_VOIDFUNC FORT(check_output_complex, CHECK_OUTPUT_COMPLEX)(
     R *err, int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     const C *data, MPI_Fint *comm
     )
@@ -172,14 +141,13 @@ PFFT_VOIDFUNC FORT(check_output_c2c, CHECK_OUTPUT_C2C)(
   INT *local_start_rev = PX(malloc_INT)(*rnk_n);
   revert_and_sub_ones_INT(*rnk_n, local_start, local_start_rev);
 
-  *err = PX(check_output_c2c)(*rnk_n, n_rev, local_n_rev, local_start_rev,
+  *err = PX(check_output_complex)(*rnk_n, n_rev, local_n_rev, local_start_rev,
       data, MPI_Comm_f2c(*comm));
 
   free(n_rev); free(local_n_rev); free(local_start_rev);
 }
 
-
-PFFT_VOIDFUNC FORT(check_output_c2r_3d, CHECK_OUTPUT_C2R_3D)(
+PFFT_VOIDFUNC FORT(check_output_real_3d, CHECK_OUTPUT_REAL_3D)(
     R *err, const INT *n, const INT *local_n, const INT *local_start,
     const R *data, MPI_Fint *comm
     )
@@ -190,11 +158,11 @@ PFFT_VOIDFUNC FORT(check_output_c2r_3d, CHECK_OUTPUT_C2R_3D)(
   revert_INT(3, local_n, local_n_rev);
   revert_and_sub_ones_INT(3, local_start, local_start_rev);
 
-  *err = PX(check_output_c2r_3d)(n_rev, local_n_rev, local_start_rev,
+  *err = PX(check_output_real_3d)(n_rev, local_n_rev, local_start_rev,
       data, MPI_Comm_f2c(*comm));
 }
 
-PFFT_VOIDFUNC FORT(check_output_c2r, CHECK_OUTPUT_C2R)(
+PFFT_VOIDFUNC FORT(check_output_real, CHECK_OUTPUT_REAL)(
     R *err, int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     const R *data, MPI_Fint *comm
     )
@@ -204,38 +172,7 @@ PFFT_VOIDFUNC FORT(check_output_c2r, CHECK_OUTPUT_C2R)(
   INT *local_start_rev = PX(malloc_INT)(*rnk_n);
   revert_and_sub_ones_INT(*rnk_n, local_start, local_start_rev);
 
-  *err = PX(check_output_c2r)(*rnk_n, n_rev, local_n_rev, local_start_rev,
-      data, MPI_Comm_f2c(*comm));
-
-  free(n_rev); free(local_n_rev); free(local_start_rev);
-}
-
-PFFT_VOIDFUNC FORT(check_output_r2r_3d, CHECK_OUTPUT_R2R_3D)(
-    R *err, const INT *n, const INT *local_n, const INT *local_start,
-    const R *data, MPI_Fint *comm
-    )
-{
-  INT n_rev[3], local_n_rev[3], local_start_rev[3];
-  
-  revert_INT(3, n, n_rev);
-  revert_INT(3, local_n, local_n_rev);
-  revert_and_sub_ones_INT(3, local_start, local_start_rev);
-
-  *err = PX(check_output_r2r_3d)(n_rev, local_n_rev, local_start_rev,
-      data, MPI_Comm_f2c(*comm));
-}
-
-PFFT_VOIDFUNC FORT(check_output_r2r, CHECK_OUTPUT_R2R)(
-    R *err, int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
-    const R *data, MPI_Fint *comm
-    )
-{
-  INT *n_rev = malloc_and_revert_INT(*rnk_n, n);
-  INT *local_n_rev = malloc_and_revert_INT(*rnk_n, local_n);
-  INT *local_start_rev = PX(malloc_INT)(*rnk_n);
-  revert_and_sub_ones_INT(*rnk_n, local_start, local_start_rev);
-
-  *err = PX(check_output_r2r)(*rnk_n, n_rev, local_n_rev, local_start_rev,
+  *err = PX(check_output_real)(*rnk_n, n_rev, local_n_rev, local_start_rev,
       data, MPI_Comm_f2c(*comm));
 
   free(n_rev); free(local_n_rev); free(local_start_rev);

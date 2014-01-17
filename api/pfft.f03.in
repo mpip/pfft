@@ -87,68 +87,52 @@
       type(C_PTR), value :: fftplan
     end subroutine pfft_destroy_plan
     
-    subroutine pfft_init_input_c2c_3d(Nos,local_n,local_n_start,data) bind(C, name='pfft_init_input_c2c_3d')
+    subroutine pfft_init_input_complex_3d(Nos,local_n,local_n_start,data) bind(C, name='pfft_init_input_complex_3d')
       import
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
       complex(C_DOUBLE_COMPLEX), dimension(*), intent(out) :: data
-    end subroutine pfft_init_input_c2c_3d
+    end subroutine pfft_init_input_complex_3d
     
-    subroutine pfft_init_input_c2c(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfft_init_input_c2c')
+    subroutine pfft_init_input_complex(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfft_init_input_complex')
       import
       integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
       complex(C_DOUBLE_COMPLEX), dimension(*), intent(out) :: data
-    end subroutine pfft_init_input_c2c
+    end subroutine pfft_init_input_complex
     
-    subroutine pfft_init_input_r2c_3d(Nos,local_n,local_n_start,data) bind(C, name='pfft_init_input_r2c_3d')
+    subroutine pfft_init_input_real_3d(Nos,local_n,local_n_start,data) bind(C, name='pfft_init_input_real_3d')
       import
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
       real(C_DOUBLE), dimension(*), intent(out) :: data
-    end subroutine pfft_init_input_r2c_3d
+    end subroutine pfft_init_input_real_3d
     
-    subroutine pfft_init_input_r2c(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfft_init_input_r2c')
+    subroutine pfft_init_input_real(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfft_init_input_real')
       import
       integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
       real(C_DOUBLE), dimension(*), intent(out) :: data
-    end subroutine pfft_init_input_r2c
+    end subroutine pfft_init_input_real
     
-    subroutine pfft_init_input_r2r_3d(Nos,local_n,local_n_start,data) bind(C, name='pfft_init_input_r2r_3d')
-      import
-      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
-      real(C_DOUBLE), dimension(*), intent(out) :: data
-    end subroutine pfft_init_input_r2r_3d
-    
-    subroutine pfft_init_input_r2r(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfft_init_input_r2r')
-      import
-      integer(C_INT), value :: rnk_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
-      real(C_DOUBLE), dimension(*), intent(out) :: data
-    end subroutine pfft_init_input_r2r
-    
-    real(C_DOUBLE) function pfft_check_output_c2c_3d(Nos,local_n,local_n_start,data,comm) &
-                            bind(C, name='pfft_check_output_c2c_3d_f03')
+    real(C_DOUBLE) function pfft_check_output_complex_3d(Nos,local_n,local_n_start,data,comm) &
+                            bind(C, name='pfft_check_output_complex_3d_f03')
       import
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
       complex(C_DOUBLE_COMPLEX), dimension(*), intent(in) :: data
       integer(@C_MPI_FINT@), value :: comm
-    end function pfft_check_output_c2c_3d
+    end function pfft_check_output_complex_3d
     
-    real(C_DOUBLE) function pfft_check_output_c2c(rnk_n,Nos,local_n,local_start,data,comm) bind(C, name='pfft_check_output_c2c_f03')
+    real(C_DOUBLE) function pfft_check_output_complex(rnk_n,Nos,local_n,local_start,data,comm) &
+                            bind(C, name='pfft_check_output_complex_f03')
       import
       integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
@@ -156,19 +140,20 @@
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
       complex(C_DOUBLE_COMPLEX), dimension(*), intent(in) :: data
       integer(@C_MPI_FINT@), value :: comm
-    end function pfft_check_output_c2c
+    end function pfft_check_output_complex
     
-    real(C_DOUBLE) function pfft_check_output_c2r_3d(Nos,local_n,local_n_start,data,comm) &
-                            bind(C, name='pfft_check_output_c2r_3d_f03')
+    real(C_DOUBLE) function pfft_check_output_real_3d(Nos,local_n,local_n_start,data,comm) &
+                            bind(C, name='pfft_check_output_real_3d_f03')
       import
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
       real(C_DOUBLE), dimension(*), intent(in) :: data
       integer(@C_MPI_FINT@), value :: comm
-    end function pfft_check_output_c2r_3d
+    end function pfft_check_output_real_3d
     
-    real(C_DOUBLE) function pfft_check_output_c2r(rnk_n,Nos,local_n,local_start,data,comm) bind(C, name='pfft_check_output_c2r_f03')
+    real(C_DOUBLE) function pfft_check_output_real(rnk_n,Nos,local_n,local_start,data,comm) &
+                            bind(C, name='pfft_check_output_real_f03')
       import
       integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
@@ -176,27 +161,7 @@
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
       real(C_DOUBLE), dimension(*), intent(in) :: data
       integer(@C_MPI_FINT@), value :: comm
-    end function pfft_check_output_c2r
-    
-    real(C_DOUBLE) function pfft_check_output_r2r_3d(Nos,local_n,local_n_start,data,comm) &
-                            bind(C, name='pfft_check_output_r2r_3d_f03')
-      import
-      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
-      real(C_DOUBLE), dimension(*), intent(in) :: data
-      integer(@C_MPI_FINT@), value :: comm
-    end function pfft_check_output_r2r_3d
-    
-    real(C_DOUBLE) function pfft_check_output_r2r(rnk_n,Nos,local_n,local_start,data,comm) bind(C, name='pfft_check_output_r2r_f03')
-      import
-      integer(C_INT), value :: rnk_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
-      real(C_DOUBLE), dimension(*), intent(in) :: data
-      integer(@C_MPI_FINT@), value :: comm
-    end function pfft_check_output_r2r
+    end function pfft_check_output_real
     
     integer(C_INTPTR_T) function pfft_local_size_dft_3d(Nos,comm_cart,pfft_flags,local_ni,local_i_start,local_no,local_o_start) &
                                  bind(C, name='pfft_local_size_dft_3d_f03')
@@ -909,69 +874,52 @@
       type(C_PTR), value :: fftplan
     end subroutine pfftf_destroy_plan
     
-    subroutine pfftf_init_input_c2c_3d(Nos,local_n,local_n_start,data) bind(C, name='pfftf_init_input_c2c_3d')
+    subroutine pfftf_init_input_complex_3d(Nos,local_n,local_n_start,data) bind(C, name='pfftf_init_input_complex_3d')
       import
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
       complex(C_FLOAT_COMPLEX), dimension(*), intent(out) :: data
-    end subroutine pfftf_init_input_c2c_3d
+    end subroutine pfftf_init_input_complex_3d
     
-    subroutine pfftf_init_input_c2c(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfftf_init_input_c2c')
+    subroutine pfftf_init_input_complex(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfftf_init_input_complex')
       import
       integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
       complex(C_FLOAT_COMPLEX), dimension(*), intent(out) :: data
-    end subroutine pfftf_init_input_c2c
+    end subroutine pfftf_init_input_complex
     
-    subroutine pfftf_init_input_r2c_3d(Nos,local_n,local_n_start,data) bind(C, name='pfftf_init_input_r2c_3d')
+    subroutine pfftf_init_input_real_3d(Nos,local_n,local_n_start,data) bind(C, name='pfftf_init_input_real_3d')
       import
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
       real(C_FLOAT), dimension(*), intent(out) :: data
-    end subroutine pfftf_init_input_r2c_3d
+    end subroutine pfftf_init_input_real_3d
     
-    subroutine pfftf_init_input_r2c(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfftf_init_input_r2c')
+    subroutine pfftf_init_input_real(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfftf_init_input_real')
       import
       integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
       real(C_FLOAT), dimension(*), intent(out) :: data
-    end subroutine pfftf_init_input_r2c
+    end subroutine pfftf_init_input_real
     
-    subroutine pfftf_init_input_r2r_3d(Nos,local_n,local_n_start,data) bind(C, name='pfftf_init_input_r2r_3d')
-      import
-      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
-      real(C_FLOAT), dimension(*), intent(out) :: data
-    end subroutine pfftf_init_input_r2r_3d
-    
-    subroutine pfftf_init_input_r2r(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfftf_init_input_r2r')
-      import
-      integer(C_INT), value :: rnk_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
-      real(C_FLOAT), dimension(*), intent(out) :: data
-    end subroutine pfftf_init_input_r2r
-    
-    real(C_FLOAT) function pfftf_check_output_c2c_3d(Nos,local_n,local_n_start,data,comm) &
-                           bind(C, name='pfftf_check_output_c2c_3d_f03')
+    real(C_FLOAT) function pfftf_check_output_complex_3d(Nos,local_n,local_n_start,data,comm) &
+                           bind(C, name='pfftf_check_output_complex_3d_f03')
       import
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
       complex(C_FLOAT_COMPLEX), dimension(*), intent(in) :: data
       integer(@C_MPI_FINT@), value :: comm
-    end function pfftf_check_output_c2c_3d
+    end function pfftf_check_output_complex_3d
     
-    real(C_FLOAT) function pfftf_check_output_c2c(rnk_n,Nos,local_n,local_start,data,comm) &
-                           bind(C, name='pfftf_check_output_c2c_f03')
+    real(C_FLOAT) function pfftf_check_output_complex(rnk_n,Nos,local_n,local_start,data,comm) &
+                           bind(C, name='pfftf_check_output_complex_f03')
       import
       integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
@@ -979,20 +927,20 @@
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
       complex(C_FLOAT_COMPLEX), dimension(*), intent(in) :: data
       integer(@C_MPI_FINT@), value :: comm
-    end function pfftf_check_output_c2c
+    end function pfftf_check_output_complex
     
-    real(C_FLOAT) function pfftf_check_output_c2r_3d(Nos,local_n,local_n_start,data,comm) &
-                           bind(C, name='pfftf_check_output_c2r_3d_f03')
+    real(C_FLOAT) function pfftf_check_output_real_3d(Nos,local_n,local_n_start,data,comm) &
+                           bind(C, name='pfftf_check_output_real_3d_f03')
       import
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
       real(C_FLOAT), dimension(*), intent(in) :: data
       integer(@C_MPI_FINT@), value :: comm
-    end function pfftf_check_output_c2r_3d
+    end function pfftf_check_output_real_3d
     
-    real(C_FLOAT) function pfftf_check_output_c2r(rnk_n,Nos,local_n,local_start,data,comm) &
-                           bind(C, name='pfftf_check_output_c2r_f03')
+    real(C_FLOAT) function pfftf_check_output_real(rnk_n,Nos,local_n,local_start,data,comm) &
+                           bind(C, name='pfftf_check_output_real_f03')
       import
       integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
@@ -1000,28 +948,7 @@
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
       real(C_FLOAT), dimension(*), intent(in) :: data
       integer(@C_MPI_FINT@), value :: comm
-    end function pfftf_check_output_c2r
-    
-    real(C_FLOAT) function pfftf_check_output_r2r_3d(Nos,local_n,local_n_start,data,comm) &
-                           bind(C, name='pfftf_check_output_r2r_3d_f03')
-      import
-      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
-      real(C_FLOAT), dimension(*), intent(in) :: data
-      integer(@C_MPI_FINT@), value :: comm
-    end function pfftf_check_output_r2r_3d
-    
-    real(C_FLOAT) function pfftf_check_output_r2r(rnk_n,Nos,local_n,local_start,data,comm) &
-                           bind(C, name='pfftf_check_output_r2r_f03')
-      import
-      integer(C_INT), value :: rnk_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
-      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
-      real(C_FLOAT), dimension(*), intent(in) :: data
-      integer(@C_MPI_FINT@), value :: comm
-    end function pfftf_check_output_r2r
+    end function pfftf_check_output_real
     
     integer(C_INTPTR_T) function pfftf_local_size_dft_3d(Nos,comm_cart,pfft_flags,local_ni,local_i_start,local_no,local_o_start) &
                                  bind(C, name='pfftf_local_size_dft_3d_f03')

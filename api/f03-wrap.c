@@ -3,12 +3,10 @@
 #include "pfft.h"
 #include "ipfft.h"
 
-PFFT_EXTERN R PX(check_output_c2c_3d_f03)(const INT * Nos, const INT * local_n, const INT * local_n_start, const C * data, MPI_Fint f_comm);
-PFFT_EXTERN R PX(check_output_c2c_f03)(int rnk_n, const INT * Nos, const INT * local_n, const INT * local_start, const C * data, MPI_Fint f_comm);
-PFFT_EXTERN R PX(check_output_c2r_3d_f03)(const INT * Nos, const INT * local_n, const INT * local_n_start, const R * data, MPI_Fint f_comm);
-PFFT_EXTERN R PX(check_output_c2r_f03)(int rnk_n, const INT * Nos, const INT * local_n, const INT * local_start, const R * data, MPI_Fint f_comm);
-PFFT_EXTERN R PX(check_output_r2r_3d_f03)(const INT * Nos, const INT * local_n, const INT * local_n_start, const R * data, MPI_Fint f_comm);
-PFFT_EXTERN R PX(check_output_r2r_f03)(int rnk_n, const INT * Nos, const INT * local_n, const INT * local_start, const R * data, MPI_Fint f_comm);
+PFFT_EXTERN R PX(check_output_complex_3d_f03)(const INT * Nos, const INT * local_n, const INT * local_n_start, const C * data, MPI_Fint f_comm);
+PFFT_EXTERN R PX(check_output_complex_f03)(int rnk_n, const INT * Nos, const INT * local_n, const INT * local_start, const C * data, MPI_Fint f_comm);
+PFFT_EXTERN R PX(check_output_real_3d_f03)(const INT * Nos, const INT * local_n, const INT * local_n_start, const R * data, MPI_Fint f_comm);
+PFFT_EXTERN R PX(check_output_real_f03)(int rnk_n, const INT * Nos, const INT * local_n, const INT * local_start, const R * data, MPI_Fint f_comm);
 PFFT_EXTERN INT PX(local_size_dft_3d_f03)(const INT * Nos, MPI_Fint f_comm_cart, unsigned pfft_flags, INT * local_ni, INT * local_i_start, INT * local_no, INT * local_o_start);
 PFFT_EXTERN INT PX(local_size_dft_r2c_3d_f03)(const INT * Nos, MPI_Fint f_comm_cart, unsigned pfft_flags, INT * local_ni, INT * local_i_start, INT * local_no, INT * local_o_start);
 PFFT_EXTERN INT PX(local_size_dft_c2r_3d_f03)(const INT * Nos, MPI_Fint f_comm_cart, unsigned pfft_flags, INT * local_ni, INT * local_i_start, INT * local_no, INT * local_o_start);
@@ -52,57 +50,39 @@ PFFT_EXTERN void PX(write_average_gctimer_f03)(const PX(gcplan) ths, const char 
 PFFT_EXTERN void PX(write_average_gctimer_adv_f03)(const PX(gcplan) ths, const char * name, MPI_Fint f_comm);
 PFFT_EXTERN PX(gctimer) PX(reduce_max_gctimer_f03)(const PX(gctimer) ths, MPI_Fint f_comm);
 
-R PX(check_output_c2c_3d_f03)(const INT * Nos, const INT * local_n, const INT * local_n_start, const C * data, MPI_Fint f_comm)
+R PX(check_output_complex_3d_f03)(const INT * Nos, const INT * local_n, const INT * local_n_start, const C * data, MPI_Fint f_comm)
 {
   MPI_Comm comm;
 
   comm = MPI_Comm_f2c(f_comm);
-  R ret = PX(check_output_c2c_3d)(Nos, local_n, local_n_start, data, comm);
+  R ret = PX(check_output_complex_3d)(Nos, local_n, local_n_start, data, comm);
   return ret;
 }
 
-R PX(check_output_c2c_f03)(int rnk_n, const INT * Nos, const INT * local_n, const INT * local_start, const C * data, MPI_Fint f_comm)
+R PX(check_output_complex_f03)(int rnk_n, const INT * Nos, const INT * local_n, const INT * local_start, const C * data, MPI_Fint f_comm)
 {
   MPI_Comm comm;
 
   comm = MPI_Comm_f2c(f_comm);
-  R ret = PX(check_output_c2c)(rnk_n, Nos, local_n, local_start, data, comm);
+  R ret = PX(check_output_complex)(rnk_n, Nos, local_n, local_start, data, comm);
   return ret;
 }
 
-R PX(check_output_c2r_3d_f03)(const INT * Nos, const INT * local_n, const INT * local_n_start, const R * data, MPI_Fint f_comm)
+R PX(check_output_real_3d_f03)(const INT * Nos, const INT * local_n, const INT * local_n_start, const R * data, MPI_Fint f_comm)
 {
   MPI_Comm comm;
 
   comm = MPI_Comm_f2c(f_comm);
-  R ret = PX(check_output_c2r_3d)(Nos, local_n, local_n_start, data, comm);
+  R ret = PX(check_output_real_3d)(Nos, local_n, local_n_start, data, comm);
   return ret;
 }
 
-R PX(check_output_c2r_f03)(int rnk_n, const INT * Nos, const INT * local_n, const INT * local_start, const R * data, MPI_Fint f_comm)
+R PX(check_output_real_f03)(int rnk_n, const INT * Nos, const INT * local_n, const INT * local_start, const R * data, MPI_Fint f_comm)
 {
   MPI_Comm comm;
 
   comm = MPI_Comm_f2c(f_comm);
-  R ret = PX(check_output_c2r)(rnk_n, Nos, local_n, local_start, data, comm);
-  return ret;
-}
-
-R PX(check_output_r2r_3d_f03)(const INT * Nos, const INT * local_n, const INT * local_n_start, const R * data, MPI_Fint f_comm)
-{
-  MPI_Comm comm;
-
-  comm = MPI_Comm_f2c(f_comm);
-  R ret = PX(check_output_r2r_3d)(Nos, local_n, local_n_start, data, comm);
-  return ret;
-}
-
-R PX(check_output_r2r_f03)(int rnk_n, const INT * Nos, const INT * local_n, const INT * local_start, const R * data, MPI_Fint f_comm)
-{
-  MPI_Comm comm;
-
-  comm = MPI_Comm_f2c(f_comm);
-  R ret = PX(check_output_r2r)(rnk_n, Nos, local_n, local_start, data, comm);
+  R ret = PX(check_output_real)(rnk_n, Nos, local_n, local_start, data, comm);
   return ret;
 }
 

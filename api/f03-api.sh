@@ -1,13 +1,17 @@
 #! /bin/sh
 
-# Script to generate Fortran 2003 interface declarations for FFTW from
-# the fftw3.h header file.
+# Script to generate Fortran 2003 interface declarations for PFFT from
+# the pfft.h header file.
+
+# Use this script in the following way:
+# ./f03-api.sh d f > pfft.f03.in
+# ./f03-api.sh l > pfftl.f03.in
 
 # This is designed so that the Fortran caller can do:
 #   use, intrinsic :: iso_c_binding
 #   implicit none
-#   include 'fftw3.f03'
-# and then call the C FFTW functions directly, with type checking.
+#   include 'pfft.f03'
+# and then call the C PFFT functions directly, with type checking.
 
 
 # pfft.h depends on fftw3-mpi.h and fftw3.h

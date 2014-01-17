@@ -45,21 +45,41 @@ int main(int argc, char **argv)
       n, out, in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_IN| PFFT_MEASURE| PFFT_DESTROY_INPUT);
 
   /* Initialize input with random numbers */
-  pfft_init_input_r2c(3, n, local_ni, local_i_start,
+  pfft_init_input_real(3, n, local_ni, local_i_start,
       in);
+
+
+//  ptrdiff_t m;
+//  int myrank, size;
+//  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+//  MPI_Comm_size(MPI_COMM_WORLD, &size);
+//  ptrdiff_t *lis, *lni;
+//  
+//  lis = local_i_start; lni = local_ni;
+//  /* Output results: here we want to see the data ordering of real and imaginary parts */
+//  MPI_Barrier(MPI_COMM_WORLD);
+//  for(int t=0; t<size; t++){
+//    if(myrank == t){
+//      printf("rank %d: R2C FFTW Output:\n", myrank);
+//      m=0;
+//      for(ptrdiff_t k0=lis[0]; k0<lis[0]+lni[0]; k0++)
+//        for(ptrdiff_t k1=lis[1]; k1<lis[1]+lni[1]; k1++)
+//          for(ptrdiff_t k2=lis[2]; k2<lis[2]+lni[2]; k2++, m++)
+//            printf("in[%td, %td, %td] = %.2f\n", k0, k1, k2, in[m]);
+//      fflush(stdout);
+//    }
+//    MPI_Barrier(MPI_COMM_WORLD);
+//  }
+
 
   /* execute parallel forward FFT */
   pfft_execute(plan_forw);
 
 
 
-//  int myrank, size;
-//  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-//  MPI_Comm_size(MPI_COMM_WORLD, &size);
-//  ptrdiff_t *los, *lno, m;
-//  
+//  ptrdiff_t *los, *lno;
 //  los = local_o_start; lno = local_no;
-//
+//  
 //  /* Output results: here we want to see the data ordering of real and imaginary parts */
 //  MPI_Barrier(MPI_COMM_WORLD);
 //  for(int t=0; t<size; t++){
@@ -82,10 +102,10 @@ int main(int argc, char **argv)
   /* Scale data */
   for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
     in[l] /= (n[0]*n[1]*n[2]);
-  
+
   /* Print error of back transformed data */
   MPI_Barrier(MPI_COMM_WORLD);
-  err = pfft_check_output_c2r(3, n, local_ni, local_i_start, in, comm_cart_2d);
+  err = pfft_check_output_real(3, n, local_ni, local_i_start, in, comm_cart_2d);
   pfft_printf(comm_cart_2d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]); 
   pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
 

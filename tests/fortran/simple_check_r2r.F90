@@ -69,7 +69,7 @@
      &     kinds_back, PFFT_TRANSPOSED_NONE + PFFT_MEASURE + PFFT_DESTROY_INPUT)
 
 !     Initialize input with random numbers
-      call dpfft_init_input_r2r_3d(n, local_ni, local_i_start, &
+      call dpfft_init_input_real_3d(n, local_ni, local_i_start, &
      &     data_in)
 
 !     Execute parallel forward FFT
@@ -86,7 +86,7 @@
       enddo
 
 !     Print error of back transformed data
-      call dpfft_check_output_r2r_3d(error, n, local_ni, local_i_start, &
+      call dpfft_check_output_real_3d(error, n, local_ni, local_i_start, &
      &      data_in, comm_cart_2d)
       
       if(myrank .eq. 0) then

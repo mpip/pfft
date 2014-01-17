@@ -45,7 +45,7 @@ int main(int argc, char **argv)
       n, out, in, comm_cart_3d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
 
   /* Initialize input with random numbers */
-  pfft_init_input_r2c(3, n, local_ni, local_i_start,
+  pfft_init_input_real(3, n, local_ni, local_i_start,
       in);
 
   /* execute parallel forward FFT */
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
   
   /* Print error of back transformed data */
   MPI_Barrier(MPI_COMM_WORLD);
-  err = pfft_check_output_c2r(3, n, local_ni, local_i_start, in, comm_cart_3d);
+  err = pfft_check_output_real(3, n, local_ni, local_i_start, in, comm_cart_3d);
   pfft_printf(comm_cart_3d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]); 
   pfft_printf(comm_cart_3d, "maxerror = %6.2e;\n", err);
   

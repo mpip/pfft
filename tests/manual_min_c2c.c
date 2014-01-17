@@ -37,7 +37,7 @@ int main(int argc, char **argv){
       PFFT_FORWARD, PFFT_TRANSPOSED_NONE);
 
   /* Initialize input with random numbers */
-  pfft_init_input_c2c_3d(n, local_ni, local_i_start,
+  pfft_init_input_complex_3d(n, local_ni, local_i_start,
       in);
 
   /* Execute parallel forward FFT */

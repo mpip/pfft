@@ -102,18 +102,18 @@ static void vector_index(
   }
 }
 
-void PX(init_input_c2c_3d)(
+void PX(init_input_complex_3d)(
     const INT *n, const INT *local_n, const INT *local_start,
     C *data
     )
 {
   int rnk_n=3;
 
-  PX(init_input_c2c)(rnk_n, n, local_n, local_start,
+  PX(init_input_complex)(rnk_n, n, local_n, local_start,
       data);
 }
 
-void PX(init_input_c2c)(
+void PX(init_input_complex)(
     int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     C *data
     )
@@ -142,58 +142,18 @@ void PX(init_input_c2c)(
   free(kvec_loc); free(kvec_glob);
 }
 
-
-void PX(init_input_r2c_3d)(
+void PX(init_input_real_3d)(
     const INT *n, const INT *local_n, const INT *local_start,
     R *data
     )
 {
   int rnk_n=3;
 
-  PX(init_input_r2c)(rnk_n, n, local_n, local_start,
+  PX(init_input_real)(rnk_n, n, local_n, local_start,
       data);
 }
 
-
-void PX(init_input_r2c)(
-    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
-    R *data
-    )
-{
-  /* take care of padding in last dimension */ 
-  INT m, ln_tot;
-  INT *kvec_loc, *kvec_glob;
-
-  kvec_loc  = PX(malloc_INT)(rnk_n);
-  kvec_glob = PX(malloc_INT)(rnk_n);
- 
-  ln_tot = PX(prod_INT)(rnk_n, local_n);
-  for(INT k=0; k<ln_tot; k++){
-    vector_index(rnk_n, k, local_n, kvec_loc);
-    PX(vadd_INT)(rnk_n, kvec_loc, local_start, kvec_glob);
-  
-    if(kvec_glob[rnk_n-1] < n[rnk_n-1]){
-      m = plain_index(rnk_n, kvec_glob, n);
-      data[k] = DATA_INIT(2*m);
-    } else 
-      data[k] = 0;
-  }
-
-  free(kvec_loc); free(kvec_glob);
-}
-
-void PX(init_input_r2r_3d)(
-    const INT *n, const INT *local_n, const INT *local_start,
-    R *data
-    )
-{
-  int rnk_n=3;
-
-  PX(init_input_r2r)(rnk_n, n, local_n, local_start,
-      data);
-}
-
-void PX(init_input_r2r)(
+void PX(init_input_real)(
     int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     R *data
     )
@@ -220,18 +180,18 @@ void PX(init_input_r2r)(
 
 /* Check results after one forward and backward FFT.
  * Only works for intial data layout */
-R PX(check_output_c2c_3d)(
+R PX(check_output_complex_3d)(
     const INT *n, const INT *local_n, const INT *local_start,
     const C *data, MPI_Comm comm
     )
 {
   int rnk_n = 3; 
 
-  return PX(check_output_c2c)(rnk_n, n, local_n, local_start,
+  return PX(check_output_complex)(rnk_n, n, local_n, local_start,
       data, comm);
 }
 
-R PX(check_output_c2c)(
+R PX(check_output_complex)(
     int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     const C *data, MPI_Comm comm
     )
@@ -263,66 +223,19 @@ R PX(check_output_c2c)(
   MPI_Allreduce(&maxerr, &globmaxerr, 1, PFFT_MPI_REAL_TYPE, MPI_MAX, comm);
   return globmaxerr;
 }
-   
-R PX(check_output_c2r_3d)(
+
+R PX(check_output_real_3d)(
     const INT *n, const INT *local_n, const INT *local_start,
     const R *data, MPI_Comm comm
     )
 {
   int rnk_n = 3; 
 
-  return PX(check_output_c2r)(rnk_n, n, local_n, local_start,
+  return PX(check_output_real)(rnk_n, n, local_n, local_start,
       data, comm);
 }
 
-
-R PX(check_output_c2r)(
-    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
-    const R *data, MPI_Comm comm
-    )
-{ 
-  /* take care of padding in last dimension */ 
-  INT m, ln_tot;
-  INT *kvec_loc, *kvec_glob;
-  R re, err, maxerr, globmaxerr;
-
-  err = maxerr = 0;
-  
-  kvec_loc  = PX(malloc_INT)(rnk_n);
-  kvec_glob = PX(malloc_INT)(rnk_n);
- 
-  ln_tot = PX(prod_INT)(rnk_n, local_n);
-  for(INT k=0; k<ln_tot; k++){
-    vector_index(rnk_n, k, local_n, kvec_loc);
-    PX(vadd_INT)(rnk_n, kvec_loc, local_start, kvec_glob);
-    
-    if(kvec_glob[rnk_n-1] < n[rnk_n-1]){
-      m = plain_index(rnk_n, kvec_glob, n);
-      re = data[ k ] - DATA_INIT(2*m);
-      err = pfft_sqrt(re*re);
-      if( err > maxerr )
-        maxerr = err;
-    } 
-  }
-
-  free(kvec_loc); free(kvec_glob);
-
-  MPI_Allreduce(&maxerr, &globmaxerr, 1, PFFT_MPI_REAL_TYPE, MPI_MAX, comm);
-  return globmaxerr;
-}
-
-R PX(check_output_r2r_3d)(
-    const INT *n, const INT *local_n, const INT *local_start,
-    const R *data, MPI_Comm comm
-    )
-{
-  int rnk_n = 3; 
-
-  return PX(check_output_r2r)(rnk_n, n, local_n, local_start,
-      data, comm);
-}
-
-R PX(check_output_r2r)(
+R PX(check_output_real)(
     int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     const R *data, MPI_Comm comm
     )

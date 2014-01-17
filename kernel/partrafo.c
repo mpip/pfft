@@ -181,14 +181,22 @@ INT PX(local_size_partrafo)(
 
   /* local size of r2c input in units of real */
   if(trafo_flag_user & PFFTI_TRAFO_R2C){
-    local_ni[rnk_n-1] *= 2;
-    local_i_start[rnk_n-1] *= 2;
+    /* overwrite physical size of r2c input, 
+     * since PFFT user interface does not use padding for real inputs */
+    local_ni[rnk_n-1] = ni[rnk_n-1];
+    local_i_start[rnk_n-1] = 0;
+//     local_ni[rnk_n-1] *= 2;
+//     local_i_start[rnk_n-1] *= 2;
   }
     
   /* local size of c2r output in units of real */
   if(trafo_flag_user & PFFTI_TRAFO_C2R){
-    local_no[rnk_n-1] *= 2;
-    local_o_start[rnk_n-1] *= 2;
+    /* overwrite physical size of r2c input, 
+     * since PFFT user interface does not use padding for real outputs */
+    local_no[rnk_n-1] = no[rnk_n-1];
+    local_o_start[rnk_n-1] = 0;
+//     local_no[rnk_n-1] *= 2;
+//     local_o_start[rnk_n-1] *= 2;
   }
   
   return mem;

@@ -85,7 +85,7 @@ int main(int argc, char **argv){
       data, comm_cart_2d, PFFT_GC_NONTRANSPOSED);
 
   /* Initialize input with random numbers */
-  pfft_init_input_c2c_3d(n, local_ni, local_i_start,
+  pfft_init_input_complex_3d(n, local_ni, local_i_start,
       data);
 
   /* check gcell input */
@@ -112,7 +112,7 @@ int main(int argc, char **argv){
 
   /* Print error of back transformed data */
   MPI_Barrier(comm_cart_2d);
-  err = pfft_check_output_c2c_3d(n, local_ni, local_i_start, data, comm_cart_2d);
+  err = pfft_check_output_complex_3d(n, local_ni, local_i_start, data, comm_cart_2d);
   pfft_printf(comm_cart_2d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]); 
   pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
 

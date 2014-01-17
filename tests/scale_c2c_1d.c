@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 //  printf("time for back planing: %.2e\n", time);
 
   /* Initialize input with random numbers */
-  pfft_init_input_c2c_3d(n, local_ni, local_i_start,
+  pfft_init_input_complex_3d(n, local_ni, local_i_start,
       in);
   
   for(int t=0; t<iter; t++){
@@ -146,7 +146,7 @@ int main(int argc, char **argv)
       in[l] /= (n[0]*n[1]*n[2]);
 
   /* Print error of back transformed data */
-  err = pfft_check_output_c2c_3d(n, local_ni, local_i_start, in, comm_cart_1d);
+  err = pfft_check_output_complex_3d(n, local_ni, local_i_start, in, comm_cart_1d);
   pfft_printf(comm_cart_1d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]); 
   pfft_printf(comm_cart_1d, "maxerror = %6.2e;\n", err);
   
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
   pb = FFTW(mpi_plan_dft_3d)(n[0], n[1], n[2], out1, in1, comm_cart_1d,
       FFTW_BACKWARD, FFTW_MPI_TRANSPOSED_IN| fftw_flag);
   
-  pfft_init_input_c2c_3d(n, lni, lis,
+  pfft_init_input_complex_3d(n, lni, lis,
       in1);
 
   time_fftw[0] = time_fftw[1] = 0;
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
   if(myrank==0)
     printf("fftw_forw = %.2e, fftw_back = %.2e\n", max_time_fftw[0]/iter, max_time_fftw[1]/iter);
  
-  err = pfft_check_output_c2c_3d(n, lni, lis, in1, comm_cart_1d);
+  err = pfft_check_output_complex_3d(n, lni, lis, in1, comm_cart_1d);
   pfft_printf(comm_cart_1d, "Error after several forward and backward FFTWs of size n=(%td, %td, %td):\n", n[0], n[1], n[2]); 
   pfft_printf(comm_cart_1d, "maxerror = %6.2e;\n", err);
   

@@ -58,7 +58,7 @@
      &     PFFT_BACKWARD, PFFT_TRANSPOSED_IN + PFFT_MEASURE + PFFT_DESTROY_INPUT)
 
 !     Initialize input with random numbers
-      call dpfft_init_input_c2c_3d(n, local_ni, local_i_start, &
+      call dpfft_init_input_complex_3d(n, local_ni, local_i_start, &
      &     data_in)
 
 !     Print input data

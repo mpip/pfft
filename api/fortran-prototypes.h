@@ -37,56 +37,38 @@ PFFT_VOIDFUNC FORT(execute, EXECUTE)(
 PFFT_VOIDFUNC FORT(destroy_plan, DESTROY_PLAN)(
     PX(plan) *p
     );
-PFFT_VOIDFUNC FORT(init_input_c2c_3d, INIT_INPUT_C2C_3D)(
+PFFT_VOIDFUNC FORT(init_input_complex_3d, INIT_INPUT_COMPLEX_3D)(
     const INT *n, const INT *local_n, const INT *local_start,
     C *data
     );
-PFFT_VOIDFUNC FORT(init_input_c2c, INIT_INPUT_C2C)(
+PFFT_VOIDFUNC FORT(init_input_complex, INIT_INPUT_COMPLEX)(
     int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     C *data
     );
 
-PFFT_VOIDFUNC FORT(init_input_r2c_3d, INIT_INPUT_R2C_3D)(
+PFFT_VOIDFUNC FORT(init_input_real_3d, INIT_INPUT_REAL_3D)(
     const INT *n, const INT *local_n, const INT *local_start,
     R *data
     );
-PFFT_VOIDFUNC FORT(init_input_r2c, INIT_INPUT_R2C)(
+PFFT_VOIDFUNC FORT(init_input_real, INIT_INPUT_REAL)(
     int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     R *data
     );
 
-PFFT_VOIDFUNC FORT(init_input_r2r_3d, INIT_INPUT_R2R_3D)(
-    const INT *n, const INT *local_n, const INT *local_start,
-    R *data
-    );
-PFFT_VOIDFUNC FORT(init_input_r2r, INIT_INPUT_R2R)(
-    int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
-    R *data
-    );
-
-
-PFFT_VOIDFUNC FORT(check_output_c2c_3d, CHECK_OUTPUT_C2C_3D)(
+PFFT_VOIDFUNC FORT(check_output_complex_3d, CHECK_OUTPUT_COMPLEX_3D)(
     R *err, const INT *n, const INT *local_n, const INT *local_start,
     const C *data, MPI_Fint *comm
     );
-PFFT_VOIDFUNC FORT(check_output_c2c, CHECK_OUTPUT_C2C)(
+PFFT_VOIDFUNC FORT(check_output_complex, CHECK_OUTPUT_COMPLEX)(
     R *err, int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     const C *data, MPI_Fint *comm
     );
 
-PFFT_VOIDFUNC FORT(check_output_c2r_3d, CHECK_OUTPUT_C2R_3D)(
+PFFT_VOIDFUNC FORT(check_output_real_3d, CHECK_OUTPUT_REAL_3D)(
     R *err, const INT *n, const INT *local_n, const INT *local_start,
     const R *data, MPI_Fint *comm
     );
-PFFT_VOIDFUNC FORT(check_output_c2r, CHECK_OUTPUT_C2R)(
-    R *err, int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
-    const R *data, MPI_Fint *comm
-    );
-PFFT_VOIDFUNC FORT(check_output_r2r_3d, CHECK_OUTPUT_R2R_3D)(
-    R *err, const INT *n, const INT *local_n, const INT *local_start,
-    const R *data, MPI_Fint *comm
-    );
-PFFT_VOIDFUNC FORT(check_output_r2r, CHECK_OUTPUT_R2R)(
+PFFT_VOIDFUNC FORT(check_output_real, CHECK_OUTPUT_REAL)(
     R *err, int *rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     const R *data, MPI_Fint *comm
     );

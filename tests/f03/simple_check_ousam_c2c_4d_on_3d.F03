@@ -79,7 +79,7 @@ program main
       out, in, comm_cart_3d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE + PFFT_MEASURE + PFFT_DESTROY_INPUT)
 
   ! Initialize input with random numbers
-  call pfft_init_input_c2c(4, ni, local_ni, local_i_start, &
+  call pfft_init_input_complex(4, ni, local_ni, local_i_start, &
       in)
 
   ! Execute parallel forward FFT
@@ -92,7 +92,7 @@ program main
   in = in / (n(1)*n(2)*n(3)*n(4))
 
   ! Print error of back transformed data
-  err = pfft_check_output_c2c(4, ni, local_ni, local_i_start, in, comm_cart_3d)
+  err = pfft_check_output_complex(4, ni, local_ni, local_i_start, in, comm_cart_3d)
   if(myrank .eq. 0) then
     write(*,*) "Error after one forward and backward trafo of size n=(", n(1), ", ", n(2), ", ", n(3), ", ", n(4), "):"
     write(*,*) "maxerror = ", err

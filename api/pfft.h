@@ -103,45 +103,31 @@ BEGIN_C_DECLS
   PFFT_EXTERN void PX(execute)(PX(plan) fftplan);                                       \
   PFFT_EXTERN void PX(destroy_plan)(PX(plan) fftplan);                                  \
                                                                                         \
-  PFFT_EXTERN void PX(init_input_c2c_3d)(                                               \
+  PFFT_EXTERN void PX(init_input_complex_3d)(                                           \
     const INT *n, const INT *local_n, const INT *local_n_start,                         \
     C *data);                                                                           \
-  PFFT_EXTERN void PX(init_input_c2c)(                                                  \
+  PFFT_EXTERN void PX(init_input_complex)(                                              \
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       C *data);                                                                         \
                                                                                         \
-  PFFT_EXTERN void PX(init_input_r2c_3d)(                                               \
+  PFFT_EXTERN void PX(init_input_real_3d)(                                              \
     const INT *n, const INT *local_n, const INT *local_n_start,                         \
     R *data);                                                                           \
-  PFFT_EXTERN void PX(init_input_r2c)(                                                  \
+  PFFT_EXTERN void PX(init_input_real)(                                                 \
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       R *data);                                                                         \
                                                                                         \
-  PFFT_EXTERN void PX(init_input_r2r_3d)(                                               \
-    const INT *n, const INT *local_n, const INT *local_n_start,                         \
-    R *data);                                                                           \
-  PFFT_EXTERN void PX(init_input_r2r)(                                                  \
-      int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
-      R *data);                                                                         \
-                                                                                        \
-  PFFT_EXTERN R PX(check_output_c2c_3d)(                                                \
+  PFFT_EXTERN R PX(check_output_complex_3d)(                                            \
     const INT *n, const INT *local_n, const INT *local_n_start,                         \
     const C *data, MPI_Comm comm);                                                      \
-  PFFT_EXTERN R PX(check_output_c2c)(                                                   \
+  PFFT_EXTERN R PX(check_output_complex)(                                               \
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       const C *data, MPI_Comm comm);                                                    \
                                                                                         \
-  PFFT_EXTERN R PX(check_output_c2r_3d)(                                                \
+ PFFT_EXTERN R PX(check_output_real_3d)(                                                \
     const INT *n, const INT *local_n, const INT *local_n_start,                         \
     const R *data, MPI_Comm comm);                                                      \
-  PFFT_EXTERN R PX(check_output_c2r)(                                                   \
-    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,                \
-    const R *data, MPI_Comm comm);                                                      \
-                                                                                        \
- PFFT_EXTERN R PX(check_output_r2r_3d)(                                                 \
-    const INT *n, const INT *local_n, const INT *local_n_start,                         \
-    const R *data, MPI_Comm comm);                                                      \
-  PFFT_EXTERN R PX(check_output_r2r)(                                                   \
+  PFFT_EXTERN R PX(check_output_real)(                                                  \
     int rnk_n, const INT *n, const INT *local_n, const INT *local_start,                \
     const R *data, MPI_Comm comm);                                                      \
                                                                                         \

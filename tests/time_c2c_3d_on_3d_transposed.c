@@ -159,7 +159,7 @@ static void measure_pfft(
   timer[1] += MPI_Wtime();
 
   /* Initialize input with random numbers */
-  pfft_init_input_c2c_3d(n, local_ni, local_i_start,
+  pfft_init_input_complex_3d(n, local_ni, local_i_start,
       in);
 
   if(verbose)
@@ -187,7 +187,7 @@ static void measure_pfft(
 
   /* Print error of back transformed data */
   MPI_Barrier(MPI_COMM_WORLD);
-  err = pfft_check_output_c2c_3d(n, local_ni, local_i_start, in, comm_cart);
+  err = pfft_check_output_complex_3d(n, local_ni, local_i_start, in, comm_cart);
 
   /* Print optimization flags */
   pfft_printf(comm_cart, "Flags: ");
@@ -285,7 +285,7 @@ static void measure_fftw(
   }
 
   /* Initialize input with random numbers */
-  pfft_init_input_c2c_3d(n, local_ni, local_i_start,
+  pfft_init_input_complex_3d(n, local_ni, local_i_start,
       in);
 
   if(verbose)
@@ -313,7 +313,7 @@ static void measure_fftw(
   
   /* Print error of back transformed data */
   MPI_Barrier(MPI_COMM_WORLD);
-  err = pfft_check_output_c2c_3d(n, local_ni, local_i_start, in, MPI_COMM_WORLD);
+  err = pfft_check_output_complex_3d(n, local_ni, local_i_start, in, MPI_COMM_WORLD);
 
   /* Print optimization flags */
   pfft_printf(MPI_COMM_WORLD, "Flags: ");

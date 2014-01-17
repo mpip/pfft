@@ -261,18 +261,8 @@ static ousam_plan_1d plan_ousam_1d(
   ths->N1i = pni;
   ths->N1o = pno;
 
-  ths->Pi = 0;
-  ths->Po = 0;
-
-  /* calculate padding for r2c input */
-  if( trafo_flag & PFFTI_TRAFO_R2C)
-    if( ousam_flag & PFFTI_OUSAM_EMBED )
-      ths->Po = padding_size(n1o, trafo_flag, ousam_flag);
-
-  /* calculate padding for c2r output */
-  if( trafo_flag & PFFTI_TRAFO_C2R)
-    if( ousam_flag & PFFTI_OUSAM_TRUNC )
-      ths->Pi = padding_size(n1i, trafo_flag, ousam_flag);
+  ths->Pi = padding_size(n1i, trafo_flag, ousam_flag);
+  ths->Po = padding_size(n1o, trafo_flag, ousam_flag);
 
   if(ousam_flag & PFFTI_OUSAM_EMBED)
   {
@@ -281,6 +271,12 @@ static ousam_plan_1d plan_ousam_1d(
     ths->Cr = 0;
 
     if( trafo_flag &PFFTI_TRAFO_R2C )
+    {
+      ths->Pi = 0;
+      ths->N1i = n1i;
+    }
+
+    if( trafo_flag &PFFTI_TRAFO_C2R )
     {
       R tmp = ths->Cl; ths->Cl = ths->Cr; ths->Cr = tmp;
     }
@@ -292,9 +288,15 @@ static ousam_plan_1d plan_ousam_1d(
     ths->Cm = (pni - ths->Pi) - (pno - ths->Po);
     ths->Cr = 0;
 
-    if( trafo_flag &PFFTI_TRAFO_C2R )
+    if( trafo_flag &PFFTI_TRAFO_R2C )
     {
       R tmp = ths->Cl; ths->Cl = ths->Cr; ths->Cr = tmp;
+    }
+
+    if( trafo_flag &PFFTI_TRAFO_C2R )
+    {
+      ths->Po = 0;
+      ths->N1o = n1o;
     }
   }
 
@@ -399,7 +401,8 @@ static void execute_embed(
 
   if( (Cm == 0) && (Pi == 0) && (Po == 0) ){
     if( in != out )
-      memcpy(in, out, sizeof(R) * (size_t) (N0*N1i));
+      if(N0*N1i > 0)
+        memcpy(in, out, sizeof(R) * (size_t) (N0*N1i));
     return;
   } 
 
@@ -411,7 +414,7 @@ static void execute_embed(
         out[mo++] = in[mi++];
       
       /* fill gap with zeros */
-      memset(&out[mo], 0, sizeof(R) * (size_t) Cm);
+      if(Cm > 0) memset(&out[mo], 0, sizeof(R) * (size_t) Cm);
       mo += Cm;
 
       /* copy last half */
@@ -436,7 +439,7 @@ static void execute_embed(
       
       /* fill gap with zeros */
       mo -= Cm;
-      memset(&out[mo+1], 0, sizeof(R) * (size_t) Cm);
+      if(Cm > 0) memset(&out[mo+1], 0, sizeof(R) * (size_t) Cm);
   
       /* special case:  N0 == 1
        * first half of array stays where it is */
@@ -464,7 +467,8 @@ static void execute_trunc(
 
   if( (Cm == 0) && (Pi == 0) && (Po == 0) ){
     if( in != out )
-      memcpy(in, out, sizeof(R) * (size_t) (N0*N1i));
+      if(N0*N1i > 0)
+        memcpy(in, out, sizeof(R) * (size_t) (N0*N1i));
     return;
   } 
 

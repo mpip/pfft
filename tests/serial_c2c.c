@@ -68,7 +68,7 @@ int main(int argc, char **argv)
   plan_back = FFTW(plan_dft_3d)(n[0], n[1], n[2], out, in, FFTW_BACKWARD, fftw_flag);
   
   /* Initialize input with random numbers */
-  pfft_init_input_c2c_3d(n_ptr, local_ni, local_i_start,
+  pfft_init_input_complex_3d(n_ptr, local_ni, local_i_start,
       in);
 
   time_fftw[0] = time_fftw[1] = 0;
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 
   printf("fftw_forw = %.2e, fftw_back = %.2e\n", time_fftw[0]/iter, time_fftw[1]/iter);
  
-  err = pfft_check_output_c2c_3d(n_ptr, local_ni, local_i_start, in, MPI_COMM_WORLD);
+  err = pfft_check_output_complex_3d(n_ptr, local_ni, local_i_start, in, MPI_COMM_WORLD);
   printf("Error after several forward and backward FFTWs of size n=(%td, %td, %td):\n", n[0], n[1], n[2]); 
   printf("maxerror = %6.2e;\n", err);
   

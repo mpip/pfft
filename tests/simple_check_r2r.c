@@ -56,7 +56,7 @@ int main(int argc, char **argv)
       n, out, in, comm_cart_2d, kinds_back, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
 
   /* Initialize input with random numbers */
-  pfft_init_input_r2r_3d(n, local_ni, local_i_start,
+  pfft_init_input_real_3d(n, local_ni, local_i_start,
       in);
 
   /* execute parallel forward FFT */
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     in[l] /= (N[0]*N[1]*N[2]);
 
   /* Print error of back transformed data */
-  err = pfft_check_output_r2r_3d(n, local_ni, local_i_start, in, comm_cart_2d);
+  err = pfft_check_output_real_3d(n, local_ni, local_i_start, in, comm_cart_2d);
   pfft_printf(comm_cart_2d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]); 
   pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
   
