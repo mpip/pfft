@@ -75,10 +75,10 @@ The following functions are useful tools but are not necessarily needed to perfo
 \subsection{Initializing inputs and checking outputs}\label{sec:init-data-3d}
 To fill a complex array \code{data} with reproducible, complex values use one of the functions
 \begin{lstlisting}
-void pfft_init_input_c2c_3d(
+void pfft_init_input_complex_3d(
     const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
     pfft_complex *data);
-void pfft_init_input_c2c(
+void pfft_init_input_complex(
     int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
     pfft_complex *data);
 \end{lstlisting}
@@ -86,20 +86,20 @@ Hereby, the arrays \code{n}, \code{local_n} and \code{local_n_start} give the si
 see \cite{sec:par-data-decomp} for details on the parallel data decomposition.
 The functions
 \begin{lstlisting}
-double pfft_check_output_c2c_3d(
+double pfft_check_output_complex_3d(
     const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
     const pfft_complex *data, MPI_Comm comm);
-double pfft_check_output_c2c(
+double pfft_check_output_complex(
     int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
     const pfft_complex *data, MPI_Comm comm);
 \end{lstlisting}
-compute the $l_1$-norm between the elements of array \code{data} and values produced by \code{pfft_init_input_c2c_3d}, \code{pfft_init_input_c2c}.
+compute the $l_1$-norm between the elements of array \code{data} and values produced by \code{pfft_init_input_complex_3d}, \code{pfft_init_input_complex}.
 
 Note, that these functions can be combined for a quick consistency check of the FFT.
 Since a forward FFT followed by a backward FFT reproduces the inputs up to a scaling factor, the following code snippet should give a result equal to zero up to machine precision.
 \begin{lstlisting}
 /* Initialize input with random numbers */
-pfft_init_input_c2c_3d(n, local_ni, local_i_start,
+pfft_init_input_complex_3d(n, local_ni, local_i_start,
     in);
 
 /* execute parallel forward FFT */
@@ -113,7 +113,7 @@ for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
   in[l] /= (n[0]*n[1]*n[2]);
 
 /* Print error of back transformed data */
-err = pfft_check_output_c2c_3d(n, local_ni, local_i_start, in, comm_cart_2d);
+err = pfft_check_output_complex_3d(n, local_ni, local_i_start, in, comm_cart_2d);
 pfft_printf(comm_cart_2d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]);
 pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
 \end{lstlisting}
@@ -124,38 +124,19 @@ pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
 \section{Generalization to arbitrary dimensions}
 
 \begin{lstlisting}
-void pfft_init_input_r2c_3d(
+void pfft_init_input_real_3d(
     const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
     double *data);
-void pfft_init_input_r2c(
+void pfft_init_input_real(
     int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
     double *data);
 \end{lstlisting}
 
 \begin{lstlisting}
-void pfft_init_input_r2r_3d(
-    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
-    double *data);
-void pfft_init_input_r2r(
-    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
-    double *data);
-\end{lstlisting}
-
-
-\begin{lstlisting}
-double pfft_check_output_c2r_3d(
+double pfft_check_output_real_3d(
     const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
     const double *data, MPI_Comm comm);
-double pfft_check_output_c2r(
-    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
-    const double *data, MPI_Comm comm);
-\end{lstlisting}
-
-\begin{lstlisting}
-double pfft_check_output_r2r_3d(
-    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
-    const double *data, MPI_Comm comm);
-double pfft_check_output_r2r(
+double pfft_check_output_real(
     int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
     const double *data, MPI_Comm comm);
 \end{lstlisting}
