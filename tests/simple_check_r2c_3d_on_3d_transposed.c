@@ -48,9 +48,51 @@ int main(int argc, char **argv)
   pfft_init_input_real(3, n, local_ni, local_i_start,
       in);
 
+//  ptrdiff_t m;
+//  int myrank, size;
+//  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+//  MPI_Comm_size(MPI_COMM_WORLD, &size);
+//  ptrdiff_t *lis, *lni;
+//  
+//  lis = local_i_start; lni = local_ni;
+//  printf("rank %d: lis = [%td, %td, %td], lni = [%td, %td, %td]\n", myrank, lis[0], lis[1], lis[2], lni[0], lni[1], lni[2]);
+// 
+//  /* Output results: here we want to see the data ordering of real and imaginary parts */
+//  MPI_Barrier(MPI_COMM_WORLD);
+//  for(int t=0; t<size; t++){
+//    if(myrank == t){
+//      printf("rank %d: R2C PFFT Input:\n", myrank);
+//      m=0;
+//      for(ptrdiff_t k0=lis[0]; k0<lis[0]+lni[0]; k0++)
+//        for(ptrdiff_t k1=lis[1]; k1<lis[1]+lni[1]; k1++)
+//          for(ptrdiff_t k2=lis[2]; k2<lis[2]+lni[2]; k2++, m++)
+//            printf("in[%td, %td, %td] = %.2f\n", k0, k1, k2, in[m]);
+//      fflush(stdout);
+//    }
+//    MPI_Barrier(MPI_COMM_WORLD);
+//  }
+
   /* execute parallel forward FFT */
   pfft_execute(plan_forw);
   
+//  ptrdiff_t *los, *lno;
+//  los = local_o_start; lno = local_no;
+//  
+//  /* Output results: here we want to see the data ordering of real and imaginary parts */
+//  MPI_Barrier(MPI_COMM_WORLD);
+//  for(int t=0; t<size; t++){
+//    if(myrank == t){
+//      printf("rank %d: R2C PFFT Output:\n", myrank);
+//      m=0;
+//      for(ptrdiff_t k1=los[1]; k1<los[1]+lno[1]; k1++)
+//        for(ptrdiff_t k2=los[2]; k2<los[2]+lno[2]; k2++)
+//          for(ptrdiff_t k0=los[0]; k0<los[0]+lno[0]; k0++, m++)
+//            printf("out[%td, %td, %td] = %.2f + I * %.2f\n", k0, k1, k2, creal(out[m]), cimag(out[m]));
+//      fflush(stdout);
+//    }
+//    MPI_Barrier(MPI_COMM_WORLD);
+//  }
+
   /* execute parallel backward FFT */
   pfft_execute(plan_back);
   

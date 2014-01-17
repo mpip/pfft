@@ -124,6 +124,16 @@ INT  PX(local_size_partrafo_transposed)(
     mem = MAX(mem, mem_tmp);
   }
 
+  /* overwrite physical size of r2c input, 
+   * since PFFT user interface does not use padding for real inputs */
+  if( trafo_flags[rnk_pm] & PFFTI_TRAFO_R2C )
+    local_ni[rnk_n-1] = ni[rnk_n-1];
+
+  /* overwrite physical size of c2r output, 
+   * since PFFT user interface does not use padding for real outputs */
+  if( trafo_flags[rnk_pm] & PFFTI_TRAFO_C2R )
+    local_no[rnk_n-1] = no[rnk_n-1];
+
   free(pni); free(pno);
   
   return mem;

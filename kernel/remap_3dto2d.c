@@ -67,7 +67,7 @@ int PX(local_size_remap_3dto2d_transposed)(
   int p0, p1, q0, q1, rnk_pm;
   INT nb, nt, N0, N1, h0, h1, hm, blk0, blk1;
   INT local_nm[3];
-  INT iblk[3], mblk[3], oblk[3], pn[3];
+  INT iblk[3], mblk[3], oblk[3];
   MPI_Comm icomms[3], mcomms[3], ocomms[3];
   MPI_Comm comm_q0, comm_q1;
 
@@ -81,14 +81,12 @@ int PX(local_size_remap_3dto2d_transposed)(
 
   PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
 
-  PX(physical_dft_size)(rnk_n, n, trafo_flag,
-      pn);
-
-  /* handle r2c and c2r like c2c */
+  /* Handle r2c input and c2r output like r2r. */
+  /* At the moment, PFFT supports 3d distributed 3d arrays only in real space. */
   if(trafo_flag & PFFTI_TRAFO_RDFT)
-    trafo_flag = PFFTI_TRAFO_C2C;
+    trafo_flag = PFFTI_TRAFO_R2R;
 
-  init_blks_comms_local_size(pn, comm_cart_3d,
+  init_blks_comms_local_size(n, comm_cart_3d,
       iblk, mblk, oblk, icomms, mcomms, ocomms,
       local_ni, local_nm, local_no);
 
@@ -136,15 +134,15 @@ int PX(local_size_remap_3dto2d_transposed)(
 
   /* take care of transposed data ordering */
   if(transp_flag & PFFT_TRANSPOSED_OUT){
-    get_local_n_3d(pn, iblk, icomms, local_ni);
-    get_local_start_3d(pn, iblk, icomms, local_i_start);
-    get_local_n_3d(pn, oblk, ocomms, local_no);
-    get_local_start_3d(pn, oblk, ocomms, local_o_start);
+    get_local_n_3d(n, iblk, icomms, local_ni);
+    get_local_start_3d(n, iblk, icomms, local_i_start);
+    get_local_n_3d(n, oblk, ocomms, local_no);
+    get_local_start_3d(n, oblk, ocomms, local_o_start);
   } else {
-    get_local_n_3d(pn, iblk, icomms, local_no);
-    get_local_start_3d(pn, iblk, icomms, local_o_start);
-    get_local_n_3d(pn, oblk, ocomms, local_ni);
-    get_local_start_3d(pn, oblk, ocomms, local_i_start);
+    get_local_n_3d(n, iblk, icomms, local_no);
+    get_local_start_3d(n, iblk, icomms, local_o_start);
+    get_local_n_3d(n, oblk, ocomms, local_ni);
+    get_local_start_3d(n, oblk, ocomms, local_i_start);
   }
 
   /* free communicators */
@@ -169,7 +167,7 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
   int rnk_pm;
   INT nb, nt, N0, N1, h0, h1, hm, blk0, blk1;
   INT local_ni[3], local_nm[3], local_no[3];
-  INT iblk[3], mblk[3], oblk[3], pn[3];
+  INT iblk[3], mblk[3], oblk[3];
   MPI_Comm icomms[3], mcomms[3], ocomms[3];
   MPI_Comm comm_q0, comm_q1;
   R *in=in_user, *out=out_user;
@@ -185,14 +183,12 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
 
   ths = remap_3dto2d_mkplan();
 
-  PX(physical_dft_size)(rnk_n, n, trafo_flag,
-      pn);
-
-  /* handle r2c and c2r like c2c */
+  /* Handle r2c input and c2r output like r2r. */
+  /* At the moment, PFFT supports 3d distributed 3d arrays only in real space. */
   if(trafo_flag & PFFTI_TRAFO_RDFT)
-    trafo_flag = PFFTI_TRAFO_C2C;
+    trafo_flag = PFFTI_TRAFO_R2R;
 
-  init_blks_comms_local_size(pn, comm_cart_3d,
+  init_blks_comms_local_size(n, comm_cart_3d,
       iblk, mblk, oblk, icomms, mcomms, ocomms,
       local_ni, local_nm, local_no);
 
