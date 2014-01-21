@@ -397,6 +397,25 @@ PX(plan) PX(plan_partrafo)(
    * So, for forward and backward steps we use 'in' for input and
    * 'out' for output. */
 
+  /* conjugate inputs because fftw only supports backward trafo for c2r */
+  /* conjugate outputs because fftw only supports forward trafo for r2c */
+  if((sign == PFFT_FORWARD) && (trafo_flag & PFFTI_TRAFO_C2R)) {
+    if(io_flag & PFFT_DESTROY_INPUT)
+      ths->conjugate_in = ths->conjugate_out = in;
+    else {
+      ths->conjugate_in = in;
+      ths->conjugate_out = out;
+
+      /* Go on with in-place transforms in order to preserve input. */
+      in = out;
+    }
+    sign = ths->sign = PFFT_BACKWARD;
+  } else if((sign == PFFT_BACKWARD) && (trafo_flag & PFFTI_TRAFO_R2C)) {
+    ths->conjugate_in = ths->conjugate_out = out;
+    sign = ths->sign = PFFT_FORWARD;
+  } else
+    ths->conjugate_in = ths->conjugate_out = NULL;
+
   /* twiddle inputs in order to get outputs shifted by n/2 */
   if(pfft_flags & PFFT_SHIFTED_OUT){
     if(io_flag & PFFT_DESTROY_INPUT){

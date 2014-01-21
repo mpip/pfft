@@ -348,6 +348,11 @@ struct PX(plan_s){
   gtransp_plan *global_remap;
   outrafo_plan *serial_trafo;
   remap_3dto2d_plan remap_3dto2d[2];
+
+  /* save data pointers to input and output for for complex conjugation in the cases
+   * PFFT_FORWARD & PFFTI_TRAFO_C2R and PFFT_BACKWARD & PFFTI_TRAFO_R2C              */
+  R* conjugate_in;
+  R* conjugate_out;
   
   /* save data pointers to input and output for index shifts (PFFT_SHIFTED_[IN|OUT]) */
   R* itwiddle_in;
