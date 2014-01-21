@@ -21,11 +21,9 @@ check_PROGRAMS = \
 
 check_PROGRAMS += \
 	simple_check_c2c simple_check_c2c_transposed \
-	simple_check_r2c simple_check_r2c_transposed \
+  simple_check_c2r simple_check_c2r_c2c simple_check_c2r_c2c_shifted simple_check_c2r_c2c_ousam simple_check_c2r_c2c_ousam_shifted \
+	simple_check_r2c simple_check_r2c_transposed simple_check_r2c_c2c \
 	simple_check_r2r simple_check_r2r_transposed
-
-check_PROGRAMS += \
-	manual_min_c2c 
 
 
 #if ENABLE_COMMON_PFFT
@@ -48,6 +46,7 @@ check_PROGRAMS += \
 
 check_PROGRAMS += \
 	simple_check_ousam_c2c simple_check_ousam_c2c_transposed \
+	simple_check_ousam_c2r \
 	simple_check_ousam_r2c simple_check_ousam_r2c_transposed \
 	simple_check_ousam_c2c_4d simple_check_ousam_c2c_4d_transposed
 
