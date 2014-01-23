@@ -422,6 +422,7 @@ PFFT_DEFINE_API(PFFT_MANGLE_LONG_DOUBLE, FFTW_MANGLE_LONG_DOUBLE, long double, p
 #define PFFT_TRANSPOSED_NONE      (0U)
 #define PFFT_TRANSPOSED_IN        (1U<< 0)
 #define PFFT_TRANSPOSED_OUT       (1U<< 1)
+#define PFFT_SHIFTED_NONE         (0U)
 #define PFFT_SHIFTED_IN           (1U<< 2)
 #define PFFT_SHIFTED_OUT          (1U<< 3)
 #define PFFT_MEASURE              (0U)     /* default: use FFTW_MEASURE for fftw planer */

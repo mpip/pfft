@@ -146,7 +146,7 @@ void PX(plan_partrafo_transposed)(
     int rnk_pm, MPI_Comm *comms_pm,
     R *in_user, R *out_user, int sign, const X(r2r_kind) *kinds,
     unsigned transp_flag_user, const unsigned *trafo_flags,
-    unsigned opt_flag, unsigned io_flag, unsigned fftw_flags, 
+    unsigned opt_flag, unsigned io_flag, unsigned si_flag, unsigned fftw_flags, 
     outrafo_plan *trafos, gtransp_plan *remaps
     )
 {
@@ -185,7 +185,7 @@ void PX(plan_partrafo_transposed)(
       Nb, rnk_n - rnk_pm,
       &n[rnk_pm], &ni[rnk_pm], &no[rnk_pm],
       howmany, in, out, sign, (kinds!=NULL) ? &kinds[rnk_pm] : NULL,
-      trafo_flag, transp_flag, opt_flag, fftw_flags);
+      trafo_flag, transp_flag, si_flag, opt_flag, fftw_flags);
 
   /* perform last trafos of forward plan in-place on 'out' in order to preserve input */
   if(transp_flag_user & PFFT_TRANSPOSED_OUT)
@@ -235,7 +235,7 @@ void PX(plan_partrafo_transposed)(
     trafos[s] = PX(plan_outrafo)(
         Nb, 1, &N, &Ni, &No, tuple_size,
         in, out, sign, &kind, 
-        trafo_flag, transp_flag, opt_flag, fftw_flags);
+        trafo_flag, transp_flag, si_flag, opt_flag, fftw_flags);
   }
 
   free(pni); free(pno);

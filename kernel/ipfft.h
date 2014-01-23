@@ -145,7 +145,7 @@ typedef ptrdiff_t INT;
 #define PFFTI_TRAFO_RO01           (1U<< 8)
 #define PFFTI_TRAFO_RO10           (1U<< 9)
 #define PFFTI_TRAFO_RO11           (1U<<10)
-#define PFFTI_TRAFO_RC2C           (1U<<11)
+#define PFFTI_TRAFO_RC2C           (1U<<11) /* TODO: Do we need this flag? */
 #define PFFTI_TRAFO_SKIP           (1U<<12)
 #define PFFTI_TRAFO_PHANTOM        (1U<<13)
 
@@ -277,9 +277,9 @@ typedef struct{
   INT N1o;  /* 2nd array size after oversampling */
   R *in;    /* pointer to input */
   R *out;   /* pointer to output */
-  INT Cl;   /* 1st block size of coefficients */
-  INT Cm;   /* gap size: number of zeros to add / coefficients to skip */
-  INT Cr;   /* 2nd block size of coefficients */
+  INT Zl;   /* left gap size: number of zeros to add / coefficients to skip on the left of D */
+  INT D;   /* left data block size */
+  INT Zr;   /* right gap size: number of zeros to add / coefficients to skip on the right of D */
   INT Pi;   /* padding for r2c, c2r before oversampling */
   INT Po;   /* padding for r2c, c2r after oversampling */ 
   unsigned ousam_flag; /* set to PFFTI_EMBED or PFFTI_TRUNC */
@@ -316,6 +316,10 @@ struct PX(plan_s){
   INT *n;
   INT *ni;
   INT *no;
+  INT *local_ni;
+  INT *local_ni_start;
+  INT *local_no;
+  INT *local_no_start;
   INT howmany;
   INT *iblock;
   INT *mblock;
@@ -335,6 +339,8 @@ struct PX(plan_s){
 
   /* save the init flags for later reference */
   unsigned pfft_flags;
+
+  int *skip_trafos;
 
   gtransp_plan *global_remap;
   outrafo_plan *serial_trafo;
@@ -423,7 +429,7 @@ void PX(plan_partrafo_transposed)(
     int rnk_pm, MPI_Comm *comms_pm,
     R *in, R *out, int sign, const X(r2r_kind) *kinds,
     unsigned transp_flag, const unsigned *trafo_flags,
-    unsigned opt_flag, unsigned io_flag, unsigned fftw_flags, 
+    unsigned opt_flag, unsigned io_flag, unsigned si_flag, unsigned fftw_flags, 
     outrafo_plan *trafos, gtransp_plan *remaps);
 
 /* transpose.c */
@@ -463,7 +469,7 @@ INT PX(local_size_outrafo)(
 outrafo_plan PX(plan_outrafo)(
     INT nb, int rnk, const INT *n, const INT *ni, const INT *no, INT howmany,
     R *in, R *out, int sign, const X(r2r_kind) *kinds,
-    unsigned trafo_flag, unsigned transp_flag,
+    unsigned trafo_flag, unsigned transp_flag, unsigned si_flag,
     unsigned opt_flag, unsigned fftw_flags);
 void PX(execute_outrafo)(
     outrafo_plan ths);
@@ -477,7 +483,7 @@ INT PX(local_size_ousam_dd)(
     unsigned trafo_flag);
 ousam_plan_dd PX(plan_ousam_dd)(
     INT nb, int rnk, const INT *ni, const INT *no, INT howmany, 
-    R *in, R *out, unsigned trafo_flag, unsigned ousam_flag);
+    R *in, R *out, unsigned trafo_flag, unsigned si_flag, unsigned ousam_flag);
 void PX(execute_ousam_dd)(
     ousam_plan_dd ths);
 void PX(ousam_dd_rmplan)(

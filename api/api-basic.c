@@ -32,6 +32,10 @@
   MPI_Comm *gdbg_comms_pm;
 #endif
 
+static void fftshift_in(
+    PX(plan) ths);
+static void fftshift_out(
+    PX(plan) ths);
 
 static void execute_transposed(
     int rnk_pm, outrafo_plan *trafos, gtransp_plan *remaps,
@@ -686,11 +690,19 @@ void PX(execute)(
   PX(execute_remap_3dto2d)(ths->remap_3dto2d[0]);
   ths->timer->remap_3dto2d[0] += MPI_Wtime(); 
 
+  /* twiddle inputs in order to get outputs shifted by n/2 */
+  if(ths->pfft_flags & PFFT_SHIFTED_OUT)
+    fftshift_in(ths);
+
   execute_transposed(r, ths->serial_trafo, ths->global_remap,
       ths->timer->trafo, ths->timer->remap);
 
   execute_transposed(r, &ths->serial_trafo[r+1], &ths->global_remap[r],
       &ths->timer->trafo[r+1], &ths->timer->remap[r]);
+
+  /* twiddle outputs in order to get inputs shifted by n/2 */
+  if(ths->pfft_flags & PFFT_SHIFTED_IN)
+    fftshift_out(ths);
   
   ths->timer->remap_3dto2d[1] -= MPI_Wtime(); 
   PX(execute_remap_3dto2d)(ths->remap_3dto2d[1]);
@@ -698,6 +710,69 @@ void PX(execute)(
 
   ths->timer->iter++;
   ths->timer->whole += MPI_Wtime();
+}
+
+
+/* twiddle inputs in order to get outputs shifted by n/2 */
+static void fftshift_in(
+    PX(plan) ths
+    )
+{
+  int rnk_n = ths->rnk_n;
+  const INT *ni = ths->ni, *n = ths->n;
+  const INT *local_ni = ths->local_ni, *local_ni_start = ths->local_ni_start;
+  INT howmany = ths->howmany, l;
+  R factor;
+
+  if( (ths->trafo_flag & PFFTI_TRAFO_C2C) || (ths->trafo_flag & PFFTI_TRAFO_C2R ) )
+    howmany *= 2;
+  
+  INT local_n_total = PX(prod_INT)(rnk_n, local_ni);
+
+  for(INT k=0; k<local_n_total; k++){
+    l = k;
+    factor = 1.0;
+    for(int t=rnk_n-1; t>=0; t--){
+      INT kt = l%local_ni[t];
+      if(!ths->skip_trafos[t])
+        factor *= (kt + local_ni_start[t] - ni[t]/2 + n[t]/2) % 2 ? -1.0 : 1.0;
+      l /= local_ni[t];
+    }
+
+    for(INT h=0; h<howmany; h++)
+      ths->in[howmany*k+h] *= factor;
+  }
+}
+
+/* twiddle outputs in order to get inputs shifted by n/2 */
+static void fftshift_out(
+    PX(plan) ths
+    )
+{
+  int rnk_n = ths->rnk_n;
+  const INT *no = ths->no;
+  const INT *local_no = ths->local_no, *local_no_start = ths->local_no_start;
+  INT howmany = ths->howmany, l;
+  R factor;
+  
+  if( (ths->trafo_flag & PFFTI_TRAFO_C2C) || (ths->trafo_flag & PFFTI_TRAFO_R2C ) )
+    howmany *= 2;
+
+  INT local_n_total = PX(prod_INT)(rnk_n, local_no);
+
+  for(INT k=0; k<local_n_total; k++){
+    l = k;
+    factor = 1.0;
+    for(int t=rnk_n-1; t>=0; t--){
+      INT kt = l%local_no[t];
+      if(!ths->skip_trafos[t])
+        factor *= (kt + local_no_start[t] - no[t]/2) % 2 ? -1.0 : 1.0;
+      l /= local_no[t];
+    }
+
+    for(INT h=0; h<howmany; h++)
+      ths->out[howmany*k+h] *= factor;
+  }
 }
 
 

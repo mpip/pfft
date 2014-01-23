@@ -38,7 +38,7 @@ static void save_param_into_plan(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock, const INT *mblock, const INT *oblock,
     MPI_Comm comm_cart, int rnk_pm, MPI_Comm *comms_pm,
-    R *in, R *out, int sign, const X(r2r_kind) *kinds,
+    R *in, R *out, int sign, const X(r2r_kind) *kinds, const int *skip_trafos,
     unsigned transp_flag, unsigned trafo_flag,
     unsigned opt_flag, unsigned fftw_flags,
     unsigned pfft_flags, 
@@ -66,6 +66,8 @@ static unsigned extract_transp_flag(
 static unsigned extract_opt_flag(
     unsigned pfft_flags);
 static unsigned extract_io_flag(
+    unsigned pfft_flags);
+static unsigned extract_shift_index_flag(
     unsigned pfft_flags);
 static unsigned extract_fftw_flags(
     unsigned pfft_flags);
@@ -194,6 +196,7 @@ PX(plan) PX(plan_partrafo)(
   unsigned transp_flag = extract_transp_flag(pfft_flags);
   unsigned opt_flag = extract_opt_flag(pfft_flags);
   unsigned io_flag = extract_io_flag(pfft_flags);
+  unsigned si_flag = extract_shift_index_flag(pfft_flags);
   unsigned fftw_flags = extract_fftw_flags(pfft_flags);
   unsigned *trafo_flags_to, *trafo_flags_ti;
   INT *ni_to, *n_to, *no_to, *ni_ti, *n_ti, *no_ti;
@@ -201,6 +204,17 @@ PX(plan) PX(plan_partrafo)(
   PX(plan) ths;
   int rnk_pm;
   MPI_Comm *comms_pm;
+
+  if(pfft_flags & (PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT))
+    for(INT t=0; t<rnk_n; t++)
+      if(n[t]%2)
+        return NULL;
+
+  /* index shift of n/2 is only possbile for even n */
+  if(pfft_flags & (PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT))
+    for(INT t=0; t<rnk_n; t++)
+      if(n[t]%2)
+        return NULL;
 
   /* transposed input and output in one plan is not supported */
   if(transp_flag & PFFT_TRANSPOSED_OUT)
@@ -246,6 +260,14 @@ PX(plan) PX(plan_partrafo)(
   iblk = PX(malloc_INT)(rnk_pm);
   mblk = PX(malloc_INT)(rnk_pm);
   oblk = PX(malloc_INT)(rnk_pm);
+
+  /* save local block sizes and offsets into PFFT plan */
+  PX(local_size_partrafo)(
+    rnk_n, n, ni, no,
+    howmany, iblock_user, oblock_user, comm_cart,
+    trafo_flag, pfft_flags,
+    ths->local_ni, ths->local_ni_start,
+    ths->local_no, ths->local_no_start);
   
   /* calculate blocksizes according to trafo and transp flags */
   evaluate_blocks(rnk_n, ni, no, iblock_user, oblock_user,
@@ -254,7 +276,7 @@ PX(plan) PX(plan_partrafo)(
   
   /* Avoid recalculation of the same parameters all the time. */
   save_param_into_plan(rnk_n, n, ni, no, howmany, iblk, mblk, oblk,
-      comm_cart, rnk_pm, comms_pm, in, out, sign, kinds,
+      comm_cart, rnk_pm, comms_pm, in, out, sign, kinds, skip_trafos_user,
       transp_flag, trafo_flag, opt_flag, fftw_flags, pfft_flags,
       ths);
 
@@ -288,7 +310,7 @@ PX(plan) PX(plan_partrafo)(
     PX(plan_partrafo_transposed)(rnk_n, n_to, ni_to, no_to,
         howmany, iblk, mblk,
         rnk_pm, comms_pm, in, out, sign, kinds,
-        PFFT_TRANSPOSED_OUT, trafo_flags_to, opt_flag, io_flag, fftw_flags, 
+        PFFT_TRANSPOSED_OUT, trafo_flags_to, opt_flag, io_flag, si_flag, fftw_flags, 
         ths->serial_trafo, ths->global_remap);
 
     /* Go on with in-place transforms in order to preserve input. */
@@ -305,7 +327,7 @@ PX(plan) PX(plan_partrafo)(
     PX(plan_partrafo_transposed)(rnk_n, n_ti, ni_ti, no_ti,
         howmany, mblk, oblk,
         rnk_pm, comms_pm, in, out, sign, kinds,
-        PFFT_TRANSPOSED_IN, trafo_flags_ti, opt_flag, io_flag, fftw_flags, 
+        PFFT_TRANSPOSED_IN, trafo_flags_ti, opt_flag, io_flag, si_flag, fftw_flags, 
         ths->serial_trafo, ths->global_remap);
 
     /* Go on with in-place transforms in order to preserve input. */
@@ -362,7 +384,7 @@ static void save_param_into_plan(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock, const INT *mblock, const INT *oblock,
     MPI_Comm comm_cart, int rnk_pm, MPI_Comm *comms_pm,
-    R *in, R *out, int sign, const X(r2r_kind) *kinds,
+    R *in, R *out, int sign, const X(r2r_kind) *kinds, const int *skip_trafos_user,
     unsigned transp_flag, unsigned trafo_flag,
     unsigned opt_flag, unsigned fftw_flags, 
     unsigned pfft_flags,
@@ -374,6 +396,7 @@ static void save_param_into_plan(
     ths->n[t]  = n[t];
     ths->ni[t] = ni[t];
     ths->no[t] = no[t];
+    ths->skip_trafos[t] = (skip_trafos_user) ? skip_trafos_user[t] : 0;
   }
   ths->howmany = howmany;
   for(int t=0; t<rnk_pm; t++){
@@ -629,6 +652,10 @@ static PX(plan) mkplan(
   ths->n  = PX(malloc_INT)(rnk_n);
   ths->ni = PX(malloc_INT)(rnk_n);
   ths->no = PX(malloc_INT)(rnk_n);
+  ths->local_ni = PX(malloc_INT)(rnk_n);
+  ths->local_no = PX(malloc_INT)(rnk_n);
+  ths->local_ni_start = PX(malloc_INT)(rnk_n);
+  ths->local_no_start = PX(malloc_INT)(rnk_n);
   ths->iblock = PX(malloc_INT)(rnk_pm);
   ths->mblock = PX(malloc_INT)(rnk_pm);
   ths->oblock = PX(malloc_INT)(rnk_pm);
@@ -636,6 +663,8 @@ static PX(plan) mkplan(
   ths->comms_pm = (MPI_Comm*) malloc(sizeof(MPI_Comm) * (size_t) rnk_pm);
   ths->np = PX(malloc_int)(rnk_pm);
   ths->kinds = NULL; /* allocate later if needed */
+
+  ths->skip_trafos = PX(malloc_int)(rnk_n);
 
   /* allocate array of plans */
   ths->serial_trafo = (outrafo_plan *)
@@ -667,6 +696,8 @@ void PX(rmplan)(
   free(ths->global_remap);
 
   free(ths->ni); free(ths->n); free(ths->no);
+  free(ths->local_ni); free(ths->local_no);
+  free(ths->local_ni_start); free(ths->local_no_start);
   free(ths->iblock); free(ths->mblock); free(ths->oblock);
 
   MPI_Comm_free(&ths->comm_cart);
@@ -676,6 +707,8 @@ void PX(rmplan)(
   free(ths->comms_pm);
   if(ths->kinds != NULL)
     free(ths->kinds);
+
+  free(ths->skip_trafos);
 
   for(int t=0; t<2; t++)
     PX(remap_3dto2d_rmplan)(ths->remap_3dto2d[t]);
@@ -722,6 +755,19 @@ static unsigned extract_io_flag(
   return flag;
 }
 
+static unsigned extract_shift_index_flag(
+    unsigned pfft_flags
+    )
+{
+  unsigned si_flag = PFFT_SHIFTED_NONE;
+
+  if(pfft_flags & PFFT_SHIFTED_IN)
+    si_flag |= PFFT_SHIFTED_IN;
+  if(pfft_flags & PFFT_SHIFTED_OUT)
+    si_flag |= PFFT_SHIFTED_OUT;
+
+  return si_flag;
+}
 /* Assure that only PFFT-compatible FFTW flags are used. */
 static unsigned extract_fftw_flags(
     unsigned pfft_flags

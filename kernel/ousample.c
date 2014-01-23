@@ -39,18 +39,14 @@ static INT local_size_ousam_1d(
     unsigned trafo_flag);
 static ousam_plan_1d plan_ousam_1d(
     INT n0, INT n1i, INT n1o, INT howmany,
-    R *in, R *out, unsigned trafo_flag, unsigned ousam_flag);
+    R *in, R *out, unsigned trafo_flag,
+   unsigned si_flag, unsigned ousam_flag);
 static int is_complex_data(
     unsigned trafo_flag, unsigned ousam_flag);
 static void execute_embed(
     ousam_plan_1d ths);
 static void execute_trunc(
     ousam_plan_1d ths);
-// static INT logical_dft_size(
-//     INT n, unsigned trafo_flag);
-static INT padding_size(
-    INT n, unsigned trafo_flag, unsigned ousam_flag);
-
 
 
 /* generalizes 'local_size_ousam_1d' to multiple dimensions */
@@ -105,7 +101,7 @@ INT PX(local_size_ousam_dd)(
 
 ousam_plan_dd PX(plan_ousam_dd)(
     INT nb, int rnk, const INT *ni, const INT *no, INT howmany, 
-    R *in, R *out, unsigned trafo_flag, unsigned ousam_flag
+    R *in, R *out, unsigned trafo_flag, unsigned si_flag, unsigned ousam_flag
     )
 {
   INT n0, tuple_size, n1i, n1o;
@@ -142,7 +138,7 @@ ousam_plan_dd PX(plan_ousam_dd)(
     }
   
     ths->ousam_1d[t] = plan_ousam_1d(
-        n0, n1i, n1o, tuple_size, in, out, trafo_flag, ousam_flag);
+        n0, n1i, n1o, tuple_size, in, out, trafo_flag, si_flag, ousam_flag);
 
     /* only first onedimensional trafo is r2c or c2r */
     if(trafo_flag & PFFTI_TRAFO_RDFT)
@@ -226,7 +222,8 @@ static int work_on_c2r_output(
 
 static ousam_plan_1d plan_ousam_1d(
     INT n0, INT n1i, INT n1o, INT howmany,
-    R *in, R *out, unsigned trafo_flag, unsigned ousam_flag
+    R *in, R *out, unsigned trafo_flag,
+    unsigned si_flag, unsigned ousam_flag
     )
 {
   INT pni, pno;
@@ -241,71 +238,85 @@ static ousam_plan_1d plan_ousam_1d(
   
   ths = ousam_1d_mkplan();
 
-//   INT lni = logical_dft_size(n1i, trafo_flag);
-//   INT lno = logical_dft_size(n1o, trafo_flag);
-
   pni = PX(physical_dft_size_1d)(n1i, trafo_flag);
   pno = PX(physical_dft_size_1d)(n1o, trafo_flag);
 
-  /* double phys. size for r2c input and c2r output */
-  if( trafo_flag & PFFTI_TRAFO_RDFT )
-    if( ! is_complex_data(trafo_flag, ousam_flag) ){
-      pni *= 2; pno *= 2;
-    }
-  
   /* double 'howmany' for complex data type */
   if( is_complex_data(trafo_flag, ousam_flag) )
     howmany *= 2;
-  
+ 
   ths->N0 = n0;
-  ths->N1i = pni;
-  ths->N1o = pno;
+  ths->N1i = n1i;
+  ths->N1o = n1o;
 
-  ths->Pi = padding_size(n1i, trafo_flag, ousam_flag);
-  ths->Po = padding_size(n1o, trafo_flag, ousam_flag);
+  /* default: no padding (valid for most trafos) */
+  ths->Pi = 0;
+  ths->Po = 0;
 
   if(ousam_flag & PFFTI_OUSAM_EMBED)
   {
-    ths->Cl = pni - ths->Pi;
-    ths->Cm = (pno - ths->Po) - (pni - ths->Pi);
-    ths->Cr = 0;
+    ths->Zl = 0;
+    ths->D  = ths->N1i;
+    ths->Zr = ths->N1o - ths->N1i;
 
-    if( trafo_flag &PFFTI_TRAFO_R2C )
-    {
-      ths->Pi = 0;
-      ths->N1i = n1i;
-    }
-
-    if( trafo_flag &PFFTI_TRAFO_C2R )
-    {
-      R tmp = ths->Cl; ths->Cl = ths->Cr; ths->Cr = tmp;
-    }
+    if(si_flag & PFFT_SHIFTED_IN)
+      ths->Zl = ths->Zr = ths->Zr/2;
   }
 
   if(ousam_flag & PFFTI_OUSAM_TRUNC)
   {
-    ths->Cl = pno - ths->Po;
-    ths->Cm = (pni - ths->Pi) - (pno - ths->Po);
-    ths->Cr = 0;
+    ths->Zl = 0;
+    ths->D = ths->N1o;
+    ths->Zr = ths->N1i - ths->N1o;
 
-    if( trafo_flag &PFFTI_TRAFO_R2C )
+    if(si_flag & PFFT_SHIFTED_OUT)
+      ths->Zl = ths->Zr = ths->Zr/2;
+  }
+
+  /* special case r2c */
+  if( trafo_flag & PFFTI_TRAFO_R2C )
+  {
+    /* use physical array size for r2c output */
+    if( ousam_flag & PFFTI_OUSAM_TRUNC )
     {
-      R tmp = ths->Cl; ths->Cl = ths->Cr; ths->Cr = tmp;
+      ths->N1i = pni;
+      ths->N1o = pno;
     }
 
-    if( trafo_flag &PFFTI_TRAFO_C2R )
+    ths->Zl = ths->N1o - ths->N1i;
+    ths->D  = ths->N1i;
+    ths->Zr = 0;
+
+    /* generate padding for r2c input */
+    if( ousam_flag & PFFTI_OUSAM_EMBED )
+      ths->Po  = 2*pno-n1o;
+  }
+
+  /* special case c2r */
+  if( trafo_flag & PFFTI_TRAFO_C2R )
+  {
+    /* use physical array size for c2r input */
+    if( ousam_flag & PFFTI_OUSAM_EMBED )
     {
-      ths->Po = 0;
-      ths->N1o = n1o;
+      ths->N1i = pni;
+      ths->N1o = pno;
     }
+
+    ths->Zl = ths->N1i - ths->N1o;
+    ths->D  = ths->N1o;
+    ths->Zr = 0;
+
+    /* truncate padding for c2r output */
+    if( ousam_flag & PFFTI_OUSAM_TRUNC )
+      ths->Pi  = 2*pni-n1i;
   }
 
   /* include howmany into parameters */
   ths->N1i *= howmany;
   ths->N1o *= howmany;
-  ths->Cl  *= howmany;
-  ths->Cm  *= howmany;
-  ths->Cr  *= howmany;
+  ths->Zl  *= howmany;
+  ths->D  *= howmany;
+  ths->Zr  *= howmany;
   ths->Pi  *= howmany;
   ths->Po  *= howmany;
 
@@ -331,33 +342,6 @@ static int is_complex_data(
     if( ousam_flag & PFFTI_OUSAM_EMBED )
       return 1;
  
-  return 0;
-}
-
-
-// static INT logical_dft_size(
-//     INT n, unsigned trafo_flag
-//     )
-// {
-//   if( trafo_flag & PFFTI_TRAFO_RE00 ){
-//     return 2*(n - 1);
-//   } else if( trafo_flag & PFFTI_TRAFO_RO00 ) {
-//     return 2*(n + 1);
-//   } else if( trafo_flag & PFFTI_TRAFO_R2R ){
-//     return 2*n;
-//   } else {
-//     return n;
-//   }
-// }
-
-static INT padding_size(
-    INT n, unsigned trafo_flag, unsigned ousam_flag
-    )
-{
-  if( trafo_flag & PFFTI_TRAFO_RDFT )
-    if( ! is_complex_data(trafo_flag, ousam_flag) )
-      return 2*PX(physical_dft_size_1d)(n, trafo_flag) - n;
-  
   return 0;
 }
 
@@ -395,11 +379,12 @@ static void execute_embed(
 {
   INT mi, mo, k0, k1;
   const INT N0 = ths->N0, N1i = ths->N1i, N1o = ths->N1o;
-  const INT Cl = ths->Cl, Cm = ths->Cm, Cr = ths->Cr; 
+  const INT Zl = ths->Zl, Zr = ths->Zr; 
+  const INT D = ths->D; 
   const INT Pi = ths->Pi, Po = ths->Po;
   R *const in = ths->in, *const out = ths->out;
 
-  if( (Cm == 0) && (Pi == 0) && (Po == 0) ){
+  if( (Zl == 0) && (Zr == 0) && (Pi == 0) && (Po == 0) ){
     if( in != out )
       if(N0*N1i > 0)
         memcpy(in, out, sizeof(R) * (size_t) (N0*N1i));
@@ -409,19 +394,19 @@ static void execute_embed(
   if( in != out ){
     mi = mo = 0;
     for(k0 = 0; k0 < N0; k0++){
-      /* copy first half */
-      for(k1 = 0; k1 < Cl; k1++)
+      /* fill in left zero block */
+      if(Zl > 0) memset(&out[mo], 0, sizeof(R) * (size_t) Zl);
+      mo += Zl;
+
+      /* copy data block */
+      for(k1 = 0; k1 < D; k1++)
         out[mo++] = in[mi++];
       
-      /* fill gap with zeros */
-      if(Cm > 0) memset(&out[mo], 0, sizeof(R) * (size_t) Cm);
-      mo += Cm;
+      /* fill in right zero block */
+      if(Zr > 0) memset(&out[mo], 0, sizeof(R) * (size_t) Zr);
+      mo += Zr;
 
-      /* copy last half */
-      for(k1 = 0; k1 < Cr; k1++)
-        out[mo++] = in[mi++];
-
-      /* padding for inplace r2c */
+      /* padding for r2c/c2r */
       mi += Pi; mo += Po;
     }
   } else {
@@ -430,23 +415,23 @@ static void execute_embed(
     mo = N0 * N1o - 1;
     
     for(k0 = 0; k0 < N0; k0++){
-      /* padding for r2c */
+      /* padding for r2c/c2r */
       mi -= Pi; mo -= Po;
   
-      /* copy last half of array */
-      for(k1 = 0; k1 < Cr; k1++)
-        out[mo--] = in[mi--];
-      
-      /* fill gap with zeros */
-      mo -= Cm;
-      if(Cm > 0) memset(&out[mo+1], 0, sizeof(R) * (size_t) Cm);
+      /* fill in right zero block */
+      mo -= Zr;
+      if(Zr > 0) memset(&out[mo+1], 0, sizeof(R) * (size_t) Zr);
   
-      /* special case:  N0 == 1
-       * first half of array stays where it is */
-      if( (N0 != 1) ){
-        /* copy first half */
-        for(k1 = 0; k1 < Cl; k1++)
+      /* special case:  N0 == 1 and Zl == 0
+       * left data block stays where it is */
+      if( (N0 != 1) || (Zl != 0) ){
+        /* copy data block */
+        for(k1 = 0; k1 < D; k1++)
           out[mo--] = in[mi--];
+
+        /* fill in left zero block */
+        mo -= Zl;
+        if(Zl > 0) memset(&out[mo+1], 0, sizeof(R) * (size_t) Zl);
       }
     }
   }
@@ -454,18 +439,19 @@ static void execute_embed(
 
 
 /* undersampling in one local dimension:
- * skip Cm coefficients starting at Cl */
+ * skip Zl coefficients starting at 0 and Zr coefficients starting at D */
 static void execute_trunc(
     ousam_plan_1d ths
     )
 {
   INT mi, mo, k0, k1;
   const INT N0 = ths->N0, N1i = ths->N1i;
-  const INT Cl = ths->Cl, Cm = ths->Cm, Cr = ths->Cr; 
+  const INT Zl = ths->Zl, Zr = ths->Zr;
+  const INT D = ths->D; 
   const INT Pi = ths->Pi, Po = ths->Po;
   R *const in = ths->in, *const out = ths->out;
 
-  if( (Cm == 0) && (Pi == 0) && (Po == 0) ){
+  if( (Zl == 0) && (Zr == 0) && (Pi == 0) && (Po == 0) ){
     if( in != out )
       if(N0*N1i > 0)
         memcpy(in, out, sizeof(R) * (size_t) (N0*N1i));
@@ -473,25 +459,26 @@ static void execute_trunc(
   } 
 
   mi = mo = 0;
-  if( (in == out) && (N0 == 1) ){
-    /* special case:  N0 == 1 and inplace
-     *  first half of array stays where it is */
-    mi += Cl + Cm; mo += Cl;
+  if( (in == out) && (N0 == 1) && (Zl == 0) ){
+    /* special case:  (N0 == 1) and (Zl == 0) and inplace
+     * data block stays where it is */
+    mi += D; mo += D;
 
-    for(k1 = 0; k1 < Cr; k1++)
-      out[mo++] = in[mi++];
+    /* skip right zero block */
+    mi += Zr;
   } else{
     for(k0 = 0; k0 < N0; k0++){
-      /* copy first half of array */
-      for(k1 = 0; k1 < Cl; k1++)
+      /* skip left zero block */
+      mi += Zl;
+
+      /* copy data block */
+      for(k1 = 0; k1 < D; k1++)
         out[mo++] = in[mi++];
     
-      /* copy last half of array */
-      mi += Cm;
-      for(k1 = 0; k1 < Cr; k1++)
-        out[mo++] = in[mi++];
+      /* skip right zero block */
+      mi += Zr;
 
-      /* padding for inplace r2c */
+      /* skip padding for inplace r2c */
       mi += Pi; mo += Po;
     }
   }

@@ -118,7 +118,7 @@ INT PX(local_size_outrafo)(
 outrafo_plan PX(plan_outrafo)(
     INT nb, int rnk, const INT *n, const INT *ni, const INT *no, INT howmany,
     R *in, R *out, int sign, const X(r2r_kind) *kinds,
-    unsigned trafo_flag, unsigned transp_flag,
+    unsigned trafo_flag, unsigned transp_flag, unsigned si_flag,
     unsigned opt_flag, unsigned fftw_flags
     )
 {
@@ -130,7 +130,7 @@ outrafo_plan PX(plan_outrafo)(
   ousam_flag = (transp_flag & PFFT_TRANSPOSED_IN) ?
     PFFTI_OUSAM_TRANSPOSED : 0;
   ths->embed = PX(plan_ousam_dd)(nb, rnk, ni, n, howmany, 
-    in, in, trafo_flag, PFFTI_OUSAM_EMBED | ousam_flag);
+    in, in, trafo_flag, si_flag, PFFTI_OUSAM_EMBED | ousam_flag);
 
   /* plan serial trafo */
   ths->trafo = PX(plan_sertrafo)(
@@ -141,7 +141,7 @@ outrafo_plan PX(plan_outrafo)(
   ousam_flag = (transp_flag & PFFT_TRANSPOSED_OUT) ?
     PFFTI_OUSAM_TRANSPOSED : 0;
   ths->trunc = PX(plan_ousam_dd)(nb, rnk, n, no, howmany, 
-    out, out, trafo_flag, PFFTI_OUSAM_TRUNC | ousam_flag);
+    out, out, trafo_flag, si_flag, PFFTI_OUSAM_TRUNC | ousam_flag);
 
   /* give back NULL if all contained palns are NULL */
   if( (ths->trafo == NULL) && (ths->embed == NULL) && (ths->trunc == NULL) ){
