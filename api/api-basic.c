@@ -713,66 +713,112 @@ void PX(execute)(
 }
 
 
+static int* malloc_and_transpose_int(
+    int rnk_n, int rnk_pm, int transp,
+    int *n
+    )
+{
+  int *nt = PX(malloc_int)(rnk_n);
+
+  for(int t=0; t<rnk_pm; t++)
+    nt[t] = transp ? n[t+1] : n[t];
+  
+  nt[rnk_pm] = transp ? n[0] : n[rnk_pm];
+
+  for(int t=rnk_pm+1; t<rnk_n; t++)
+    nt[t] = n[t];
+
+  return nt;
+} 
+
+static INT* malloc_and_transpose_INT(
+    int rnk_n, int rnk_pm, int transp,
+    INT *n
+    )
+{
+  INT *nt = PX(malloc_INT)(rnk_n);
+
+  for(int t=0; t<rnk_pm; t++)
+    nt[t] = transp ? n[t+1] : n[t];
+  
+  nt[rnk_pm] = transp ? n[0] : n[rnk_pm];
+
+  for(int t=rnk_pm+1; t<rnk_n; t++)
+    nt[t] = n[t];
+
+  return nt;
+} 
+
 /* twiddle inputs in order to get outputs shifted by n/2 */
 static void fftshift_in(
     PX(plan) ths
     )
 {
-  int rnk_n = ths->rnk_n;
-  const INT *ni = ths->ni, *n = ths->n;
-  const INT *local_ni = ths->local_ni, *local_ni_start = ths->local_ni_start;
   INT howmany = ths->howmany, l;
   R factor;
+  INT *n = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->n);
+  INT *ni = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->ni);
+  INT *local_ni = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->local_ni);
+  INT *local_ni_start = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->local_ni_start);
+  int *skip_trafos = malloc_and_transpose_int(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->skip_trafos);
 
   if( (ths->trafo_flag & PFFTI_TRAFO_C2C) || (ths->trafo_flag & PFFTI_TRAFO_C2R ) )
     howmany *= 2;
   
-  INT local_n_total = PX(prod_INT)(rnk_n, local_ni);
+  INT local_n_total = PX(prod_INT)(ths->rnk_n, local_ni);
 
   for(INT k=0; k<local_n_total; k++){
     l = k;
     factor = 1.0;
-    for(int t=rnk_n-1; t>=0; t--){
+    for(int t=ths->rnk_n-1; t>=0; t--){
       INT kt = l%local_ni[t];
-      if(!ths->skip_trafos[t])
+      if(!skip_trafos[t])
         factor *= (kt + local_ni_start[t] - ni[t]/2 + n[t]/2) % 2 ? -1.0 : 1.0;
       l /= local_ni[t];
     }
 
     for(INT h=0; h<howmany; h++)
       ths->in[howmany*k+h] *= factor;
+//     fprintf(stderr, "pfft: api-basic: in[%2td] = %.2e + I* %.2e\n", k, ths->in[howmany*k], ths->in[howmany*k+1]);
   }
+
+  free(n); free(ni); free(local_ni); free(local_ni_start); free(skip_trafos);
 }
+
 
 /* twiddle outputs in order to get inputs shifted by n/2 */
 static void fftshift_out(
     PX(plan) ths
     )
 {
-  int rnk_n = ths->rnk_n;
-  const INT *no = ths->no;
-  const INT *local_no = ths->local_no, *local_no_start = ths->local_no_start;
   INT howmany = ths->howmany, l;
   R factor;
+  INT *no = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->no);
+  INT *local_no = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->local_no);
+  INT *local_no_start = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->local_no_start);
+  int *skip_trafos = malloc_and_transpose_int(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->skip_trafos);
   
   if( (ths->trafo_flag & PFFTI_TRAFO_C2C) || (ths->trafo_flag & PFFTI_TRAFO_R2C ) )
     howmany *= 2;
 
-  INT local_n_total = PX(prod_INT)(rnk_n, local_no);
+  INT local_n_total = PX(prod_INT)(ths->rnk_n, local_no);
 
   for(INT k=0; k<local_n_total; k++){
     l = k;
     factor = 1.0;
-    for(int t=rnk_n-1; t>=0; t--){
+    for(int t=ths->rnk_n-1; t>=0; t--){
       INT kt = l%local_no[t];
-      if(!ths->skip_trafos[t])
+      if(!skip_trafos[t])
         factor *= (kt + local_no_start[t] - no[t]/2) % 2 ? -1.0 : 1.0;
       l /= local_no[t];
     }
 
     for(INT h=0; h<howmany; h++)
       ths->out[howmany*k+h] *= factor;
+//     fprintf(stderr, "pfft: api-basic: out[%2td] = %.2e + I* %.2e\n", k, ths->out[howmany*k], ths->out[howmany*k+1]);
   }
+
+  free(no); free(local_no); free(local_no_start); free(skip_trafos);
 }
 
 
