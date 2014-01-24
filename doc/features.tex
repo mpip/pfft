@@ -73,6 +73,7 @@ for shifted input and output index sets.
 
 The special case of input shift $k_s=-\nicefrac n2$ and/or output shift $l_s=-\nicefrac n2$ is supported by PFFT.
 User can choose to shift the input (\verb+PFFT_SHIFTED_IN+) and/or to shift the output (\verb+PFFT_SHIFTED_OUT+).
+\todo{this flag can be used for \code{local_size} and planning}
 
 Here, we are interested in the computation of
 \begin{equation*}
@@ -115,6 +116,10 @@ The special case $k_s=-\frac{n_i}{2}, l_s=-\frac{n_o}{2}$ corresponds to the shi
 
 Note, that this shift implies that the library deals with pruned FFTs in a special way, i.e., half of the zeros are added
 at the beginning of the inputs and the other half is added at the end.
+
+
+
+
 
 
 \subsection{Arbitrary shifts}
@@ -201,6 +206,9 @@ The definition of pruned FFT changes for \code{PFFT_SHIFTED_IN} and \code{PFFT_S
 \section{Skip FFTs along some dimensions}
 
 \code{int skip_trafos[rnk_n]}, but skip of last \code{rnk_n - rnk_pm + 2} dims is not yet implemented (needs other call to serial multidimensional FFT). 
+
+
+
 
 
 %------------------------------------------------------------------------------

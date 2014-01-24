@@ -757,7 +757,6 @@ static void fftshift_in(
   INT howmany = ths->howmany, l;
   R factor;
   INT *n = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->n);
-  INT *ni = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->ni);
   INT *local_ni = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->local_ni);
   INT *local_ni_start = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->local_ni_start);
   int *skip_trafos = malloc_and_transpose_int(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->skip_trafos);
@@ -773,7 +772,7 @@ static void fftshift_in(
     for(int t=ths->rnk_n-1; t>=0; t--){
       INT kt = l%local_ni[t];
       if(!skip_trafos[t])
-        factor *= (kt + local_ni_start[t] - ni[t]/2 + n[t]/2) % 2 ? -1.0 : 1.0;
+        factor *= (kt + local_ni_start[t] + n[t]/2) % 2 ? -1.0 : 1.0;
       l /= local_ni[t];
     }
 
@@ -782,7 +781,7 @@ static void fftshift_in(
 //     fprintf(stderr, "pfft: api-basic: in[%2td] = %.2e + I* %.2e\n", k, ths->in[howmany*k], ths->in[howmany*k+1]);
   }
 
-  free(n); free(ni); free(local_ni); free(local_ni_start); free(skip_trafos);
+  free(n); free(local_ni); free(local_ni_start); free(skip_trafos);
 }
 
 
@@ -793,7 +792,6 @@ static void fftshift_out(
 {
   INT howmany = ths->howmany, l;
   R factor;
-  INT *no = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->no);
   INT *local_no = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->local_no);
   INT *local_no_start = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->local_no_start);
   int *skip_trafos = malloc_and_transpose_int(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->skip_trafos);
@@ -809,7 +807,7 @@ static void fftshift_out(
     for(int t=ths->rnk_n-1; t>=0; t--){
       INT kt = l%local_no[t];
       if(!skip_trafos[t])
-        factor *= (kt + local_no_start[t] - no[t]/2) % 2 ? -1.0 : 1.0;
+        factor *= (kt + local_no_start[t]) % 2 ? -1.0 : 1.0;
       l /= local_no[t];
     }
 
@@ -818,7 +816,7 @@ static void fftshift_out(
 //     fprintf(stderr, "pfft: api-basic: out[%2td] = %.2e + I* %.2e\n", k, ths->out[howmany*k], ths->out[howmany*k+1]);
   }
 
-  free(no); free(local_no); free(local_no_start); free(skip_trafos);
+  free(local_no); free(local_no_start); free(skip_trafos);
 }
 
 

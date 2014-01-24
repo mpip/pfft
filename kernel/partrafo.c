@@ -170,6 +170,20 @@ INT PX(local_size_partrafo)(
     mem = MAX(mem, mem_tmp);
   }
 
+  if(pfft_flags & PFFT_SHIFTED_IN){
+    for(int t=0; t<rnk_n; t++){
+      if(ni[t]%2) PX(fprintf)(comm_cart, stderr, "PFFT ERROR: flag PFFT_SHIFTED_IN requires ni to be an even number\n");
+      local_i_start[t] -= ni[t]/2;
+    }
+  }
+
+  if(pfft_flags & PFFT_SHIFTED_OUT){
+    for(int t=0; t<rnk_n; t++){
+      if(no[t]%2) PX(fprintf)(comm_cart, stderr, "PFFT ERROR: flag PFFT_SHIFTED_OUT requires no to be an even number\n");
+      local_o_start[t] -= no[t]/2;
+    }
+  }
+
   /* free one-dimensional comms */
   for(int t=0; t<rnk_pm; t++)
     MPI_Comm_free(&comms_pm[t]);
