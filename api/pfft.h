@@ -80,6 +80,8 @@ BEGIN_C_DECLS
     double *trafo;                                                                      \
     double *remap;                                                                      \
     double remap_3dto2d[2];                                                             \
+    double itwiddle;                                                                    \
+    double otwiddle;                                                                    \
   } PX(timer_s);                                                                        \
   typedef PX(timer_s) *PX(timer);                                                       \
                                                                                         \

@@ -189,6 +189,8 @@ typedef struct {
   double *trafo;
   double *remap;
   double remap_3dto2d[2];
+  double itwiddle;
+  double otwiddle;
 } PX(timer_s);
 typedef PX(timer_s) *PX(timer);
 
@@ -309,7 +311,6 @@ typedef struct{
 } remap_3dto2d_plan_s;
 typedef remap_3dto2d_plan_s *remap_3dto2d_plan;
 
-
 /* plan for parallel trafo */
 struct PX(plan_s){
   int rnk_n;
@@ -345,6 +346,12 @@ struct PX(plan_s){
   gtransp_plan *global_remap;
   outrafo_plan *serial_trafo;
   remap_3dto2d_plan remap_3dto2d[2];
+  
+  /* save data pointers to input and output for index shifts (PFFT_SHIFTED_[IN|OUT]) */
+  R* itwiddle_in;
+  R* itwiddle_out;
+  R* otwiddle_in;
+  R* otwiddle_out;
 
   PX(timer) timer;
 };

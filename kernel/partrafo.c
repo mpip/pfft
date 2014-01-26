@@ -307,12 +307,27 @@ PX(plan) PX(plan_partrafo)(
    * So, for forward and backward steps we use 'in' for input and
    * 'out' for output. */
 
+  /* twiddle inputs in order to get outputs shifted by n/2 */
+  if(pfft_flags & PFFT_SHIFTED_OUT){
+    if(io_flag & PFFT_DESTROY_INPUT){
+      ths->itwiddle_in = ths->itwiddle_out = in;
+    } else {
+      ths->itwiddle_in = in;
+      ths->itwiddle_out = out;
+      
+      /* Go on with in-place transforms in order to preserve input. */
+      in = out;
+    }
+  } else
+    ths->itwiddle_in = ths->itwiddle_out = NULL;
+
   /* plan with transposed output */
   if(transp_flag & PFFT_TRANSPOSED_IN){
     ths->remap_3dto2d[0] = NULL;
     set_plans_to_null(rnk_pm, PFFT_TRANSPOSED_OUT,
         ths->serial_trafo, ths->global_remap);
   } else {
+
     ths->remap_3dto2d[0] = PX(plan_remap_3dto2d_transposed)(
         rnk_n, ni_to, howmany, comm_cart, in, out,
         PFFT_TRANSPOSED_OUT, trafo_flags_to[rnk_pm], opt_flag, io_flag, fftw_flags);
@@ -351,7 +366,14 @@ PX(plan) PX(plan_partrafo)(
     ths->remap_3dto2d[1] = PX(plan_remap_3dto2d_transposed)(
         rnk_n, no_ti, howmany, comm_cart, out, in,
         PFFT_TRANSPOSED_IN, trafo_flags_ti[rnk_pm], opt_flag, io_flag, fftw_flags);
+
   }
+
+  /* twiddle outputs in order to get inputs shifted by n/2 */
+  if(pfft_flags & PFFT_SHIFTED_IN)
+    ths->otwiddle_in = ths->otwiddle_out = out;
+  else
+    ths->otwiddle_in = ths->otwiddle_out = NULL;
 
   /* free one-dimensional comms */
   for(int t=0; t<rnk_pm; t++)

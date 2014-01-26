@@ -32,9 +32,9 @@
   MPI_Comm *gdbg_comms_pm;
 #endif
 
-static void fftshift_in(
+static void twiddle_input(
     PX(plan) ths);
-static void fftshift_out(
+static void twiddle_output(
     PX(plan) ths);
 
 static void execute_transposed(
@@ -686,27 +686,31 @@ void PX(execute)(
 
   ths->timer->whole -= MPI_Wtime();
 
+  /* twiddle inputs in order to get outputs shifted by n/2 */
+  ths->timer->itwiddle -= MPI_Wtime(); 
+  if(ths->pfft_flags & PFFT_SHIFTED_OUT)
+    twiddle_input(ths);
+  ths->timer->itwiddle += MPI_Wtime(); 
+
   ths->timer->remap_3dto2d[0] -= MPI_Wtime(); 
   PX(execute_remap_3dto2d)(ths->remap_3dto2d[0]);
   ths->timer->remap_3dto2d[0] += MPI_Wtime(); 
-
-  /* twiddle inputs in order to get outputs shifted by n/2 */
-  if(ths->pfft_flags & PFFT_SHIFTED_OUT)
-    fftshift_in(ths);
 
   execute_transposed(r, ths->serial_trafo, ths->global_remap,
       ths->timer->trafo, ths->timer->remap);
 
   execute_transposed(r, &ths->serial_trafo[r+1], &ths->global_remap[r],
       &ths->timer->trafo[r+1], &ths->timer->remap[r]);
-
-  /* twiddle outputs in order to get inputs shifted by n/2 */
-  if(ths->pfft_flags & PFFT_SHIFTED_IN)
-    fftshift_out(ths);
   
   ths->timer->remap_3dto2d[1] -= MPI_Wtime(); 
   PX(execute_remap_3dto2d)(ths->remap_3dto2d[1]);
   ths->timer->remap_3dto2d[1] += MPI_Wtime(); 
+
+  /* twiddle outputs in order to get inputs shifted by n/2 */
+  ths->timer->otwiddle -= MPI_Wtime(); 
+  if(ths->pfft_flags & PFFT_SHIFTED_IN)
+    twiddle_output(ths);
+  ths->timer->otwiddle += MPI_Wtime(); 
 
   ths->timer->iter++;
   ths->timer->whole += MPI_Wtime();
@@ -750,10 +754,13 @@ static INT* malloc_and_transpose_INT(
 } 
 
 /* twiddle inputs in order to get outputs shifted by n/2 */
-static void fftshift_in(
+static void twiddle_input(
     PX(plan) ths
     )
 {
+  if(ths->itwiddle_in == NULL)
+    return;
+
   INT howmany = ths->howmany, l;
   R factor;
   INT *n = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->n);
@@ -777,7 +784,7 @@ static void fftshift_in(
     }
 
     for(INT h=0; h<howmany; h++)
-      ths->in[howmany*k+h] *= factor;
+      ths->itwiddle_out[howmany*k+h] = ths->itwiddle_in[howmany*k+h] * factor;
 //     fprintf(stderr, "pfft: api-basic: in[%2td] = %.2e + I* %.2e\n", k, ths->in[howmany*k], ths->in[howmany*k+1]);
   }
 
@@ -786,10 +793,13 @@ static void fftshift_in(
 
 
 /* twiddle outputs in order to get inputs shifted by n/2 */
-static void fftshift_out(
+static void twiddle_output(
     PX(plan) ths
     )
 {
+  if(ths->otwiddle_in == NULL)
+    return;
+
   INT howmany = ths->howmany, l;
   R factor;
   INT *local_no = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->local_no);
@@ -812,7 +822,7 @@ static void fftshift_out(
     }
 
     for(INT h=0; h<howmany; h++)
-      ths->out[howmany*k+h] *= factor;
+      ths->otwiddle_out[howmany*k+h] = ths->otwiddle_in[howmany*k+h] * factor;
 //     fprintf(stderr, "pfft: api-basic: out[%2td] = %.2e + I* %.2e\n", k, ths->out[howmany*k], ths->out[howmany*k+1]);
   }
 

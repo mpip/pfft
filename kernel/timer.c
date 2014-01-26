@@ -233,6 +233,8 @@ PX(timer) PX(copy_timer)(
     copy->remap[t] = orig->remap[t];
   for(int t=0; t<2; t++)
     copy->remap_3dto2d[t] = orig->remap_3dto2d[t];
+  copy->itwiddle = orig->itwiddle;
+  copy->otwiddle = orig->otwiddle;
 
   return copy;
 }
@@ -251,7 +253,9 @@ void PX(average_timer)(
     ths->remap[t] /= ths->iter;
   for(int t=0; t<2; t++)
     ths->remap_3dto2d[t] /= ths->iter;
-  
+  ths->itwiddle /= ths->iter;
+  ths->otwiddle /= ths->iter;
+
   ths->iter = 1;
 }
 
@@ -269,6 +273,8 @@ PX(timer) PX(add_timers)(
     res->remap[t] += sum2->remap[t];
   for(int t=0; t<2; t++)
     res->remap_3dto2d[t] += sum2->remap_3dto2d[t];
+  res->itwiddle += sum2->itwiddle;
+  res->otwiddle += sum1->otwiddle;
 
   return res;
 }
@@ -306,6 +312,8 @@ double* PX(convert_timer2vec)(
     times[m++] = ths->remap[t];
   for(int t=0; t<2; t++)
     times[m++] = ths->remap_3dto2d[t];
+  times[m++] = ths->itwiddle;
+  times[m++] = ths->otwiddle;
 
   return times;
 }
@@ -325,6 +333,8 @@ PX(timer) PX(convert_vec2timer)(
     ths->remap[t] = times[m++];
   for(int t=0; t<2; t++)
     ths->remap_3dto2d[t] = times[m++];
+  ths->itwiddle = times[m++];
+  ths->otwiddle = times[m++];
 
   return ths;
 }
@@ -341,6 +351,8 @@ static void reset_timer(
     ths->remap[t] = 0;
   for(int t=0; t<2; t++)
     ths->remap_3dto2d[t] = 0;
+  ths->itwiddle = 0;
+  ths->otwiddle = 0;
 }
 
 PX(timer) PX(mktimer)(
@@ -368,7 +380,8 @@ static size_t length(
   /* +1 for number of iterations */
   /* +1 for whole trafo timer */
   /* +2 for remap_3dto2d[2] */
-  return (size_t) (ths->rnk_trafo + ths->rnk_remap + 7);
+  /* +2 for itwiddle, otwiddle */
+  return (size_t) (ths->rnk_trafo + ths->rnk_remap + 9);
 }
 
 void PX(destroy_timer)(
@@ -401,6 +414,8 @@ static void fprint_average_timer_prefixed(
     PX(fprintf)(comm, file, "%s(%d)   = %.3e;\n", prefix, idx, mt->whole);
   } else if(flags & PFFTI_PRINT_TIMER_ADV){
     /* print times of transposed out step */
+    PX(fprintf)(comm, file, "%s_itwiddle(%d)   = %.3e;\n",
+        prefix, idx, mt->itwiddle);
     PX(fprintf)(comm, file, "%s_remap_3dto2d(%d, 2)   = %.3e;\n",
         prefix, idx, mt->remap_3dto2d[0]);
     for(int t=0; t<mt->rnk_pm; t++, k++, l++){
@@ -424,6 +439,8 @@ static void fprint_average_timer_prefixed(
         prefix, k+1, idx, mt->trafo[k]);
     PX(fprintf)(comm, file, "%s_remap_2dto3d(%d, 2)   = %.3e;\n",
         prefix, idx, mt->remap_3dto2d[1]);
+    PX(fprintf)(comm, file, "%s_otwiddle(%d)   = %.3e;\n",
+        prefix, idx, mt->otwiddle);
   }
 
   PX(destroy_timer)(mt);
