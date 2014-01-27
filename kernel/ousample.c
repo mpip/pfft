@@ -288,8 +288,10 @@ static ousam_plan_1d plan_ousam_1d(
     ths->Zr = 0;
 
     /* generate padding for r2c input */
-    if( ousam_flag & PFFTI_OUSAM_EMBED )
+    if( ousam_flag & PFFTI_OUSAM_EMBED ){
       ths->Po  = 2*pno-n1o;
+      ths->N1o = 2*pno;
+    }
   }
 
   /* special case c2r */
@@ -307,8 +309,10 @@ static ousam_plan_1d plan_ousam_1d(
     ths->Zr = 0;
 
     /* truncate padding for c2r output */
-    if( ousam_flag & PFFTI_OUSAM_TRUNC )
+    if( ousam_flag & PFFTI_OUSAM_TRUNC ){
       ths->Pi  = 2*pni-n1i;
+      ths->N1i = 2*pni;
+    }
   }
 
   /* include howmany into parameters */
