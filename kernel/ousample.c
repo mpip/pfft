@@ -282,7 +282,7 @@ static ousam_plan_1d plan_ousam_1d(
       ths->N1i = pni;
       ths->N1o = pno;
       ths->Zl = pni - pno;
-      ths->D  = pni;
+      ths->D  = pno;
       ths->Zr = 0;
     }
 
