@@ -281,14 +281,16 @@ static ousam_plan_1d plan_ousam_1d(
     {
       ths->N1i = pni;
       ths->N1o = pno;
+      ths->Zl = pni - pno;
+      ths->D  = pni;
+      ths->Zr = 0;
     }
-
-    ths->Zl = ths->N1o - ths->N1i;
-    ths->D  = ths->N1i;
-    ths->Zr = 0;
 
     /* generate padding for r2c input */
     if( ousam_flag & PFFTI_OUSAM_EMBED ){
+      ths->Zl = n1o - n1i;
+      ths->D  = n1i;
+      ths->Zr = 0;
       ths->Po  = 2*pno-n1o;
       ths->N1o = 2*pno;
     }
@@ -302,14 +304,16 @@ static ousam_plan_1d plan_ousam_1d(
     {
       ths->N1i = pni;
       ths->N1o = pno;
+      ths->Zl = pno - pni;
+      ths->D  = pni;
+      ths->Zr = 0;
     }
-
-    ths->Zl = ths->N1i - ths->N1o;
-    ths->D  = ths->N1o;
-    ths->Zr = 0;
 
     /* truncate padding for c2r output */
     if( ousam_flag & PFFTI_OUSAM_TRUNC ){
+      ths->Zl = n1i - n1o;
+      ths->D  = n1o;
+      ths->Zr = 0;
       ths->Pi  = 2*pni-n1i;
       ths->N1i = 2*pni;
     }
