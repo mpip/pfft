@@ -58,7 +58,7 @@ check_PROGRAMS += \
 
 check_PROGRAMS += \
 	simple_check_ghost_c2c \
-	simple_check_ghost_c2c_3d_on_3d \ 
+	simple_check_ghost_c2c_3d_on_3d \
 	simple_check_ghost_c2r
 
 check_PROGRAMS += \
