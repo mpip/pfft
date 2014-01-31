@@ -296,6 +296,8 @@ static void fprint_average_gctimer_prefixed(
     PX(fprintf)(comm, file, "%s_gc_pad_zeros(%d) = %.3e;  ", prefix, idx, mt->pad_zeros);
     PX(fprintf)(comm, file, "%s_gc_exchange(%d)  = %.3e;\n", prefix, idx, mt->exchange);
   }
+
+  PX(destroy_gctimer)(mt);
 }
 
 
