@@ -41,7 +41,7 @@ static void init_blks_comms_local_size(
     MPI_Comm *icomms, MPI_Comm *mcomms, MPI_Comm *ocomms,
     INT *local_ni, INT *local_nm, INT *local_no);
 static void split_comms_3dto2d(
-    MPI_Comm comm_cart_3d,
+    const INT *n, MPI_Comm comm_cart_3d,
     MPI_Comm *icomms, MPI_Comm *mcomms, MPI_Comm *ocomms);
 static void get_local_n_3d(
     const INT *n, const INT *blks, const MPI_Comm *comms,
@@ -79,7 +79,7 @@ int PX(local_size_remap_3dto2d_transposed)(
   if(rnk_pm != 3)
     return 0;
 
-  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+  PX(get_procmesh_dims_2d)(n, comm_cart_3d, &p0, &p1, &q0, &q1);
 
   /* Handle r2c input and c2r output like r2r. */
   /* At the moment, PFFT supports 3d distributed 3d arrays only in real space. */
@@ -105,7 +105,7 @@ int PX(local_size_remap_3dto2d_transposed)(
   blk1 = iblk[2];
   hm = 1; /* set hm to 1 since mem will be in units of real/complex */
 
-  PX(split_cart_procmesh_for_3dto2d_remap_q1)(comm_cart_3d, &comm_q1);
+  PX(split_cart_procmesh_for_3dto2d_remap_q1)(n, comm_cart_3d, &comm_q1);
   mem_tmp = PX(local_size_global_transp)(
       N0, N1, h0, h1, hm, blk0, blk1, comm_q1);
   mem = MAX(mem, mem_tmp);
@@ -118,7 +118,7 @@ int PX(local_size_remap_3dto2d_transposed)(
   blk1 = mblk[2];
   hm = 1; /* set hm to 1 since mem will be in units of real/complex */
 
-  PX(split_cart_procmesh_for_3dto2d_remap_q0)(comm_cart_3d, &comm_q0);
+  PX(split_cart_procmesh_for_3dto2d_remap_q0)(n, comm_cart_3d, &comm_q0);
   mem_tmp = PX(local_size_global_transp)(
       N0, N1, h0, h1, hm, blk0, blk1, comm_q0);
   mem = MAX(mem, mem_tmp);
@@ -220,7 +220,7 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
   blk1 = iblk[2];
   hm = howmany * (trafo_flag & PFFTI_TRAFO_C2C) ? 2 : 1;
 
-  PX(split_cart_procmesh_for_3dto2d_remap_q1)(comm_cart_3d, &comm_q1);
+  PX(split_cart_procmesh_for_3dto2d_remap_q1)(n, comm_cart_3d, &comm_q1);
   if(transp_flag & PFFT_TRANSPOSED_IN)
     ths->global_remap[1] = PX(plan_global_transp)(
         N1, N0, h1, h0, hm, blk1, blk0,
@@ -238,7 +238,7 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
   blk1 = mblk[2];
   hm = howmany * (trafo_flag & PFFTI_TRAFO_C2C) ? 2 : 1;
 
-  PX(split_cart_procmesh_for_3dto2d_remap_q0)(comm_cart_3d, &comm_q0);
+  PX(split_cart_procmesh_for_3dto2d_remap_q0)(n, comm_cart_3d, &comm_q0);
   if(transp_flag & PFFT_TRANSPOSED_IN)
     ths->global_remap[0] = PX(plan_global_transp)(
         N1, N0, h1, h0, hm, blk1, blk0,
@@ -289,11 +289,11 @@ static void init_blks_comms_local_size(
 {
   int p0, p1, q0, q1;
 
-  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+  PX(get_procmesh_dims_2d)(n, comm_cart_3d, &p0, &p1, &q0, &q1);
 
   PX(default_block_size_3dto2d)(n, p0, p1, q0, q1,
       iblk, mblk, oblk);
-  split_comms_3dto2d(comm_cart_3d,
+  split_comms_3dto2d(n, comm_cart_3d,
     icomms, mcomms, ocomms);
   get_local_n_3d(n, iblk, icomms,
       local_ni);
@@ -358,7 +358,7 @@ void PX(default_block_size_3dto2d)(
 
 /* allocate array of length 3 for communicators */
 static void split_comms_3dto2d(
-    MPI_Comm comm_cart_3d,
+    const INT *n, MPI_Comm comm_cart_3d,
     MPI_Comm *icomms, MPI_Comm *mcomms, MPI_Comm *ocomms
     )
 {
@@ -368,8 +368,8 @@ static void split_comms_3dto2d(
   PX(split_cart_procmesh)(comm_cart_3d, icomms);
 
   /* n0/p0 x n1/p1 x n2/(q0*q1) */
-  PX(split_cart_procmesh_3dto2d_p0q0)(comm_cart_3d, &ocomms[0]);
-  PX(split_cart_procmesh_3dto2d_p1q1)(comm_cart_3d, &ocomms[1]);
+  PX(split_cart_procmesh_3dto2d_p0q0)(n, comm_cart_3d, &ocomms[0]);
+  PX(split_cart_procmesh_3dto2d_p1q1)(n, comm_cart_3d, &ocomms[1]);
   dim_1d=1; period_1d=1; 
   MPI_Cart_create(MPI_COMM_SELF, ndims, &dim_1d, &period_1d, reorder,
       &ocomms[2]);
@@ -377,7 +377,7 @@ static void split_comms_3dto2d(
   /* n0/p0 x n1/(p1*q1) x n2/q0 */
   MPI_Comm_dup(icomms[0], &mcomms[0]);
   MPI_Comm_dup(ocomms[1], &mcomms[1]);
-  PX(split_cart_procmesh_for_3dto2d_remap_q0)(comm_cart_3d, &mcomms[2]);
+  PX(split_cart_procmesh_for_3dto2d_remap_q0)(n, comm_cart_3d, &mcomms[2]);
 }
 
 

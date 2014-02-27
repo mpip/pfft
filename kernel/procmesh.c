@@ -26,7 +26,7 @@ static void extract_comm_1d(
     int dim, MPI_Comm comm_cart,
     MPI_Comm *comm_1d);
 static void factorize(
-    int q, 
+    const INT *N, int p0, int p1, int q,
     int *ptr_q0, int *ptr_q1);
 
 
@@ -162,7 +162,7 @@ int PX(get_mpi_cart_dims)(MPI_Comm comm_cart, int maxdims, int *dims)
 
 
 void PX(split_cart_procmesh_3dto2d_p0q0)(
-    MPI_Comm comm_cart_3d,
+    const INT *n, MPI_Comm comm_cart_3d,
     MPI_Comm *comm_1d
     )
 {
@@ -180,7 +180,7 @@ void PX(split_cart_procmesh_3dto2d_p0q0)(
     return;
 
   PX(get_mpi_cart_coords)(comm_cart_3d, ndims, coords_3d);
-  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+  PX(get_procmesh_dims_2d)(n, comm_cart_3d, &p0, &p1, &q0, &q1);
 
   /* split into p1*q1 comms of size p0*q0 */
   color = coords_3d[1]*q1 + coords_3d[2]%q1;
@@ -196,7 +196,7 @@ void PX(split_cart_procmesh_3dto2d_p0q0)(
 
 
 void PX(split_cart_procmesh_3dto2d_p1q1)(
-    MPI_Comm comm_cart_3d,
+    const INT *n, MPI_Comm comm_cart_3d,
     MPI_Comm *comm_1d
     )
 {
@@ -214,7 +214,7 @@ void PX(split_cart_procmesh_3dto2d_p1q1)(
     return;
 
   PX(get_mpi_cart_coords)(comm_cart_3d, ndims, coords_3d);
-  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+  PX(get_procmesh_dims_2d)(n, comm_cart_3d, &p0, &p1, &q0, &q1);
 
   /* split into p0*q0 comms of size p1*q1 */
   color = coords_3d[0]*q0 + coords_3d[2]/q1;
@@ -232,7 +232,7 @@ void PX(split_cart_procmesh_3dto2d_p1q1)(
 /* implement the splitting to create p0*p1*q0 comms of size q1
  * and p0*p1*q1 comms of size q0 */
 void PX(split_cart_procmesh_for_3dto2d_remap_q0)(
-    MPI_Comm comm_cart_3d,
+    const INT *n, MPI_Comm comm_cart_3d,
     MPI_Comm *comm_1d
     )
 {
@@ -250,12 +250,11 @@ void PX(split_cart_procmesh_for_3dto2d_remap_q0)(
     return;
 
   PX(get_mpi_cart_coords)(comm_cart_3d, ndims, coords_3d);
-  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+  PX(get_procmesh_dims_2d)(n, comm_cart_3d, &p0, &p1, &q0, &q1);
 
   /* split into p0*p1*q1 comms of size q0 */
   color = coords_3d[0]*p1*q1 + coords_3d[1]*q1 + coords_3d[2]%q1;
   key = coords_3d[2]/q1;
-//   key = coords_3d[2]%q0; /* TODO: delete this line after several tests */
   MPI_Comm_split(comm_cart_3d, color, key, &comm);
 
   dim_1d = q0; period_1d = 1;
@@ -267,7 +266,7 @@ void PX(split_cart_procmesh_for_3dto2d_remap_q0)(
 
 
 void PX(split_cart_procmesh_for_3dto2d_remap_q1)(
-    MPI_Comm comm_cart_3d,
+    const INT *n, MPI_Comm comm_cart_3d,
     MPI_Comm *comm_1d
     )
 {
@@ -285,7 +284,7 @@ void PX(split_cart_procmesh_for_3dto2d_remap_q1)(
     return;
 
   PX(get_mpi_cart_coords)(comm_cart_3d, ndims, coords_3d);
-  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+  PX(get_procmesh_dims_2d)(n, comm_cart_3d, &p0, &p1, &q0, &q1);
 
   /* split into p0*p1*q0 comms of size q1 */
   color = coords_3d[0]*p1*q0 + coords_3d[1]*q0 + coords_3d[2]/q1;
@@ -300,9 +299,22 @@ void PX(split_cart_procmesh_for_3dto2d_remap_q1)(
   MPI_Comm_free(&comm);
 }
 
+/* factorize an integer q into q0*q1 with
+ * q1 <= q0 and q0-q1 -> min */
+// static void factorize_old(
+//     int q, 
+//     int *ptr_q0, int *ptr_q1
+//     )
+// {
+//   for(int t1 = 1; t1 <= sqrt(q); t1++)
+//     if(t1 * (q/t1) == q)
+//       *ptr_q1 = t1;
+// 
+//   *ptr_q0 = q / (*ptr_q1);
+// }
 
 void PX(get_procmesh_dims_2d)(
-    MPI_Comm comm_cart_3d,
+    const INT *n, MPI_Comm comm_cart_3d,
     int *p0, int *p1, int *q0, int *q1
     )
 {
@@ -310,23 +322,61 @@ void PX(get_procmesh_dims_2d)(
 
   PX(get_mpi_cart_dims)(comm_cart_3d, ndims, dims);
   *p0 = dims[0]; *p1 = dims[1];
-  factorize(dims[2], q0, q1);
+  factorize(n, dims[0], dims[1], dims[2], q0, q1);
 }
 
+static INT num_used_procs(
+    INT N, int p
+    )
+{
+  INT blk = PX(global_block_size)(N, PFFT_DEFAULT_BLOCK, p);
+  return PX(num_blocks)(N, blk);
+}
 
-/* factorize an integer q into q0*q1 with
- * q1 <= q0 and q0-q1 -> min */
+static INT used_procs(
+    const INT *n, int p0, int p1, int q0, int q1
+    )
+{
+  INT up00 = num_used_procs(n[0], p0*q0);
+  INT up10 = num_used_procs(n[1], p0*q0);
+  INT up11 = num_used_procs(n[1], p1*q1);
+  INT up21 = num_used_procs(n[2], p1*q1);
+
+  INT used_procs = up00 * up11;
+  used_procs = MIN(used_procs, up21 * up00);
+  used_procs = MIN(used_procs, up10 * up21);
+ 
+  return used_procs; 
+}
+
+/* Factorize an integer q into q0*q1 with
+ * Min{ n0/(p0*q0) * n1/(p1*q1), n2/(p1*q1) * n0/(p0*q0), n1/(p0*q0) * n2/(p1*q1) } -> Max
+ * */
 static void factorize(
-    int q, 
+    const INT *n, int p0, int p1, int q,
     int *ptr_q0, int *ptr_q1
     )
 {
-  for(int t1 = 1; t1 <= sqrt(q); t1++)
-    if(t1 * (q/t1) == q)
-      *ptr_q1 = t1;
+  INT up, max_used_procs = 0;
 
-  *ptr_q0 = q / (*ptr_q1);
+  for(int t = 1; t <= sqrt(q); t++){
+    if(t * (q/t) == q){
+      
+      up = used_procs(n, p0, p1, q/t, t);
+      if(up > max_used_procs){
+        max_used_procs = up;
+        *ptr_q0 = q/t;
+      }
+
+      up = used_procs(n, p0, p1, t, q/t);
+      if(up > max_used_procs){
+        max_used_procs = up;
+        *ptr_q0 = t;
+      }
+    }
+  }
+
+  *ptr_q1 = q / (*ptr_q0);
+
 }
-
-
 

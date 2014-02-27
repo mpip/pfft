@@ -225,7 +225,7 @@ static void calculate_3dto2d_blocks(
   int q0, q1, p0, p1;
   INT mblk[3], oblk[3];
 
-  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+  PX(get_procmesh_dims_2d)(n, comm_cart_3d, &p0, &p1, &q0, &q1);
   PX(default_block_size_3dto2d)(n, p0, p1, q0, q1,
       iblk, mblk, oblk);
 }
