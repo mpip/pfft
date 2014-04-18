@@ -328,6 +328,10 @@ BEGIN_C_DECLS
       MPI_Comm comm, int np0, int np1,                                                  \
       MPI_Comm *comm_cart_2d);                                                          \
                                                                                         \
+  PFFT_EXTERN void PX(procmesh_3dto2d)(                                                 \
+      PX(plan) ths, int *np_2d);                                                        \
+  PFFT_EXTERN void PX(coords_3dto2d)(                                                   \
+      PX(plan) ths, int *coords_3d, int *coords_2d);                                    \
                                                                                         \
                                                                                         \
   PFFT_EXTERN INT PX(local_size_gc_3d)(                                                 \

@@ -161,6 +161,51 @@ int PX(get_mpi_cart_dims)(MPI_Comm comm_cart, int maxdims, int *dims)
 }
 
 
+static int no_3dto2d(
+    PX(plan) ths
+    )
+{
+  if(ths->remap_3dto2d[0] != NULL)
+    return 0;
+
+  if(ths->remap_3dto2d[1] != NULL)
+    return 0;
+
+  PX(fprintf)(ths->comm_cart, stderr, "Error: PFFT plan does not use 3dto2d remap.\n");
+  return 1;
+}
+
+
+void PX(procmesh_3dto2d)(
+    PX(plan) ths, int *np_2d
+    )
+{
+  if(no_3dto2d(ths)) return;
+
+  np_2d[0] = ths->np[0];
+  np_2d[1] = ths->np[1];
+}
+
+void PX(coords_3dto2d)(
+    PX(plan) ths, int *coords_3d, int *coords_2d
+    )
+{
+  int q0, q1;
+
+  if(no_3dto2d(ths)) return;
+
+  if(ths->remap_3dto2d[0] != NULL){
+    q0 = ths->remap_3dto2d[0]->q0;
+    q1 = ths->remap_3dto2d[0]->q1;
+  } else {
+    q0 = ths->remap_3dto2d[1]->q0;
+    q1 = ths->remap_3dto2d[1]->q1;
+  }
+
+  coords_2d[0] = coords_3d[0]*q0 + coords_3d[2]/q1;
+  coords_2d[1] = coords_3d[1]*q1 + coords_3d[2]%q1;
+}
+
 void PX(split_cart_procmesh_3dto2d_p0q0)(
     const INT *n, MPI_Comm comm_cart_3d,
     MPI_Comm *comm_1d
@@ -183,8 +228,8 @@ void PX(split_cart_procmesh_3dto2d_p0q0)(
   PX(get_procmesh_dims_2d)(n, comm_cart_3d, &p0, &p1, &q0, &q1);
 
   /* split into p1*q1 comms of size p0*q0 */
+  key   = coords_3d[0]*q0 + coords_3d[2]/q1;
   color = coords_3d[1]*q1 + coords_3d[2]%q1;
-  key = coords_3d[0]*q0 + coords_3d[2]/q1;
   MPI_Comm_split(comm_cart_3d, color, key, &comm);
 
   dim_1d = p0*q0; period_1d = 1;
@@ -218,7 +263,7 @@ void PX(split_cart_procmesh_3dto2d_p1q1)(
 
   /* split into p0*q0 comms of size p1*q1 */
   color = coords_3d[0]*q0 + coords_3d[2]/q1;
-  key = coords_3d[1]*q1 + coords_3d[2]%q1;
+  key   = coords_3d[1]*q1 + coords_3d[2]%q1;
   MPI_Comm_split(comm_cart_3d, color, key, &comm);
 
   dim_1d = p1*q1; period_1d = 1;
