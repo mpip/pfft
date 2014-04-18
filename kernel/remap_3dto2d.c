@@ -164,7 +164,7 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
     unsigned opt_flag, unsigned io_flag, unsigned fftw_flags 
     )
 {
-  int rnk_pm;
+  int p0, p1, rnk_pm;
   INT nb, nt, N0, N1, h0, h1, hm, blk0, blk1;
   INT local_ni[3], local_nm[3], local_no[3];
   INT iblk[3], mblk[3], oblk[3];
@@ -182,6 +182,8 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
     return NULL;
 
   ths = remap_3dto2d_mkplan();
+
+  PX(get_procmesh_dims_2d)(n, comm_cart_3d, &p0, &p1, &ths->q0, &ths->q1);
 
   /* Handle r2c input and c2r output like r2r. */
   /* At the moment, PFFT supports 3d distributed 3d arrays only in real space. */
