@@ -453,8 +453,37 @@ void PX(apr_complex_permuted_3d)(
 
 
 
+/****************
+ * 3d interface *
+ ***************/
 
-/* 3d interface */
+/* compute block size and offset for any process */
+void PX(local_block_3d)(
+    const INT *n, int *which_block, MPI_Comm comm_cart,
+    INT *local_n, INT *local_n_start
+    )
+{
+  const int rnk_n = 3;
+  int rnk_pm;
+  int np[rnk_n], periods[3], coords[3];
+
+  MPI_Cartdim_get(comm_cart, &rnk_pm);
+  
+  MPI_Cart_get(comm_cart, rnk_pm, np, periods, coords);
+  for(int t=rnk_pm; t<rnk_n; t++)
+    np[t] = 1;
+
+  for(int t=0; t<rnk_n; t++){
+    INT global_block_size = PX(global_block_size)(n[t], PFFT_DEFAULT_BLOCK, np[t]);
+    PX(local_block_size_and_offset)(n[t], global_block_size, which_block[t],
+        &local_n[t], &local_n_start[t]);
+  }
+}
+
+
+
+
+
 INT PX(local_size_dft_3d)(
     const INT *n,
     MPI_Comm comm_cart, unsigned pfft_flags,

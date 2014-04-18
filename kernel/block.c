@@ -20,13 +20,15 @@
  *
  */
 
+#include "pfft.h"
 #include "ipfft.h"
 #include <util.h>
 
 static INT default_block_size(INT global_array_size, int num_procs);
 
 
-void PX(local_block_size_and_offset)(INT global_array_size, INT global_block_size, int which_block,
+void PX(local_block_size_and_offset)(
+    INT global_array_size, INT global_block_size, int which_block,
     INT *local_block_size, INT *local_block_start)
 {
   /* Block index runs from blockStart <= index < blockEnd */
@@ -68,11 +70,10 @@ INT PX(local_block_size)(INT global_array_size, INT global_block_size, int which
         ? (global_array_size - which_block * global_block_size) : global_block_size);
 }
 
-
 INT PX(global_block_size)(INT global_array_size, INT user_block_size, int num_procs)
 {
-  /* calculate default globalBlockSize if userBlockSize equals FFTW_MPI_DEFAULT_BLOCK */
-  return (user_block_size == FFTW_MPI_DEFAULT_BLOCK) ?
+  /* calculate default globalBlockSize if userBlockSize equals PFFT_DEFAULT_BLOCK */
+  return (user_block_size == PFFT_DEFAULT_BLOCK) ?
       default_block_size(global_array_size, num_procs) : user_block_size;
 }
 

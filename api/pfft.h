@@ -126,12 +126,16 @@ BEGIN_C_DECLS
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       const C *data, MPI_Comm comm);                                                    \
                                                                                         \
- PFFT_EXTERN R PX(check_output_real_3d)(                                                \
+  PFFT_EXTERN R PX(check_output_real_3d)(                                               \
     const INT *n, const INT *local_n, const INT *local_n_start,                         \
     const R *data, MPI_Comm comm);                                                      \
   PFFT_EXTERN R PX(check_output_real)(                                                  \
     int rnk_n, const INT *n, const INT *local_n, const INT *local_start,                \
     const R *data, MPI_Comm comm);                                                      \
+                                                                                        \
+  PFFT_EXTERN void PX(local_block_3d)(                                                  \
+    const INT *n, int *which_block, MPI_Comm comm_cart,                                 \
+    INT *local_n, INT *local_n_start);                                                  \
                                                                                         \
   PFFT_EXTERN INT PX(local_size_dft_3d)(                                                \
       const INT *n, MPI_Comm comm_cart, unsigned pfft_flags,                            \

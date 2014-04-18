@@ -26,6 +26,7 @@ static void calculate_3dto2d_blocks(
     const INT *n, MPI_Comm comm_cart_3d,
     INT *iblk);
 
+
 INT PX(local_size_many_dft)(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock, const INT *oblock,
