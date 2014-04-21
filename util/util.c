@@ -24,6 +24,19 @@
 #include <string.h>     /* strcmp */
 
 
+void PX(get_coords)(
+    int rnk_pm, const MPI_Comm *comms_pm,
+    int *coords_pm
+    )
+{
+  int rnk;
+  
+  for(int t=0; t<rnk_pm; t++){
+    MPI_Comm_rank(comms_pm[t], &rnk);
+    MPI_Cart_coords(comms_pm[t], rnk, 1, &coords_pm[t]); 
+  }
+}
+
 /* calculate block sizes from physical array size
  * the 'rnk_pm' distributed dimensions */
 /*  */

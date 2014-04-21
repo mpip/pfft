@@ -27,6 +27,7 @@
 static INT default_block_size(INT global_array_size, int num_procs);
 
 
+
 void PX(local_block_size_and_offset)(
     INT global_array_size, INT global_block_size, int which_block,
     INT *local_block_size, INT *local_block_start)

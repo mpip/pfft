@@ -25,6 +25,9 @@
 
 #include "ipfft.h"
 
+void PX(get_coords)(
+    int rnk_pm, const MPI_Comm *comms_pm,
+    int *coords_pm);
 void PX(decompose)(
     const INT *pn, const INT* block,
     int rnk_pm, const int *coords_pm,

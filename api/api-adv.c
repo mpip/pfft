@@ -27,7 +27,7 @@ static void calculate_3dto2d_blocks(
     INT *iblk);
 
 
-INT PX(local_size_many_dft)(
+INT PX(local_size_many_dft)(:
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock, const INT *oblock,
     MPI_Comm comm_cart, unsigned pfft_flags,
@@ -231,6 +231,27 @@ static void calculate_3dto2d_blocks(
       iblk, mblk, oblk);
 }
 
+INT PX(local_size_many_dft_by_pid)(
+    int pid, int rnk_n, const INT *n, const INT *ni, const INT *no,
+    INT howmany, const INT *iblock, const INT *oblock,
+    MPI_Comm comm_cart, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  INT *pn = PX();
+
+  
+
+
+  if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) ){
+    /* 3d to 2d remap results in complicated blocks.
+     * We ignore users input and use default block size. */
+    calculate_3dto2d_blocks(n, comm_cart,
+        blk_3dto2d);
+
+
+}
 
 
 PX(gcplan) PX(plan_many_cgc)(

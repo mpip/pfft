@@ -457,7 +457,23 @@ void PX(apr_complex_permuted_3d)(
  * 3d interface *
  ***************/
 
-/* compute block size and offset for any process */
+/* compute block size and offset for arbitrary process rank */
+void PX(local_block_size_dft_3d)(
+    int pid, const INT *n,
+    MPI_Comm comm_cart, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+
+
+
+}
+
+
+
+
+
 void PX(local_block_3d)(
     const INT *n, int *which_block, MPI_Comm comm_cart,
     INT *local_n, INT *local_n_start

@@ -85,6 +85,68 @@ static unsigned extract_fftw_flags(
  */
 
 
+void PX(local_block_by_coords)(
+    int rnk_n, const INT *ni, const INT *no,
+    INT howmany, const INT *iblock_user, INT *oblock_user,
+    MPI_Comm comm_cart, int *pid,
+    unsigned trafo_flag_user, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  INT *ni_t, *no_t;
+  INT *iblk_t, *oblk_t;
+
+  int rnk_pm, *coords;
+  MPI_Cartdim_get(comm_cart, &rnk_pm);
+
+  int *coords_pm = PX(malloc_int)(rnk_pm);
+
+  MPI_Cart_coords(comm_cart, pid, rnk_pm, coords_pm);
+
+
+  ni_t = PX(malloc_and_transpose_INT)(rnk_n, rnk_pm, pfft_flags & PFFT_TRANSPOSED_IN, ni);
+  no_t = PX(malloc_and_transpose_INT)(rnk_n, rnk_pm, pfft_flags & PFFT_TRANSPOSED_IN, no);
+  iblk_t = PX(malloc_and_transpose_INT)(rnk_pm, rnk_pm, pfft_flags & PFFT_TRANSPOSED_IN, iblock_user);
+
+
+  TODO convert block_user to block;
+  
+
+
+  if( transp_flag & PFFT_TRANSPOSED_IN ){
+    decompose_transposed(rnk_n, ni, iblock, rnk_pm, coords_pm, trafo_flags[rnk_pm],
+        local_ni, local_i_start);
+  } else {
+    if(needs_remap_3dto2d){
+      decompose_remap_3dto2d(...,
+          local_ni, local_ni_start);
+    } else {
+    decompose_nontransposed(rnk_n, ni, iblock, rnk_pm, coords_pm, trafo_flags[rnk_pm],
+        local_ni, local_i_start);
+    }
+  }
+
+  if( transp_flag & PFFT_TRANSPOSED_OUT ){
+    decompose_transposed(rnk_n, no, oblock, rnk_pm, coords_pm, trafo_flags[rnk_pm],
+        local_no, local_o_start);
+  } else {
+    if(needs_remap_3dto2d){
+      decompose_remap_3dto2d(...,
+          local_no, local_no_start);
+    } else {
+    decompose_nontransposed(rnk_n, no, oblock, rnk_pm, coords_pm, trafo_flags[rnk_pm],
+        local_no, local_o_start);
+    }
+  }
+
+
+
+  free(coords_pm);
+
+}
+
+
 INT PX(local_size_partrafo)(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock_user, const INT *oblock_user,
@@ -120,7 +182,6 @@ INT PX(local_size_partrafo)(
 
   dummy_ln = PX(malloc_INT)(rnk_n);
   dummy_ls = PX(malloc_INT)(rnk_n);
-
   iblk = PX(malloc_INT)(rnk_pm);
   mblk = PX(malloc_INT)(rnk_pm);
   oblk = PX(malloc_INT)(rnk_pm);
