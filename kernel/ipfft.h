@@ -407,6 +407,13 @@ void PX(die)(
 
 /* partrafo.c */
 
+void PX(local_block_partrafo)(
+    int rnk_n, const INT *ni, const INT *no,
+    const INT *iblock_user, const INT *oblock_user,
+    MPI_Comm comm_cart, int pid,
+    unsigned trafo_flag_user, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start);
 INT PX(local_size_partrafo)(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock, const INT *oblock,
@@ -425,6 +432,13 @@ void PX(rmplan)(
 
 /* partrafo-transposed.c */
 
+void PX(local_block_partrafo_transposed)(
+    int rnk_n, const INT *ni, const INT *no,
+    const INT *iblock, const INT *oblock,
+    int rnk_pm, int *coords_pm,
+    unsigned transp_flag, unsigned trafo_flag,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start);
 INT  PX(local_size_partrafo_transposed)(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock, const INT *oblock,
@@ -523,6 +537,9 @@ int PX(is_cart_procmesh_2d)(
 void PX(split_cart_procmesh)(
     MPI_Comm comm_cart,
     MPI_Comm *comms_1d);
+void PX(coords_3dto2d)(
+    int q0, int q1, const int *coords_3d,
+    int *coords_2d);
 void PX(split_cart_procmesh_3dto2d_p0q0)(
     const INT *n, MPI_Comm comm_cart_3d,
     MPI_Comm *comm_1d);
@@ -545,6 +562,12 @@ int PX(get_mpi_cart_dims)(MPI_Comm comm_cart, int maxdims, int *dims);
 
 /* remap_3dto2d.c */
 
+void PX(local_block_remap_3dto2d_transposed)(
+    int rnk_n, const INT *n, 
+    MPI_Comm comm_cart_3d, int pid, 
+    unsigned transp_flag,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start); 
 int PX(local_size_remap_3dto2d_transposed)(
     int rnk_n, const INT *n, INT howmany, 
     MPI_Comm comm_cart_3d, 

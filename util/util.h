@@ -37,7 +37,7 @@ void PX(decompose_1d)(
     INT *local_n, INT *local_n_start);
 int PX(pos_mod)(int dividend, int divisor);
 void PX(evaluate_user_block_size)(
-    int rnk_pm, const INT *pn, const INT *block, const MPI_Comm *comms_pm,
+    int rnk_pm, const INT *pn, const INT *block, const int *np_pm,
     INT *block_intern);
 void PX(evaluate_user_gcells)(
     int rnk_n, const INT *gc_below, const INT *gc_above,

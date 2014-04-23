@@ -70,19 +70,15 @@ int PX(pos_mod)(int dividend, int divisor)
 
 
 void PX(evaluate_user_block_size)(
-    int rnk_pm, const INT *pn, const INT *block, const MPI_Comm *comms_pm,
+    int rnk_pm, const INT *pn, const INT *block, const int *np_pm,
     INT *block_intern
     )
 {
-  int num_procs;
-  
   for(int t=0; t<rnk_pm; t++){
-    MPI_Comm_size(comms_pm[t], &num_procs);
-    
     if(block == PFFT_DEFAULT_BLOCKS)
-      block_intern[t] = PX(global_block_size)(pn[t], PFFT_DEFAULT_BLOCK, num_procs);
+      block_intern[t] = PX(global_block_size)(pn[t], PFFT_DEFAULT_BLOCK, np_pm[t]);
     else
-      block_intern[t] = PX(global_block_size)(pn[t], block[t], num_procs);
+      block_intern[t] = PX(global_block_size)(pn[t], block[t], np_pm[t]);
   }
 }
 

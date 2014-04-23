@@ -43,16 +43,70 @@ static void init_blks_comms_local_size(
 static void split_comms_3dto2d(
     const INT *n, MPI_Comm comm_cart_3d,
     MPI_Comm *icomms, MPI_Comm *mcomms, MPI_Comm *ocomms);
-static void get_local_n_3d(
+static void get_local_blocks_by_comms(
+    const INT *n,
+    const INT *iblks, const MPI_Comm *icomms,
+    const INT *oblks, const MPI_Comm *ocomms,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start);
+static void get_local_n_3d_by_comms(
     const INT *n, const INT *blks, const MPI_Comm *comms,
     INT *local_n);
-static void get_local_start_3d(
+static void get_local_start_3d_by_comms(
     const INT *n, const INT *blks, const MPI_Comm *comms,
     INT *local_start);
+static void get_local_blocks_by_coords(
+    const INT *n,
+    const INT *iblks, const int *icoords,
+    const INT *oblks, const int *ocoords,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start);
+static void get_local_n_3d_by_coords(
+    const INT *n, const INT *blks, const int *coords,
+    INT *local_n);
+static void get_local_start_3d_by_coords(
+    const INT *n, const INT *blks, const int *coords,
+    INT *local_start);
+
 static remap_3dto2d_plan remap_3dto2d_mkplan(
     void);
 
 
+void PX(local_block_remap_3dto2d_transposed)(
+    int rnk_n, const INT *n, 
+    MPI_Comm comm_cart_3d, int pid, 
+    unsigned transp_flag,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start 
+    )
+{
+  int p0, p1, q0, q1, rnk_pm;
+  int icoords[3], ocoords[3];
+  INT iblks[3], mblks[3], oblks[3];
+
+  /* remap only works for 3d data on 3d procmesh */
+  if(rnk_n != 3) return;
+
+  MPI_Cartdim_get(comm_cart_3d, &rnk_pm);
+  if(rnk_pm != 3) return;
+
+  PX(get_procmesh_dims_2d)(n, comm_cart_3d, &p0, &p1, &q0, &q1);
+  PX(default_block_size_3dto2d)(n, p0, p1, q0, q1,
+      iblks, mblks, oblks);
+
+  MPI_Cart_coords(comm_cart_3d, pid, 3, icoords);
+  PX(coords_3dto2d)(q0, q1, icoords, ocoords);
+  ocoords[2] = 0;
+
+  /* take care of transposed data ordering */
+  if(transp_flag & PFFT_TRANSPOSED_OUT){
+    get_local_blocks_by_coords(n, iblks, icoords, oblks, ocoords,
+        local_ni, local_i_start, local_no, local_o_start);
+  } else {
+    get_local_blocks_by_coords(n, iblks, icoords, oblks, ocoords,
+        local_no, local_o_start, local_ni, local_i_start);
+  }
+} 
 
 
 int PX(local_size_remap_3dto2d_transposed)(
@@ -134,15 +188,11 @@ int PX(local_size_remap_3dto2d_transposed)(
 
   /* take care of transposed data ordering */
   if(transp_flag & PFFT_TRANSPOSED_OUT){
-    get_local_n_3d(n, iblk, icomms, local_ni);
-    get_local_start_3d(n, iblk, icomms, local_i_start);
-    get_local_n_3d(n, oblk, ocomms, local_no);
-    get_local_start_3d(n, oblk, ocomms, local_o_start);
+    get_local_blocks_by_comms(n, iblk, icomms, oblk, ocomms,
+        local_ni, local_i_start, local_no, local_o_start);
   } else {
-    get_local_n_3d(n, iblk, icomms, local_no);
-    get_local_start_3d(n, iblk, icomms, local_o_start);
-    get_local_n_3d(n, oblk, ocomms, local_ni);
-    get_local_start_3d(n, oblk, ocomms, local_i_start);
+    get_local_blocks_by_comms(n, iblk, icomms, oblk, ocomms,
+        local_no, local_o_start, local_ni, local_i_start);
   }
 
   /* free communicators */
@@ -297,16 +347,29 @@ static void init_blks_comms_local_size(
       iblk, mblk, oblk);
   split_comms_3dto2d(n, comm_cart_3d,
     icomms, mcomms, ocomms);
-  get_local_n_3d(n, iblk, icomms,
+  get_local_n_3d_by_comms(n, iblk, icomms,
       local_ni);
-  get_local_n_3d(n, mblk, mcomms,
+  get_local_n_3d_by_comms(n, mblk, mcomms,
       local_nm);
-  get_local_n_3d(n, oblk, ocomms,
+  get_local_n_3d_by_comms(n, oblk, ocomms,
       local_no);
 }
 
+static void get_local_blocks_by_comms(
+    const INT *n,
+    const INT *iblks, const MPI_Comm *icomms,
+    const INT *oblks, const MPI_Comm *ocomms,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  get_local_n_3d_by_comms(n, iblks, icomms, local_ni);
+  get_local_start_3d_by_comms(n, iblks, icomms, local_i_start);
+  get_local_n_3d_by_comms(n, oblks, ocomms, local_no);
+  get_local_start_3d_by_comms(n, oblks, ocomms, local_o_start);
+}
 
-static void get_local_n_3d(
+static void get_local_n_3d_by_comms(
     const INT *n, const INT *blks, const MPI_Comm *comms,
     INT *local_n
     )
@@ -319,7 +382,7 @@ static void get_local_n_3d(
   }
 }
 
-static void get_local_start_3d(
+static void get_local_start_3d_by_comms(
     const INT *n, const INT *blks, const MPI_Comm *comms,
     INT *local_start
     )
@@ -332,6 +395,37 @@ static void get_local_start_3d(
   }
 }
 
+static void get_local_blocks_by_coords(
+    const INT *n,
+    const INT *iblks, const int *icoords,
+    const INT *oblks, const int *ocoords,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  get_local_n_3d_by_coords(n, iblks, icoords, local_ni);
+  get_local_start_3d_by_coords(n, iblks, icoords, local_i_start);
+  get_local_n_3d_by_coords(n, oblks, ocoords, local_no);
+  get_local_start_3d_by_coords(n, oblks, ocoords, local_o_start);
+}
+
+static void get_local_n_3d_by_coords(
+    const INT *n, const INT *blks, const int *coords,
+    INT *local_n
+    )
+{
+  for(int t=0; t<3; t++)
+    local_n[t] = PX(local_block_size)(n[t], blks[t], coords[t]);
+}
+
+static void get_local_start_3d_by_coords(
+    const INT *n, const INT *blks, const int *coords,
+    INT *local_start
+    )
+{
+  for(int t=0; t<3; t++)
+    local_start[t] = PX(local_block_offset)(n[t], blks[t], coords[t]);
+}
 
 
 

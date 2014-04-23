@@ -29,9 +29,6 @@ static void decompose(
     const INT *pn, const INT *block,
     int rnk_pm, const MPI_Comm *comms_pm,
     INT *local_n, INT *local_start);
-static void get_coords(
-    int rnk_pm, const MPI_Comm *comms_pm,
-    int *coords_pm);
 static int gc_RMA_applicable(
     int rnk_n, int rnk_pm, const INT *gc_below, const INT *gc_above);
 static void vcopy_INT_transposed(
@@ -129,10 +126,15 @@ PX(gcplan) PX(plan_rgc_internal)(
   vcopy_INT_transposed(rnk_n, gc_below, rnk_pm, gc_flags, ths->gc_below);
   vcopy_INT_transposed(rnk_n, gc_above, rnk_pm, gc_flags, ths->gc_above);
  
-  /* calculate 'blk' from transposed array */ 
-  PX(evaluate_user_block_size)(rnk_pm, ths->n, block_user, comms_pm, ths->blk);
+  /* calculate 'blk' from transposed array */
+  int *np_pm = PX(malloc_int)(rnk_pm);
+  for(int t=0; t<rnk_pm; t++)
+    MPI_Comm_size(comms_pm[t], np_pm + t); 
+  PX(evaluate_user_block_size)(rnk_pm, ths->n, block_user, np_pm,
+      ths->blk);
   for(int t=rnk_pm; t<rnk_n; t++)
     ths->blk[t] = ths->n[t];
+  free(np_pm);
 
   /* calculate 'loc_n' from transposed array */ 
   dummy = PX(malloc_INT)(rnk_pm);
@@ -241,27 +243,13 @@ static void decompose(
 {
   int *coords_pm = PX(malloc_int)(rnk_pm);
 
-  get_coords(rnk_pm, comms_pm,
+  PX(get_coords)(rnk_pm, comms_pm,
       coords_pm);
 
   PX(decompose)(pn, block, rnk_pm, coords_pm,
       local_n, local_start);
 
   free(coords_pm);
-}
-
-
-static void get_coords(
-    int rnk_pm, const MPI_Comm *comms_pm,
-    int *coords_pm
-    )
-{
-  int rnk;
-  
-  for(int t=0; t<rnk_pm; t++){
-    MPI_Comm_rank(comms_pm[t], &rnk);
-    MPI_Cart_coords(comms_pm[t], rnk, 1, &coords_pm[t]); 
-  }
 }
 
 

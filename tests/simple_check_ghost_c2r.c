@@ -75,29 +75,29 @@ int main(int argc, char **argv){
 
   /* Plan parallel ghost cell send */
   ths = pfft_plan_cgc_3d(n, gc_below, gc_above,
-      data, comm_cart_2d, PFFT_GC_NONTRANSPOSED);
+      (pfft_complex*) data, comm_cart_2d, PFFT_GC_NONTRANSPOSED);
 
   /* Initialize input with random numbers */
   pfft_init_input_complex_3d(n, local_ni, local_i_start,
-      data);
+      (pfft_complex*) data);
 
   /* check gcell input */
   if(verbose)
-    pfft_apr_complex_3d(data, local_ni, local_i_start, "gcell input", comm_cart_2d);
+    pfft_apr_complex_3d((pfft_complex*) data, local_ni, local_i_start, "gcell input", comm_cart_2d);
 
   /* Execute parallel ghost cell send */
   pfft_exchange(ths);
 
   /* Check gcell output */
   if(verbose)
-    pfft_apr_complex_3d(data, local_ngc, local_gc_start, "exchanged gcells", comm_cart_2d);
+    pfft_apr_complex_3d((pfft_complex*) data, local_ngc, local_gc_start, "exchanged gcells", comm_cart_2d);
   
   /* Execute adjoint parallel ghost cell send */
   pfft_reduce(ths);
 
   /* check input */
   if(verbose)
-    pfft_apr_complex_3d(data, local_no, local_o_start, "reduced gcells", comm_cart_2d);
+    pfft_apr_complex_3d((pfft_complex*) data, local_no, local_o_start, "reduced gcells", comm_cart_2d);
 
   /* Scale data */
   for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
@@ -105,7 +105,7 @@ int main(int argc, char **argv){
 
   /* Print error of back transformed data */
   MPI_Barrier(comm_cart_2d);
-  err = pfft_check_output_complex_3d(n, local_ni, local_i_start, data, comm_cart_2d);
+  err = pfft_check_output_complex_3d(n, local_ni, local_i_start, (pfft_complex*) data, comm_cart_2d);
   pfft_printf(comm_cart_2d, "Error after one gcell exchange and reduce of size n=(%td, %td, %td),\n", n[0], n[1], n[2]); 
   pfft_printf(comm_cart_2d, "gc_below = (%td, %td, %td), gc_above = (%td, %td, %td):\n", gc_below[0], gc_below[1], gc_below[2], gc_above[0], gc_above[1], gc_above[2]); 
   pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);

@@ -31,18 +31,18 @@ static INT calculate_tuple_size(
 static void local_size_transposed(
     int rnk_n, const INT *ni, const INT *no,
     const INT *iblock, const INT *oblock,
-    int rnk_pm, const MPI_Comm *comms_pm,
+    int rnk_pm, const int *coords_pm,
     unsigned trafo_flag, unsigned transp_flag,
     INT *local_ni, INT *local_i_start,
     INT *local_no, INT *local_o_start);
 static void decompose_nontransposed(
     int rnk_n, const INT *n, const INT *blk,
-    int rnk_pm, const MPI_Comm *comms_pm,
+    int rnk_pm, const int *coords_pm,
     unsigned trafo_flag,
     INT *local_n, INT *local_start);
 static void decompose_transposed(
     int rnk_n, const INT *n, const INT *blk,
-    int rnk_pm, const MPI_Comm *comms_pm,
+    int rnk_pm, const int *coords_pm,
     unsigned trafo_flag,
     INT *local_n, INT *local_start); 
 
@@ -50,11 +50,11 @@ static void decompose_transposed(
 /* call these routines with transp_flag
  * PFFT_TRANSPOSED_IN or PFFT_TRANSPOSED_OUT */
 
-void PX(local_block_by_coords_partrafo_transposed)(
+void PX(local_block_partrafo_transposed)(
     int rnk_n, const INT *ni, const INT *no,
-    INT howmany, const INT *iblock, const INT *oblock,
+    const INT *iblock, const INT *oblock,
     int rnk_pm, int *coords_pm,
-    unsigned transp_flag, const unsigned *trafo_flags,
+    unsigned transp_flag, unsigned trafo_flag,
     INT *local_ni, INT *local_i_start,
     INT *local_no, INT *local_o_start
     )
@@ -66,12 +66,12 @@ void PX(local_block_by_coords_partrafo_transposed)(
 
   /* overwrite physical size of r2c input, 
    * since PFFT user interface does not use padding for real inputs */
-  if( trafo_flags[rnk_pm] & PFFTI_TRAFO_R2C )
+  if( trafo_flag & PFFTI_TRAFO_R2C )
     local_ni[rnk_n-1] = ni[rnk_n-1];
 
   /* overwrite physical size of c2r output, 
    * since PFFT user interface does not use padding for real outputs */
-  if( trafo_flags[rnk_pm] & PFFTI_TRAFO_C2R )
+  if( trafo_flag & PFFTI_TRAFO_C2R )
     local_no[rnk_n-1] = no[rnk_n-1];
 }
 
@@ -91,12 +91,12 @@ INT PX(local_size_partrafo_transposed)(
   X(r2r_kind) kind, *kinds=NULL;
   int *coords_pm = PX(malloc_int)(rnk_pm);
 
-  get_coords(rnk_pm, comms_pm,
+  PX(get_coords)(rnk_pm, comms_pm,
       coords_pm);
 
   /* get initial and final data decomposition */
   local_size_transposed(rnk_n, ni, no, iblock, oblock,
-      rnk_pm, comms_pm, trafo_flag, transp_flag,
+      rnk_pm, coords_pm, trafo_flag, transp_flag,
       local_ni, local_i_start, local_no, local_o_start);
 
   /* parameter of canonicalized trafo */
@@ -182,7 +182,7 @@ void PX(plan_partrafo_transposed)(
   X(r2r_kind) kind;
   int *coords_pm = PX(malloc_int)(rnk_pm);
 
-  get_coords(rnk_pm, comms_pm,
+  PX(get_coords)(rnk_pm, comms_pm,
       coords_pm);
  
   /* perform last trafos of backward plan in-place on 'out' in order to preserve input */
@@ -197,7 +197,7 @@ void PX(plan_partrafo_transposed)(
 
   /* get initial and final data decomposition */
   local_size_transposed(rnk_n, ni, no, iblock, oblock,
-      rnk_pm, comms_pm, trafo_flag, transp_flag,
+      rnk_pm, coords_pm, trafo_flag, transp_flag,
       local_ni, local_i_start, local_no, local_o_start);
 
   /* parameter of canonicalized trafo */

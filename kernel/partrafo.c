@@ -28,6 +28,10 @@ static PX(plan) mkplan(
 static void malloc_and_split_cart_procmesh(
     int rnk_n, const INT *ni, const INT *no, unsigned transp_flag, MPI_Comm comm_cart, 
     int *rnk_pm, MPI_Comm **comms_pm);
+static void malloc_and_compute_cart_np_and_coords(
+    int rnk_n, const INT *ni, const INT *no, unsigned transp_flag,
+    MPI_Comm comm_cart, int pid, 
+    int *rnk_pm, int **np_pm, int **coords_pm);
 
 static void init_param_local_size(
     INT *lni, INT *lis, INT *dummy_ln, INT *dummy_ls, INT *lno, INT *los,
@@ -54,10 +58,16 @@ static void set_plans_to_null(
     int rnk_pm, unsigned transp_flag,
     outrafo_plan *trafos, gtransp_plan *remaps);
 
-static void evaluate_blocks(
+static void evaluate_blocks_by_comms(
     int rnk_n, const INT *ni, const INT *no,
     const INT *iblock_user, const INT *oblock_user,
     int rnk_pm, const MPI_Comm *comms_pm,
+    unsigned trafo_flag, unsigned transp_flag,
+    INT *iblk, INT *mblk, INT *oblk);
+static void evaluate_blocks(
+    int rnk_n, const INT *ni, const INT *no,
+    const INT *iblock_user, const INT *oblock_user,
+    int rnk_pm, const int *np_pm,
     unsigned trafo_flag, unsigned transp_flag,
     INT *iblk, INT *mblk, INT *oblk);
 
@@ -85,65 +95,83 @@ static unsigned extract_fftw_flags(
  */
 
 
-void PX(local_block_by_coords)(
+void PX(local_block_partrafo)(
     int rnk_n, const INT *ni, const INT *no,
-    INT howmany, const INT *iblock_user, INT *oblock_user,
-    MPI_Comm comm_cart, int *pid,
+    const INT *iblock_user, const INT *oblock_user,
+    MPI_Comm comm_cart, int pid,
     unsigned trafo_flag_user, unsigned pfft_flags,
     INT *local_ni, INT *local_i_start,
     INT *local_no, INT *local_o_start
     )
 {
-  INT *ni_t, *no_t;
-  INT *iblk_t, *oblk_t;
+  unsigned transp_flag = extract_transp_flag(pfft_flags);
+  int rnk_pm, *np_pm, *coords_pm;
+  INT *iblk, *mblk, *oblk;
+  INT *dummy_ln, *dummy_ls;
+  INT *lni_to, *lis_to, *lno_to, *los_to; 
+  INT *lni_ti, *lis_ti, *lno_ti, *los_ti;
 
-  int rnk_pm, *coords;
-  MPI_Cartdim_get(comm_cart, &rnk_pm);
+  malloc_and_compute_cart_np_and_coords(rnk_n, ni, no, transp_flag, comm_cart, pid,
+      &rnk_pm, &np_pm, &coords_pm);
 
-  int *coords_pm = PX(malloc_int)(rnk_pm);
+  dummy_ln = PX(malloc_INT)(rnk_n);
+  dummy_ls = PX(malloc_INT)(rnk_n);
+  iblk = PX(malloc_INT)(rnk_pm);
+  mblk = PX(malloc_INT)(rnk_pm);
+  oblk = PX(malloc_INT)(rnk_pm);
 
-  MPI_Cart_coords(comm_cart, pid, rnk_pm, coords_pm);
+  /* calculate blocksizes according to trafo and transp flags */
+  evaluate_blocks(rnk_n, ni, no, iblock_user, oblock_user,
+      rnk_pm, np_pm, trafo_flag_user, transp_flag,
+      iblk, mblk, oblk);
 
+  init_param_local_size(
+      local_ni, local_i_start, dummy_ln, dummy_ls,
+      local_no, local_o_start, transp_flag,
+      &lni_to, &lis_to, &lno_to, &los_to,
+      &lni_ti, &lis_ti, &lno_ti, &los_ti);
 
-  ni_t = PX(malloc_and_transpose_INT)(rnk_n, rnk_pm, pfft_flags & PFFT_TRANSPOSED_IN, ni);
-  no_t = PX(malloc_and_transpose_INT)(rnk_n, rnk_pm, pfft_flags & PFFT_TRANSPOSED_IN, no);
-  iblk_t = PX(malloc_and_transpose_INT)(rnk_pm, rnk_pm, pfft_flags & PFFT_TRANSPOSED_IN, iblock_user);
+  /* overwrite input blocks if remap_3dto2d is used */
+  if( ~transp_flag & PFFT_TRANSPOSED_IN ){
+    PX(local_block_partrafo_transposed)(
+        rnk_n, ni, no, iblk, mblk, 
+        rnk_pm, coords_pm, PFFT_TRANSPOSED_OUT, trafo_flag_user,
+        lni_to, lis_to, lno_to, los_to);
 
+    PX(local_block_remap_3dto2d_transposed)(
+        rnk_n, ni, comm_cart, pid, PFFT_TRANSPOSED_OUT,
+        local_ni, local_i_start, dummy_ln, dummy_ls);
+  }
 
-  TODO convert block_user to block;
-  
+  /* overwrite input blocks if remap_3dto2d is used */
+  if( ~transp_flag & PFFT_TRANSPOSED_OUT ){
+    PX(local_block_partrafo_transposed)(
+        rnk_n, ni, no, mblk, oblk, 
+        rnk_pm, coords_pm, PFFT_TRANSPOSED_IN, trafo_flag_user,
+        lni_ti, lis_ti, lno_ti, los_ti);
 
+    PX(local_block_remap_3dto2d_transposed)(
+        rnk_n, no, comm_cart, pid, PFFT_TRANSPOSED_IN,
+        dummy_ln, dummy_ls, local_no, local_o_start);
+  }
 
-  if( transp_flag & PFFT_TRANSPOSED_IN ){
-    decompose_transposed(rnk_n, ni, iblock, rnk_pm, coords_pm, trafo_flags[rnk_pm],
-        local_ni, local_i_start);
-  } else {
-    if(needs_remap_3dto2d){
-      decompose_remap_3dto2d(...,
-          local_ni, local_ni_start);
-    } else {
-    decompose_nontransposed(rnk_n, ni, iblock, rnk_pm, coords_pm, trafo_flags[rnk_pm],
-        local_ni, local_i_start);
+  if(pfft_flags & PFFT_SHIFTED_IN){
+    for(int t=0; t<rnk_n; t++){
+      if(ni[t]%2) PX(fprintf)(comm_cart, stderr, "PFFT ERROR: flag PFFT_SHIFTED_IN requires ni to be an even number\n");
+      local_i_start[t] -= ni[t]/2;
     }
   }
 
-  if( transp_flag & PFFT_TRANSPOSED_OUT ){
-    decompose_transposed(rnk_n, no, oblock, rnk_pm, coords_pm, trafo_flags[rnk_pm],
-        local_no, local_o_start);
-  } else {
-    if(needs_remap_3dto2d){
-      decompose_remap_3dto2d(...,
-          local_no, local_no_start);
-    } else {
-    decompose_nontransposed(rnk_n, no, oblock, rnk_pm, coords_pm, trafo_flags[rnk_pm],
-        local_no, local_o_start);
+  if(pfft_flags & PFFT_SHIFTED_OUT){
+    for(int t=0; t<rnk_n; t++){
+      if(no[t]%2) PX(fprintf)(comm_cart, stderr, "PFFT ERROR: flag PFFT_SHIFTED_OUT requires no to be an even number\n");
+      local_o_start[t] -= no[t]/2;
     }
   }
 
-
-
-  free(coords_pm);
-
+  free(np_pm); free(coords_pm);
+  free(iblk); free(mblk); free(oblk);
+  free(dummy_ln); free(dummy_ls);
 }
 
 
@@ -187,7 +215,7 @@ INT PX(local_size_partrafo)(
   oblk = PX(malloc_INT)(rnk_pm);
   
   /* calculate blocksizes according to trafo and transp flags */
-  evaluate_blocks(rnk_n, ni, no, iblock_user, oblock_user,
+  evaluate_blocks_by_comms(rnk_n, ni, no, iblock_user, oblock_user,
       rnk_pm, comms_pm, trafo_flag_user, transp_flag,
       iblk, mblk, oblk);
 
@@ -345,7 +373,7 @@ PX(plan) PX(plan_partrafo)(
     ths->local_no, ths->local_no_start);
   
   /* calculate blocksizes according to trafo and transp flags */
-  evaluate_blocks(rnk_n, ni, no, iblock_user, oblock_user,
+  evaluate_blocks_by_comms(rnk_n, ni, no, iblock_user, oblock_user,
       rnk_pm, comms_pm, trafo_flag, transp_flag,
       iblk, mblk, oblk);
   
@@ -470,10 +498,38 @@ static void malloc_and_split_cart_procmesh(
         *comms_pm + 0);
     PX(split_cart_procmesh_3dto2d_p1q1)(n3dto2d, comm_cart,
         *comms_pm + 1);
-  } else
+  } else 
     PX(split_cart_procmesh)(comm_cart, *comms_pm);
 }
 
+static void malloc_and_compute_cart_np_and_coords(
+    int rnk_n, const INT *ni, const INT *no, unsigned transp_flag,
+    MPI_Comm comm_cart, int pid, 
+    int *rnk_pm, int **np_pm, int **coords_pm
+    )
+{
+  const INT *n3dto2d = (transp_flag & PFFT_TRANSPOSED_IN) ? no : ni; 
+  MPI_Cartdim_get(comm_cart, rnk_pm);
+
+  if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) )
+    *rnk_pm = 2;
+
+  *np_pm     = PX(malloc_int)(*rnk_pm);
+  *coords_pm = PX(malloc_int)(*rnk_pm);
+
+  if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) ){
+    int p0, p1, q0, q1, coords_3d[3];
+    PX(get_procmesh_dims_2d)(n3dto2d, comm_cart, &p0, &p1, &q0, &q1);
+    MPI_Cart_coords(comm_cart, pid, 3, coords_3d);
+    PX(coords_3dto2d)(q0, q1, coords_3d, *coords_pm);
+    (*np_pm)[0] = p0*q0; (*np_pm)[1] = p1*q1;
+  } else {
+    int *periods = PX(malloc_int)(*rnk_pm);
+    MPI_Cart_get(comm_cart, *rnk_pm, *np_pm, periods, *coords_pm);
+    MPI_Cart_coords(comm_cart, pid, *rnk_pm, *coords_pm);
+    free(periods);
+  }
+}
 
 
 
@@ -528,11 +584,29 @@ static void save_param_into_plan(
   ths->pfft_flags = pfft_flags;
 }
 
+static void evaluate_blocks_by_comms(
+    int rnk_n, const INT *ni, const INT *no,
+    const INT *iblock_user, const INT *oblock_user,
+    int rnk_pm, const MPI_Comm *comms_pm,
+    unsigned trafo_flag, unsigned transp_flag,
+    INT *iblk, INT *mblk, INT *oblk
+    )
+{
+  int *np_pm = PX(malloc_int)(rnk_pm);
+  for(int t=0; t<rnk_pm; t++)
+    MPI_Comm_size(comms_pm[t], &np_pm[t]);
+
+  evaluate_blocks(rnk_n, ni, no, iblock_user, oblock_user,
+      rnk_pm, np_pm, trafo_flag, transp_flag,
+      iblk, mblk, oblk);
+
+  free(np_pm);
+}
 
 static void evaluate_blocks(
     int rnk_n, const INT *ni, const INT *no,
     const INT *iblock_user, const INT *oblock_user,
-    int rnk_pm, const MPI_Comm *comms_pm,
+    int rnk_pm, const int *np_pm,
     unsigned trafo_flag, unsigned transp_flag,
     INT *iblk, INT *mblk, INT *oblk
     )
@@ -569,13 +643,13 @@ static void evaluate_blocks(
 
   /* not needed for transposed input */
   if( ~transp_flag & PFFT_TRANSPOSED_IN )
-    PX(evaluate_user_block_size)(rnk_pm, pni, iblock_user, comms_pm, iblk);
+    PX(evaluate_user_block_size)(rnk_pm, pni, iblock_user, np_pm, iblk);
 
-  PX(evaluate_user_block_size)(rnk_pm, pnm+1, mblock_user, comms_pm, mblk);
+  PX(evaluate_user_block_size)(rnk_pm, pnm+1, mblock_user, np_pm, mblk);
 
   /* not needed for transposed output */
   if( ~transp_flag & PFFT_TRANSPOSED_OUT )
-    PX(evaluate_user_block_size)(rnk_pm, pno, oblock_user, comms_pm, oblk);
+    PX(evaluate_user_block_size)(rnk_pm, pno, oblock_user, np_pm, oblk);
 
   free(pni); free(pno);
 }

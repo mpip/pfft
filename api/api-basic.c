@@ -457,44 +457,8 @@ void PX(apr_complex_permuted_3d)(
  * 3d interface *
  ***************/
 
-/* compute block size and offset for arbitrary process rank */
-void PX(local_block_size_dft_3d)(
-    int pid, const INT *n,
-    MPI_Comm comm_cart, unsigned pfft_flags,
-    INT *local_ni, INT *local_i_start,
-    INT *local_no, INT *local_o_start
-    )
-{
 
 
-
-}
-
-
-
-
-
-void PX(local_block_3d)(
-    const INT *n, int *which_block, MPI_Comm comm_cart,
-    INT *local_n, INT *local_n_start
-    )
-{
-  const int rnk_n = 3;
-  int rnk_pm;
-  int np[rnk_n], periods[3], coords[3];
-
-  MPI_Cartdim_get(comm_cart, &rnk_pm);
-  
-  MPI_Cart_get(comm_cart, rnk_pm, np, periods, coords);
-  for(int t=rnk_pm; t<rnk_n; t++)
-    np[t] = 1;
-
-  for(int t=0; t<rnk_n; t++){
-    INT global_block_size = PX(global_block_size)(n[t], PFFT_DEFAULT_BLOCK, np[t]);
-    PX(local_block_size_and_offset)(n[t], global_block_size, which_block[t],
-        &local_n[t], &local_n_start[t]);
-  }
-}
 
 
 
@@ -594,6 +558,59 @@ PX(plan) PX(plan_r2r_3d)(
 
   return PX(plan_r2r)(rnk_n, n, in, out,
       comm_cart, kinds, pfft_flags);
+}
+
+/* compute block size and offset for arbitrary process rank */
+void PX(local_block_dft_3d)(
+    const INT *n,
+    MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  int rnk_n = 3;
+
+  PX(local_block_dft)(rnk_n, n, comm_cart, pid, pfft_flags,
+      local_ni, local_i_start, local_no, local_o_start);
+}
+
+void PX(local_block_dft_r2c_3d)(
+    const INT *n,
+    MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  int rnk_n = 3;
+
+  PX(local_block_dft_r2c)(rnk_n, n, comm_cart, pid, pfft_flags,
+      local_ni, local_i_start, local_no, local_o_start);
+}
+
+void PX(local_block_dft_c2r_3d)(
+    const INT *n,
+    MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  int rnk_n = 3;
+
+  PX(local_block_dft_c2r)(rnk_n, n, comm_cart, pid, pfft_flags,
+      local_ni, local_i_start, local_no, local_o_start);
+}
+
+void PX(local_block_r2r_3d)(
+    const INT *n,
+    MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  int rnk_n = 3;
+
+  PX(local_block_r2r)(rnk_n, n, comm_cart, pid, pfft_flags,
+      local_ni, local_i_start, local_no, local_o_start);
 }
 
 
@@ -704,6 +721,53 @@ PX(plan) PX(plan_r2r)(
     in, out, comm_cart, kinds, pfft_flags);
 }
 
+void PX(local_block_dft)(
+    int rnk_n, const INT *n,
+    MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  PX(local_block_many_dft)(rnk_n, n, n,
+      PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS, comm_cart, pid, pfft_flags,
+      local_ni, local_i_start, local_no, local_o_start);
+}
+
+void PX(local_block_dft_r2c)(
+    int rnk_n, const INT *n,
+    MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  PX(local_block_many_dft_r2c)(rnk_n, n, n,
+      PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS, comm_cart, pid, pfft_flags,
+      local_ni, local_i_start, local_no, local_o_start);
+}
+
+void PX(local_block_dft_c2r)(
+    int rnk_n, const INT *n,
+    MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  PX(local_block_many_dft_c2r)(rnk_n, n, n,
+      PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS, comm_cart, pid, pfft_flags,
+      local_ni, local_i_start, local_no, local_o_start);
+}
+
+void PX(local_block_r2r)(
+    int rnk_n, const INT *n,
+    MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start
+    )
+{
+  PX(local_block_many_r2r)(rnk_n, n, n,
+      PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS, comm_cart, pid, pfft_flags,
+      local_ni, local_i_start, local_no, local_o_start);
+}
 
 
 /* functions to execute and destroy PX(plan) */
