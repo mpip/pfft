@@ -541,19 +541,19 @@ void PX(coords_3dto2d)(
     int q0, int q1, const int *coords_3d,
     int *coords_2d);
 void PX(split_cart_procmesh_3dto2d_p0q0)(
-    const INT *n, MPI_Comm comm_cart_3d,
+    MPI_Comm comm_cart_3d,
     MPI_Comm *comm_1d);
 void PX(split_cart_procmesh_3dto2d_p1q1)(
-    const INT *n, MPI_Comm comm_cart_3d,
+    MPI_Comm comm_cart_3d,
     MPI_Comm *comm_1d);
 void PX(get_procmesh_dims_2d)(
-    const INT *n, MPI_Comm comm_cart_3d,
+    MPI_Comm comm_cart_3d,
     int *p0, int *p1, int *q0, int *q1);
 void PX(split_cart_procmesh_for_3dto2d_remap_q0)(
-    const INT *n, MPI_Comm comm_cart_3d,
+    MPI_Comm comm_cart_3d,
     MPI_Comm *comm_1d);
 void PX(split_cart_procmesh_for_3dto2d_remap_q1)(
-    const INT *n, MPI_Comm comm_cart_3d,
+    MPI_Comm comm_cart_3d,
     MPI_Comm *comms_1d);
 int PX(get_mpi_cart_coord_1d)(MPI_Comm comm_cart_1d, int *coord);
 int PX(get_mpi_cart_coords)(MPI_Comm comm_cart, int maxdims, int *coords);

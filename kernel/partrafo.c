@@ -26,10 +26,11 @@ static PX(plan) mkplan(
     int rnk_n, int rnk_pm);
 
 static void malloc_and_split_cart_procmesh(
-    int rnk_n, const INT *ni, const INT *no, unsigned transp_flag, MPI_Comm comm_cart, 
+    int rnk_n, unsigned transp_flag,
+    MPI_Comm comm_cart, 
     int *rnk_pm, MPI_Comm **comms_pm);
 static void malloc_and_compute_cart_np_and_coords(
-    int rnk_n, const INT *ni, const INT *no, unsigned transp_flag,
+    int rnk_n, unsigned transp_flag,
     MPI_Comm comm_cart, int pid, 
     int *rnk_pm, int **np_pm, int **coords_pm);
 
@@ -111,7 +112,7 @@ void PX(local_block_partrafo)(
   INT *lni_to, *lis_to, *lno_to, *los_to; 
   INT *lni_ti, *lis_ti, *lno_ti, *los_ti;
 
-  malloc_and_compute_cart_np_and_coords(rnk_n, ni, no, transp_flag, comm_cart, pid,
+  malloc_and_compute_cart_np_and_coords(rnk_n, transp_flag, comm_cart, pid,
       &rnk_pm, &np_pm, &coords_pm);
 
   dummy_ln = PX(malloc_INT)(rnk_n);
@@ -195,7 +196,7 @@ INT PX(local_size_partrafo)(
   int rnk_pm;
   MPI_Comm *comms_pm;
 
-  malloc_and_split_cart_procmesh(rnk_n, ni, no, transp_flag, comm_cart,
+  malloc_and_split_cart_procmesh(rnk_n, transp_flag, comm_cart,
       &rnk_pm, &comms_pm);
 
   ni_to = PX(malloc_INT)(rnk_n);
@@ -345,7 +346,7 @@ PX(plan) PX(plan_partrafo)(
     if(rnk_n != 3)
       return NULL;
   
-  malloc_and_split_cart_procmesh(rnk_n, ni, no, transp_flag, comm_cart,
+  malloc_and_split_cart_procmesh(rnk_n, transp_flag, comm_cart,
       &rnk_pm, &comms_pm);
 
   ths = mkplan(rnk_n, rnk_pm);
@@ -480,12 +481,11 @@ PX(plan) PX(plan_partrafo)(
  * Special case: 3d data with 3d decomposition
  * => First remap to 2d decomposition. */
 static void malloc_and_split_cart_procmesh(
-    int rnk_n, const INT *ni, const INT *no, unsigned transp_flag,
+    int rnk_n, unsigned transp_flag,
     MPI_Comm comm_cart, 
     int *rnk_pm, MPI_Comm **comms_pm
     )
 {
-  const INT *n3dto2d = (transp_flag & PFFT_TRANSPOSED_IN) ? no : ni; 
   MPI_Cartdim_get(comm_cart, rnk_pm);
 
   if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) )
@@ -494,21 +494,20 @@ static void malloc_and_split_cart_procmesh(
   *comms_pm = (MPI_Comm*) malloc(sizeof(MPI_Comm) * (size_t) *rnk_pm);
 
   if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) ){
-    PX(split_cart_procmesh_3dto2d_p0q0)(n3dto2d, comm_cart,
+    PX(split_cart_procmesh_3dto2d_p0q0)(comm_cart,
         *comms_pm + 0);
-    PX(split_cart_procmesh_3dto2d_p1q1)(n3dto2d, comm_cart,
+    PX(split_cart_procmesh_3dto2d_p1q1)(comm_cart,
         *comms_pm + 1);
   } else 
     PX(split_cart_procmesh)(comm_cart, *comms_pm);
 }
 
 static void malloc_and_compute_cart_np_and_coords(
-    int rnk_n, const INT *ni, const INT *no, unsigned transp_flag,
+    int rnk_n, unsigned transp_flag,
     MPI_Comm comm_cart, int pid, 
     int *rnk_pm, int **np_pm, int **coords_pm
     )
 {
-  const INT *n3dto2d = (transp_flag & PFFT_TRANSPOSED_IN) ? no : ni; 
   MPI_Cartdim_get(comm_cart, rnk_pm);
 
   if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) )
@@ -519,7 +518,7 @@ static void malloc_and_compute_cart_np_and_coords(
 
   if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) ){
     int p0, p1, q0, q1, coords_3d[3];
-    PX(get_procmesh_dims_2d)(n3dto2d, comm_cart, &p0, &p1, &q0, &q1);
+    PX(get_procmesh_dims_2d)(comm_cart, &p0, &p1, &q0, &q1);
     MPI_Cart_coords(comm_cart, pid, 3, coords_3d);
     PX(coords_3dto2d)(q0, q1, coords_3d, *coords_pm);
     (*np_pm)[0] = p0*q0; (*np_pm)[1] = p1*q1;
