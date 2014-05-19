@@ -73,9 +73,9 @@ static remap_3dto2d_plan remap_3dto2d_mkplan(
 
 
 void PX(local_block_remap_3dto2d_transposed)(
-    int rnk_n, const INT *n, 
+    int rnk_n, const INT *pn, 
     MPI_Comm comm_cart_3d, int pid, 
-    unsigned transp_flag,
+    unsigned transp_flag, unsigned trafo_flag,
     INT *local_ni, INT *local_i_start,
     INT *local_no, INT *local_o_start 
     )
@@ -90,8 +90,12 @@ void PX(local_block_remap_3dto2d_transposed)(
   MPI_Cartdim_get(comm_cart_3d, &rnk_pm);
   if(rnk_pm != 3) return;
 
+  /* Handle r2c input and c2r output like r2r. For complex data we use the C2C flag. */
+  if(trafo_flag & PFFTI_TRAFO_RDFT)
+    trafo_flag = PFFTI_TRAFO_R2R;
+
   PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
-  PX(default_block_size_3dto2d)(n, p0, p1, q0, q1,
+  PX(default_block_size_3dto2d)(pn, p0, p1, q0, q1,
       iblks, mblks, oblks);
 
   MPI_Cart_coords(comm_cart_3d, pid, 3, icoords);
@@ -100,17 +104,17 @@ void PX(local_block_remap_3dto2d_transposed)(
 
   /* take care of transposed data ordering */
   if(transp_flag & PFFT_TRANSPOSED_OUT){
-    get_local_blocks_by_coords(n, iblks, icoords, oblks, ocoords,
+    get_local_blocks_by_coords(pn, iblks, icoords, oblks, ocoords,
         local_ni, local_i_start, local_no, local_o_start);
   } else {
-    get_local_blocks_by_coords(n, iblks, icoords, oblks, ocoords,
+    get_local_blocks_by_coords(pn, iblks, icoords, oblks, ocoords,
         local_no, local_o_start, local_ni, local_i_start);
   }
 } 
 
 
 int PX(local_size_remap_3dto2d_transposed)(
-    int rnk_n, const INT *n, INT howmany, 
+    int rnk_n, const INT *pn, INT howmany, 
     MPI_Comm comm_cart_3d, 
     unsigned transp_flag, unsigned trafo_flag,
     INT *local_ni, INT *local_i_start,
@@ -133,14 +137,12 @@ int PX(local_size_remap_3dto2d_transposed)(
   if(rnk_pm != 3)
     return 0;
 
-  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
-
-  /* Handle r2c input and c2r output like r2r. */
-  /* At the moment, PFFT supports 3d distributed 3d arrays only in real space. */
+  /* Handle r2c input and c2r output like r2r. For complex data we use the C2C flag. */
   if(trafo_flag & PFFTI_TRAFO_RDFT)
     trafo_flag = PFFTI_TRAFO_R2R;
 
-  init_blks_comms_local_size(n, comm_cart_3d,
+  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+  init_blks_comms_local_size(pn, comm_cart_3d,
       iblk, mblk, oblk, icomms, mcomms, ocomms,
       local_ni, local_nm, local_no);
 
@@ -188,10 +190,10 @@ int PX(local_size_remap_3dto2d_transposed)(
 
   /* take care of transposed data ordering */
   if(transp_flag & PFFT_TRANSPOSED_OUT){
-    get_local_blocks_by_comms(n, iblk, icomms, oblk, ocomms,
+    get_local_blocks_by_comms(pn, iblk, icomms, oblk, ocomms,
         local_ni, local_i_start, local_no, local_o_start);
   } else {
-    get_local_blocks_by_comms(n, iblk, icomms, oblk, ocomms,
+    get_local_blocks_by_comms(pn, iblk, icomms, oblk, ocomms,
         local_no, local_o_start, local_ni, local_i_start);
   }
 
@@ -208,7 +210,7 @@ int PX(local_size_remap_3dto2d_transposed)(
 
 /* ouput is written to 'in', also for outofplace */
 remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
-    int rnk_n, const INT *n, INT howmany, 
+    int rnk_n, const INT *pn, INT howmany, 
     MPI_Comm comm_cart_3d, R *in_user, R *out_user, 
     unsigned transp_flag, unsigned trafo_flag,
     unsigned opt_flag, unsigned io_flag, unsigned fftw_flags 
@@ -233,14 +235,12 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
 
   ths = remap_3dto2d_mkplan();
 
-  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &ths->q0, &ths->q1);
-
-  /* Handle r2c input and c2r output like r2r. */
-  /* At the moment, PFFT supports 3d distributed 3d arrays only in real space. */
+  /* Handle r2c input and c2r output like r2r. For complex data we use the C2C flag. */
   if(trafo_flag & PFFTI_TRAFO_RDFT)
     trafo_flag = PFFTI_TRAFO_R2R;
 
-  init_blks_comms_local_size(n, comm_cart_3d,
+  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &ths->q0, &ths->q1);
+  init_blks_comms_local_size(pn, comm_cart_3d,
       iblk, mblk, oblk, icomms, mcomms, ocomms,
       local_ni, local_nm, local_no);
 

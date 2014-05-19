@@ -113,10 +113,10 @@ INT PX(local_size_partrafo_transposed)(
   
   pni = PX(malloc_INT)(rnk_n);
   pno = PX(malloc_INT)(rnk_n);
+  PX(physical_dft_size)(rnk_n, ni, trafo_flag,
+      pni);
   PX(physical_dft_size)(rnk_n, no, trafo_flag,
       pno);
-  PX(physical_dft_size)(rnk_n, no, trafo_flag,
-      pni);
   
   /* only trafo of last dimensions is r2c or c2r */
   if(trafo_flag & PFFTI_TRAFO_RDFT)

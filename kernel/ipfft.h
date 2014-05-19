@@ -570,7 +570,7 @@ int PX(get_mpi_cart_dims)(MPI_Comm comm_cart, int maxdims, int *dims);
 void PX(local_block_remap_3dto2d_transposed)(
     int rnk_n, const INT *n, 
     MPI_Comm comm_cart_3d, int pid, 
-    unsigned transp_flag,
+    unsigned transp_flag, unsigned trafo_flag,
     INT *local_ni, INT *local_i_start,
     INT *local_no, INT *local_o_start); 
 int PX(local_size_remap_3dto2d_transposed)(
