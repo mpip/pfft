@@ -170,10 +170,12 @@ gtransp_plan PX(plan_global_transp)(
   ths->dbg = gtransp_mkdbg(N, hm, blk, in, out, comm, fftw_flags);
 #endif
 
-  ths->plan = XM(plan_many_transpose)(
+  ths->plan.plan = XM(plan_many_transpose)(
       N[0], N[1], hm, blk[0], blk[1], in, out,
       comm, fftw_flags);
-
+  ths->plan.plannedin = in;
+  ths->plan.plannedout = out;
+  ths->plan.execute = (PX(fftw_execute))(XM(execute_r2r));
   return ths;
 }
 
@@ -185,7 +187,7 @@ static gtransp_plan gtransp_mkplan(
   gtransp_plan ths = (gtransp_plan) malloc(sizeof(gtransp_plan_s));
   
   /* initialize to NULL for easy checks */
-  ths->plan=NULL;
+  ths->plan.plan=NULL;
 
   /* initialize debug info */
 #if PFFT_DEBUG_GTRANSP
@@ -204,8 +206,8 @@ void PX(gtransp_rmplan)(
     return;
 
   /* take care of unsuccessful FFTW planing */
-  if(ths->plan != NULL)
-    X(destroy_plan)(ths->plan);
+  if(ths->plan.plan != NULL)
+    X(destroy_plan)(ths->plan.plan);
 
 #if PFFT_DEBUG_GTRANSP
   if(ths->dbg != NULL)
@@ -219,7 +221,7 @@ void PX(gtransp_rmplan)(
 
 
 void PX(execute_gtransp)(
-    gtransp_plan ths
+    gtransp_plan ths, R * plannedin, R * plannedout, R * in, R * out
     )
 {
 #if PFFT_DEBUG_GTRANSP
@@ -232,7 +234,7 @@ void PX(execute_gtransp)(
   if(!myrank) fprintf(stderr, "\n");
   if(!myrank){
     if(ths != NULL){
-      if(ths->plan != NULL){
+      if(ths->plan.plan != NULL){
         fprintf(stderr, "PFFT_DBG_GTRANSP: counter = %d\n", counter);
         print_dbg(ths->dbg);
       } else
@@ -245,19 +247,20 @@ void PX(execute_gtransp)(
   /* Checksum inputs */ 
   lsum=0.0;
   if(ths != NULL)
-    if(ths->plan != NULL)
+    if(ths->plan.plan != NULL)
       for(INT k=0; k<n_total; k++)
         lsum += fabs(ths->dbg->in[k]);
   MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(ths != NULL)
-    if(ths->plan != NULL)
+    if(ths->plan.plan != NULL)
       if(!myrank) fprintf(stderr, "PFFT_DBG_GTRANSP: counter = %d, Checksum(in) = %e\n", counter, gsum);
 #endif
 
   /* Global transposition */ 
   if(ths != NULL)
-    if(ths->plan != NULL)
-      X(execute)(ths->plan);
+    if(ths->plan.plan != NULL) {
+        PX(execute_fftw_plan)(&ths->plan, plannedin, plannedout, in, out);
+    }
     
 #if PFFT_DEBUG_GTRANSP
   n_total = (ths != NULL) ? ths->dbg->N0 * ths->dbg->local_N1 * ths->dbg->hm : 0;
@@ -265,12 +268,12 @@ void PX(execute_gtransp)(
   /* Checksum outputs */ 
   lsum=0.0;
   if(ths != NULL)
-    if(ths->plan != NULL)
+    if(ths->plan.plan != NULL)
       for(INT k=0; k<n_total; k++)
         lsum += fabs(ths->dbg->out[k]);
   MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
   if(ths != NULL)
-    if(ths->plan != NULL)
+    if(ths->plan.plan != NULL)
       if(!myrank) fprintf(stderr, "PFFT_DBG_GTRANSP: counter = %d, Checksum(out) = %e\n", counter, gsum);
 
 //   if(counter==3){

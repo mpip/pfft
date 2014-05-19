@@ -16,7 +16,7 @@ int main(int argc, char **argv)
   
   /* Set size of FFT and process mesh */
   n[0] = 29; n[1] = 27; n[2] = 31;
-  np[0] = 1; np[1] = 1;
+  np[0] = 2; np[1] = 2;
   
   /* Initialize MPI and PFFT */
   MPI_Init(&argc, &argv);
@@ -40,35 +40,36 @@ int main(int argc, char **argv)
   in2  = pfft_alloc_complex(alloc_local);
   out2 = pfft_alloc_complex(alloc_local);
 
-
   /* Plan parallel forward FFT */
   plan_forw = pfft_plan_dft_3d(
-      n, in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+      n, in2, out2, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
   
   /* Plan parallel backward FFT */
   plan_back = pfft_plan_dft_3d(
-      n, out, in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
-  
+      n, out2, in2, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+
   /* Initialize input with random numbers */
   pfft_init_input_c2c_3d(n, local_ni, local_i_start,
       in);
-  memcpy(in2, in, sizeof(pfft_complex) * alloc_local);
   
+  memset(in2, 0, sizeof(pfft_complex) * alloc_local);
+  memset(out2, 0, sizeof(pfft_complex) * alloc_local);
   /* execute parallel forward FFT */
-  pfft_execute(plan_forw);
-  pfft_execute_dft(plan_forw, in2, out2);
-
+  pfft_execute_dft(plan_forw, in, out);
+  memset(in2, 0, sizeof(pfft_complex) * alloc_local);
+  memset(out2, 0, sizeof(pfft_complex) * alloc_local);
   /* execute parallel backward FFT */
-  pfft_execute(plan_back);
-  pfft_execute_dft(plan_back, out2, in2);
+  pfft_execute_dft(plan_back, out, in);
+  memset(in2, 0, sizeof(pfft_complex) * alloc_local);
+  memset(out2, 0, sizeof(pfft_complex) * alloc_local);
   
   /* Scale data */
   ptrdiff_t l;
   for(l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
-    in2[l] /= (n[0]*n[1]*n[2]);
+    in[l] /= (n[0]*n[1]*n[2]);
 
   /* Print error of back transformed data */
-  err = pfft_check_output_c2c_3d(n, local_ni, local_i_start, in2, comm_cart_2d);
+  err = pfft_check_output_c2c_3d(n, local_ni, local_i_start, in, comm_cart_2d);
   pfft_printf(comm_cart_2d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]); 
   pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
   

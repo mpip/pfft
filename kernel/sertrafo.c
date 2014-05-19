@@ -59,7 +59,7 @@ static sertrafo_plan plan_sertrafo_pt(
 static sertrafo_plan plan_remap_only(
     INT nb, int rnk, const INT *n, INT howmany, R *in, R *out,
     unsigned trafo_flag, unsigned transp_flag, unsigned fftw_flags);
-static X(plan) plan_trafo(
+static void plan_trafo(PX(fftw_plan) * plan,
     INT nb, int rnk, const INT *n, INT howmany,
     R *in, R *out, int sign, const X(r2r_kind) *kinds,
     unsigned trafo_flag, unsigned transp_flag, unsigned fftw_flags
@@ -67,7 +67,7 @@ static X(plan) plan_trafo(
     , sertrafo_dbg *dbg_ptr
 #endif
     );
-static X(plan) plan_remap(
+static void plan_remap(PX(fftw_plan) * plan,
     INT nb, int rnk, const INT *n, INT howmany, R *in, R *out,
     unsigned trafo_flag, unsigned transp_flag,
     unsigned fftw_flags, unsigned ioarray_flag
@@ -196,7 +196,6 @@ INT PX(local_size_sertrafo)(
  * However, if PFFT_TUNE is set all the other options are also checked by the planner.
  * */
 
-
 /* At first we decide which plans work in-place or out-of-place. */
 sertrafo_plan PX(plan_sertrafo)(
     INT nb, int rnk, const INT *n, INT howmany,
@@ -208,22 +207,22 @@ sertrafo_plan PX(plan_sertrafo)(
 
   double time0, time1;
   sertrafo_plan ths0=NULL, ths1=NULL;
-
+  sertrafo_plan result;
   if(trafo_flag & PFFTI_TRAFO_PHANTOM)
     return NULL;
 
-  if(trafo_flag & PFFTI_TRAFO_SKIP)
-    return plan_remap_only(
+  if(trafo_flag & PFFTI_TRAFO_SKIP) {
+    result = plan_remap_only(
         nb, rnk, n, howmany, in, out,
         trafo_flag, transp_flag, fftw_flags);
-
+    return result;
+  }
   /* try all allowed sequences of in-place and out-of-place plans */
   if(in == out) { /* in-place */
     ths0 = plan_sertrafo_p(
         nb, rnk, n, howmany, in, in, in, in, sign, kinds,
         trafo_flag, transp_flag, opt_flag, fftw_flags,
         &time0);
-
     /* assure that plan0 wins, no plan1 possible */
     time1 = time0 * 10.0;
 
@@ -238,12 +237,12 @@ sertrafo_plan PX(plan_sertrafo)(
       time1 = time0 * 10.0;
 
       /* skip extra plan for PFFT_NO_TUNE */
-      if( opt_flag & PFFT_TUNE )
+      if( opt_flag & PFFT_TUNE ) {
         ths1 = plan_sertrafo_p(
             nb, rnk, n, howmany, in, in, in, in, sign, kinds,
             trafo_flag, transp_flag, opt_flag, fftw_flags,
             &time1);
-
+      }
     } else { /* out-of-place */
       if(transp_flag & PFFT_TRANSPOSED_IN){
         /* input does not have stride-1, transpose first */
@@ -307,14 +306,14 @@ static sertrafo_plan plan_remap_only(
   ths = sertrafo_mkplan();
 
 #if PFFT_DEBUG_SERTRAFO
-  ths->plan[0] = plan_remap(
+  plan_remap(&ths->plan[0],
       nb, rnk, n, howmany, in, out, trafo_flag, transp_flag, fftw_flags, PFFTI_ARRAY_INPUT,
       &ths->dbg[0]);
 #else
-  ths->plan[0] = plan_remap(
+  plan_remap(&ths->plan[0],
       nb, rnk, n, howmany, in, out, trafo_flag, transp_flag, fftw_flags, PFFTI_ARRAY_INPUT);
 #endif
-  ths->plan[1] = NULL;
+  ths->plan[1].plan = NULL;
 
   return ths;
 }
@@ -378,6 +377,7 @@ static sertrafo_plan plan_sertrafo_p(
   }
   
   /* choose best plan, delete the other one */
+
   if(time1 < time0){
     *time = time1;
     PX(sertrafo_rmplan)(ths0);
@@ -422,29 +422,28 @@ static sertrafo_plan plan_sertrafo_pt(
   sertrafo_plan ths0=NULL, ths1=NULL;
    
   ths0 = sertrafo_mkplan();
-
+  
   if(transp_flag0 & PFFT_TRANSPOSED_IN){
     /* default: perform remap first, fft second */
-    ths0->plan[0] = plan_remap(
+    plan_remap(&ths0->plan[0],
         nb, rnk, n, howmany, in0, out0, trafo_flag, transp_flag0, fftw_flags, PFFTI_ARRAY_INPUT
         PFFT_DEBUG_SERTRAFO_PTR00);
-    ths0->plan[1] = plan_trafo(
+    plan_trafo(&ths0->plan[1],
         nb, rnk, n, howmany, in1, out1, sign, kinds, trafo_flag, transp_flag1, fftw_flags
         PFFT_DEBUG_SERTRAFO_PTR01);
-
   } else {
     /* default: perform FFT first, remap second */
-    ths0->plan[0] = plan_trafo(
+    plan_trafo(&ths0->plan[0],
         nb, rnk, n, howmany, in0, out0, sign, kinds, trafo_flag, transp_flag0, fftw_flags
         PFFT_DEBUG_SERTRAFO_PTR00);
-    ths0->plan[1] = plan_remap(
+    plan_remap(&ths0->plan[1],
         nb, rnk, n, howmany, in1, out1, trafo_flag, transp_flag1, fftw_flags, PFFTI_ARRAY_OUTPUT
         PFFT_DEBUG_SERTRAFO_PTR01);
   }
 
   /* only measure times if we need them for comparison to plan1 */
   if(opt_flag & PFFT_TUNE)
-    time0 = measure_time(ths0->plan[0]) + measure_time(ths0->plan[1]);
+    time0 = measure_time(ths0->plan[0].plan) + measure_time(ths0->plan[1].plan);
   
   /* this plan differs for altered strides or out-of-place */
   ths1 = sertrafo_mkplan();
@@ -456,22 +455,22 @@ static sertrafo_plan plan_sertrafo_pt(
     {
       if(transp_flag0 & PFFT_TRANSPOSED_IN){
         /* default: perform remap first, fft second */
-        ths1->plan[0] = plan_trafo(
+        plan_trafo(&ths1->plan[0],
             nb, rnk, n, howmany, in0, out0, sign, kinds, trafo_flag, transp_flag0, fftw_flags
             PFFT_DEBUG_SERTRAFO_PTR10);
-        ths1->plan[1] = plan_remap(
+        plan_remap(&ths1->plan[1],
             nb, rnk, n, howmany, in1, out1, trafo_flag, transp_flag1, fftw_flags, PFFTI_ARRAY_OUTPUT
             PFFT_DEBUG_SERTRAFO_PTR11);
       } else {
         /* compare to: perform remap first, FFT second */
-        ths1->plan[0] = plan_remap(
+        plan_remap(&ths1->plan[0],
             nb, rnk, n, howmany, in0, out0, trafo_flag, transp_flag0, fftw_flags, PFFTI_ARRAY_INPUT
             PFFT_DEBUG_SERTRAFO_PTR10);
-        ths1->plan[1] = plan_trafo(
+        plan_trafo(&ths1->plan[1],
             nb, rnk, n, howmany, in1, out1, sign, kinds, trafo_flag, transp_flag1, fftw_flags
             PFFT_DEBUG_SERTRAFO_PTR11);
       }
-      time1 = measure_time(ths1->plan[0]) + measure_time(ths1->plan[1]);
+      time1 = measure_time(ths1->plan[0].plan) + measure_time(ths1->plan[1].plan);
     }
   }
 
@@ -487,7 +486,8 @@ static sertrafo_plan plan_sertrafo_pt(
 }
 
 
-static X(plan) plan_trafo(
+static void plan_trafo(
+    PX(fftw_plan) * plan,
     INT nb, int rnk, const INT *n, INT howmany,
     R *in, R *out, int sign, const X(r2r_kind) *kinds,
     unsigned trafo_flag, unsigned transp_flag, unsigned fftw_flags
@@ -498,37 +498,50 @@ static X(plan) plan_trafo(
 {
   int dims_rnk, howmany_rnk;
   X(iodim64) *dims, *howmany_dims;
-  X(plan) ths;
  
   /* R2C can not combine trafo and transposition */
-  if( (trafo_flag & PFFTI_TRAFO_RDFT) && needs_transpose(transp_flag) )
-    return NULL;
-
+  if( (trafo_flag & PFFTI_TRAFO_RDFT) && needs_transpose(transp_flag) ) {
+    plan->plan = NULL;
+    return;
+  }
   /* R2R can not combine trafo and transposition */
-  if( (trafo_flag & PFFTI_TRAFO_R2R) && needs_transpose(transp_flag) )
-    return NULL;
-  
+  if( (trafo_flag & PFFTI_TRAFO_R2R) && needs_transpose(transp_flag) ) {
+    plan->plan = NULL;
+    return;
+  } 
   malloc_and_fill_dims_trafo(
     nb, rnk, n, howmany, trafo_flag, transp_flag,
     &dims_rnk, &dims, &howmany_rnk, &howmany_dims);
 
   /* choose appropriate fftw planner for trafo */
   if(trafo_flag & PFFTI_TRAFO_R2C){
-    ths = X(plan_guru64_dft_r2c)(
+    plan->plan = X(plan_guru64_dft_r2c)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
         in, (C*) out, fftw_flags);
+    plan->plannedin = in;
+    plan->plannedout = out;
+    plan->execute = (PX(fftw_execute)) X(execute_dft_r2c);
   } else if(trafo_flag & PFFTI_TRAFO_C2R){
-    ths = X(plan_guru64_dft_c2r)(
+    plan->plan = X(plan_guru64_dft_c2r)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
         (C*) in, out, fftw_flags);
+    plan->plannedin = in;
+    plan->plannedout = out;
+    plan->execute = (PX(fftw_execute)) X(execute_dft_c2r);
   } else if(trafo_flag & PFFTI_TRAFO_R2R){
-    ths = X(plan_guru64_r2r)(
+    plan->plan = X(plan_guru64_r2r)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
 	in, out, kinds, fftw_flags);
+    plan->plannedin = in;
+    plan->plannedout = out;
+    plan->execute = (PX(fftw_execute)) X(execute_r2r);
   } else {
-    ths = X(plan_guru64_dft)(
+    plan->plan = X(plan_guru64_dft)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
         (C*) in, (C*) out, sign, fftw_flags);
+    plan->plannedin = in;
+    plan->plannedout = out;
+    plan->execute = (PX(fftw_execute)) X(execute_dft);
   }
   
 #if PFFT_DEBUG_SERTRAFO
@@ -538,8 +551,6 @@ static X(plan) plan_trafo(
 #endif
 
   free(dims); free(howmany_dims);
-
-  return ths;
 }
 
 static void malloc_and_fill_dims_trafo(
@@ -590,7 +601,8 @@ static void malloc_and_fill_dims_trafo(
 /* We use a r2r plan for r2c transposition. For the input
  * we double the physical array size and for the output we
  * double 'howmany'. Analogously done for c2r. */
-static X(plan) plan_remap(
+static void plan_remap(
+    PX(fftw_plan) * plan,
     INT nb, int rnk, const INT *n, INT howmany, R *in, R *out,
     unsigned trafo_flag, unsigned transp_flag,
     unsigned fftw_flags, unsigned ioarray_flag
@@ -603,22 +615,27 @@ static X(plan) plan_remap(
   int sign=1, howmany_rnk, dims_rnk=0;
   X(r2r_kind) *kinds=NULL;
   X(iodim64) *howmany_dims, *dims=NULL;
-  X(plan) ths;
     
   malloc_and_fill_dims_remap(
       nb, rnk, n, howmany, trafo_flag, transp_flag, ioarray_flag,
       &howmany_rnk, &howmany_dims);
 
   /* choose appropriate fftw planner for remap */
-  if(trafo_flag & PFFTI_TRAFO_C2C)
-    ths = X(plan_guru64_dft)(
+  if(trafo_flag & PFFTI_TRAFO_C2C) {
+    plan->plan = X(plan_guru64_dft)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
         (C*) in, (C*) out, sign, fftw_flags);
-  else
-    ths = X(plan_guru64_r2r)(
+    plan->plannedin = in;
+    plan->plannedout = out;
+    plan->execute = (PX(fftw_execute)) X(execute_dft);
+  } else {
+    plan->plan = X(plan_guru64_r2r)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
 	in, out, kinds, fftw_flags);
-
+    plan->plannedin = in;
+    plan->plannedout = out;
+    plan->execute = (PX(fftw_execute)) X(execute_r2r);
+  }
 #if PFFT_DEBUG_SERTRAFO
   *dbg_ptr = sertrafo_mkdbg(0, nb, rnk, n, howmany, in, out, 
       trafo_flag, transp_flag, fftw_flags, ioarray_flag,
@@ -626,8 +643,6 @@ static X(plan) plan_remap(
 #endif
     
   free(howmany_dims);
-
-  return ths;
 }
 
 
@@ -842,7 +857,7 @@ static sertrafo_plan sertrafo_mkplan(
   
   /* initialize to NULL for easy checks */
   for(int t=0; t<2; t++)
-    ths->plan[t]=NULL;
+    ths->plan[t].plan = NULL;
 
   /* initialize debug info */
 #if PFFT_DEBUG_SERTRAFO
@@ -863,8 +878,8 @@ void PX(sertrafo_rmplan)(
 
   /* take care of unsuccessful FFTW planing */
   for(int t=0; t<2; t++)
-    if(ths->plan[t] != NULL)
-      X(destroy_plan)(ths->plan[t]);
+    if(ths->plan[t].plan != NULL)
+      X(destroy_plan)(ths->plan[t].plan);
 
 #if PFFT_DEBUG_SERTRAFO
   for(int t=0; t<2; t++)
@@ -1042,10 +1057,35 @@ INT calc_n_total(
 }
 #endif
 
-
+void PX(execute_fftw_plan)(
+            PX(fftw_plan) * fftwplan,
+            R * plannedin,
+            R * plannedout,
+            R * in, 
+            R * out) {
+    R * tmpin = in;
+    R * tmpout = out;
+    if(fftwplan->plannedin == plannedin) {
+        in = tmpin;
+    } else
+    if(fftwplan->plannedin == plannedout) {
+        in = tmpout;
+    } else {
+        abort();
+    }
+    if(fftwplan->plannedout == plannedin) {
+        out = tmpin;
+    } else
+    if(fftwplan->plannedout == plannedout) {
+        out = tmpout;
+    } else {
+        abort();
+    }
+    (fftwplan->execute)(fftwplan->plan, in, out);
+}
 
 void PX(execute_sertrafo)(
-    sertrafo_plan ths
+    sertrafo_plan ths, R * plannedin, R * plannedout, R * in, R * out
     )
 {
   if(ths==NULL)
@@ -1064,7 +1104,7 @@ void PX(execute_sertrafo)(
 
   if(!myrank) fprintf(stderr, "\n");
   if(!myrank){
-    if(ths->plan[0] != NULL){
+    if(ths->plan[0].plan != NULL){
       fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, plan0\n", counter);
       print_dbg(ths->dbg[0]);
     } else
@@ -1076,11 +1116,11 @@ void PX(execute_sertrafo)(
   
   /* Checksum inputs */ 
   lsum=0.0;
-  if(ths->plan[0] != NULL)
+  if(ths->plan[0].plan != NULL)
     for(INT k=0; k<n_total; k++)
       lsum += fabs(ths->dbg[0]->in[k]);
   MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
-  if(ths->plan[0] != NULL)
+  if(ths->plan[0].plan != NULL)
     if(!myrank) fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, Checksum(in0) = %e\n", counter, gsum);
 
 // #if PFFT_DEBUG_GVARS 
@@ -1122,16 +1162,16 @@ void PX(execute_sertrafo)(
 // #endif
   
   /* Serial trafo */ 
-  if(ths->plan[0] != NULL)
-    X(execute)(ths->plan[0]);
-  
+  if(ths->plan[0].plan != NULL) {
+    PX(execute_fftw_plan)(&ths->plan[0], plannedin, plannedout, in, out);
+  } 
   /* Checksum outputs */ 
   lsum=0.0;
-  if(ths->plan[0] != NULL)
+  if(ths->plan[0].plan != NULL)
     for(INT k=0; k<n_total; k++)
       lsum += fabs(ths->dbg[0]->out[k]);
   MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
-  if(ths->plan[0] != NULL)
+  if(ths->plan[0].plan != NULL)
     if(!myrank) fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, Checksum(out0) = %e - Value may change\n", counter, gsum);
 
 // #if PFFT_DEBUG_GVARS 
@@ -1176,7 +1216,7 @@ void PX(execute_sertrafo)(
   
   if(!myrank) fprintf(stderr, "\n");
   if(!myrank){
-    if(ths->plan[1] != NULL){
+    if(ths->plan[1].plan != NULL){
       fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, plan1\n", counter);
       print_dbg(ths->dbg[1]);
     } else
@@ -1187,41 +1227,34 @@ void PX(execute_sertrafo)(
   
   /* Checksum inputs */ 
   lsum=0.0;
-  if(ths->plan[1] != NULL)
+  if(ths->plan[1].plan != NULL)
     for(INT k=0; k<n_total; k++)
       lsum += fabs(ths->dbg[1]->in[k]);
   MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
-  if(ths->plan[1] != NULL)
+  if(ths->plan[1].plan != NULL)
     if(!myrank) fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, Checksum(in1) = %e - Value may change.\n", counter, gsum);
     
   /* Serial trafo */ 
-  if(ths->plan[1] != NULL)
-    X(execute)(ths->plan[1]);
-
+  if(ths->plan[1].plan != NULL) {
+    PX(execute_fftw_plan)(&ths->plan[1], plannedin, plannedout, in, out);
+  }
   /* Checksum outputs */ 
   lsum=0.0;
-  if(ths->plan[1] != NULL)
+  if(ths->plan[1].plan != NULL)
     for(INT k=0; k<n_total; k++)
       lsum += fabs(ths->dbg[1]->out[k]);
   MPI_Reduce(&lsum, &gsum, 1, PFFT_MPI_REAL_TYPE, MPI_SUM, 0, MPI_COMM_WORLD);
-  if(ths->plan[1] != NULL)
+  if(ths->plan[1].plan != NULL)
     if(!myrank) fprintf(stderr, "PFFT_DBG_SERTRAFO: counter = %d, Checksum(out1) = %e\n", counter, gsum);
   
   
   counter++;
 #else
   /* execute all initialized serfft plans */
-  for(int t=0; t<2; t++)
-    if(ths->plan[t] != NULL)
-      X(execute)(ths->plan[t]);
+  for(int t=0; t<2; t++) {
+    if(ths->plan[t].plan != NULL)
+    PX(execute_fftw_plan)(&ths->plan[t], plannedin, plannedout, in, out);
+  }
 #endif
 }
-
-
-
-
-
-
-
-
 

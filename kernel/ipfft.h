@@ -235,9 +235,27 @@ typedef struct{
 typedef sertrafo_dbg_s *sertrafo_dbg;
 #endif
 
+/* a fftw plan */
+typedef void (* PX(fftw_execute))(const X(plan) , R * in, R * out);
+typedef struct {
+  X(plan) plan;
+  R * plannedin;  /* in and out array used at the time of plannning */
+  R * plannedout;
+  PX(fftw_execute) execute;
+} PX(fftw_plan);
+/* this function is put in sertrafo.c, it should be in a different
+ * file; as it is also used in transpose.c */
+void PX(execute_fftw_plan)(
+            PX(fftw_plan) * fftwplan,
+            R * plannedin,
+            R * plannedout,
+            R * in, 
+            R * out);
+
 /* plan for serial trafo (c2c, r2c, c2r, r2r) */
 typedef struct{
-  X(plan) plan[2];
+  
+  PX(fftw_plan) plan[2]; 
 #if PFFT_DEBUG_SERTRAFO
   sertrafo_dbg dbg[2];
 #endif
@@ -270,7 +288,7 @@ typedef gtransp_dbg_s *gtransp_dbg;
 /* We need the following wrapper to store debug infos */
 /* plan for global transposition */
 typedef struct{
-  X(plan) plan;
+  PX(fftw_plan) plan;
 #if PFFT_DEBUG_GTRANSP
   gtransp_dbg dbg;
 #endif
@@ -486,7 +504,7 @@ gtransp_plan PX(plan_global_transp)(
 void PX(gtransp_rmplan)(
     gtransp_plan ths);
 void PX(execute_gtransp)(
-    gtransp_plan ths);
+    gtransp_plan ths, R *plannedin, R *plannedout, R *in, R *out);
 
 /* outrafo.c */
 
@@ -507,7 +525,7 @@ outrafo_plan PX(plan_outrafo)(
     unsigned trafo_flag, unsigned transp_flag, unsigned si_flag,
     unsigned opt_flag, unsigned fftw_flags);
 void PX(execute_outrafo)(
-    outrafo_plan ths);
+    outrafo_plan ths, R *plannedout, R *plannedin, R *in, R *out);
 void PX(outrafo_rmplan)(
     outrafo_plan ths);
 
@@ -535,7 +553,7 @@ sertrafo_plan PX(plan_sertrafo)(
     unsigned trafo_flag, unsigned transp_flag, unsigned io_flag,
     unsigned opt_flag, unsigned fftw_flags);
 void PX(execute_sertrafo)(
-    sertrafo_plan ths);
+    sertrafo_plan ths, R * plannedin, R * plannedout, R * in, R * out);
 void PX(sertrafo_rmplan)(
     sertrafo_plan ths);
 
@@ -592,7 +610,7 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
     unsigned transp_flag, unsigned trafo_flag,
     unsigned opt_flag, unsigned io_flag, unsigned fftw_flags);
 void PX(execute_remap_3dto2d)(
-    remap_3dto2d_plan ths);
+    remap_3dto2d_plan ths, R *plannedin, R *plannedout, R *in, R *out);
 void PX(remap_3dto2d_rmplan)(
     remap_3dto2d_plan ths);
 void PX(default_block_size_3dto2d)(

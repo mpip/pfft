@@ -55,7 +55,8 @@ int main(int argc, char **argv)
   pfft_execute(plan_back);
   
   /* Scale data */
-  for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
+  ptrdiff_t l;
+  for(l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
     in[l] /= (n[0]*n[1]*n[2]);
 
   /* Print error of back transformed data */
