@@ -31,7 +31,7 @@
 AC_PREREQ(2.64)
 
 # autoconf initialization
-AC_INIT([PFFT],[1.0.7-alpha],[michael.pippig@mathematik.tu-chemnitz.de],[pfft],[http://www.tu-chemnitz.de/~mpip/software/])
+AC_INIT([PFFT],[1.0.7-alpha-newarray],[michael.pippig@mathematik.tu-chemnitz.de],[pfft],[http://www.tu-chemnitz.de/~mpip/software/])
 m4_ifndef([AC_PACKAGE_URL],
 	  [AC_SUBST([PACKAGE_URL], [http://www.tu-chemnitz.de/~mpip/software/])])
 

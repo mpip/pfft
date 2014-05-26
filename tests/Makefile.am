@@ -48,8 +48,8 @@ check_PROGRAMS += \
 	simple_check_c2r_c2c simple_check_c2r_c2c_shifted simple_check_c2r_c2c_ousam_shifted \
 	simple_check_r2c simple_check_r2c_transposed \
 	simple_check_r2r simple_check_r2r_transposed \
-	simple_check_c2c_newarray
-
+	simple_check_c2c_newarray \
+    simple_check_r2c_newarray
 
 #if ENABLE_COMMON_PFFT
 # do not compile checks
