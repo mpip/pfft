@@ -154,7 +154,7 @@ void PX(local_block_partrafo)(
   if( ~transp_flag & PFFT_TRANSPOSED_IN ){
     PX(local_block_partrafo_transposed)(
         rnk_n, pni_to, pno_to, iblk, mblk, 
-        rnk_pm, coords_pm, PFFT_TRANSPOSED_OUT, trafo_flag_user,
+        rnk_pm, coords_pm, PFFT_TRANSPOSED_OUT, trafo_flags_to[rnk_pm],
         lni_to, lis_to, lno_to, los_to);
 
     PX(local_block_remap_3dto2d_transposed)(
@@ -166,7 +166,7 @@ void PX(local_block_partrafo)(
   if( ~transp_flag & PFFT_TRANSPOSED_OUT ){
     PX(local_block_partrafo_transposed)(
         rnk_n, pni_ti, pno_ti, mblk, oblk, 
-        rnk_pm, coords_pm, PFFT_TRANSPOSED_IN, trafo_flag_user,
+        rnk_pm, coords_pm, PFFT_TRANSPOSED_IN, trafo_flags_ti[rnk_pm],
         lni_ti, lis_ti, lno_ti, los_ti);
 
     PX(local_block_remap_3dto2d_transposed)(
