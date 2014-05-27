@@ -163,6 +163,52 @@ PX(plan) PX(plan_many_dft_skipped)(
       PFFTI_TRAFO_C2C, pfft_flags);
 }
 
+PX(plan) PX(plan_many_dft_r2c_skipped)(
+    int rnk_n, const INT *n, const INT *ni, const INT *no,
+    INT howmany, const INT *iblock, const INT *oblock,
+    const int *skip_trafos, R *in, C *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags
+    )
+{
+  X(r2r_kind) *kinds=NULL;
+
+  return PX(plan_partrafo)(
+      rnk_n, n, ni, no, howmany, iblock, oblock,
+      in, (R*) out, comm_cart, sign, kinds, skip_trafos,
+      PFFTI_TRAFO_R2C, pfft_flags);
+}
+
+PX(plan) PX(plan_many_dft_c2r_skipped)(
+    int rnk_n, const INT *n, const INT *ni, const INT *no,
+    INT howmany, const INT *iblock, const INT *oblock,
+    const int *skip_trafos, C *in, R *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags
+    )
+{
+  X(r2r_kind) *kinds=NULL;
+
+  return PX(plan_partrafo)(
+      rnk_n, n, ni, no, howmany, iblock, oblock,
+      (R*) in, out, comm_cart, sign, kinds, skip_trafos,
+      PFFTI_TRAFO_C2R, pfft_flags);
+}
+
+PX(plan) PX(plan_many_r2r_skipped)(
+    int rnk_n, const INT *n, const INT *ni, const INT *no,
+    INT howmany, const INT *iblock, const INT *oblock,
+    const int *skip_trafos, R *in, R *out, MPI_Comm comm_cart,
+    const PX(r2r_kind) *kinds, unsigned pfft_flags
+    )
+{
+  int sign=0;
+
+  return PX(plan_partrafo)(
+      rnk_n, n, ni, no, howmany, iblock, oblock,
+      in, out, comm_cart, sign, kinds, skip_trafos,
+      PFFTI_TRAFO_R2R, pfft_flags);
+}
+
+
 INT PX(local_size_many_gc)(
     int rnk_n, const INT *local_n, const INT *local_start, INT alloc_local,
     INT howmany, const INT *gc_below, const INT *gc_above,
