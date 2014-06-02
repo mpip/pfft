@@ -90,8 +90,6 @@ int main(int argc, char **argv)
     in_r[l] /= (n[0]*n[1]*n[2]);
 
   /* Print error of back transformed data */
-  MPI_Barrier(MPI_COMM_WORLD);
-
   err = compare_c2c_c2r(local_ni_c, local_ni_r, in_c, in_r, comm_cart_2d);
 
   pfft_printf(comm_cart_2d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]);
@@ -156,7 +154,5 @@ static double compare_c2c_c2r(const ptrdiff_t *local_N_c, const ptrdiff_t *local
       }
   MPI_Allreduce(&err, &glob_max_err, 1, MPI_DOUBLE, MPI_MAX, comm);
   return glob_max_err;
-
-
 }
 

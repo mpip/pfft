@@ -32,7 +32,7 @@ int main(int argc, char **argv){
   int np[3], rnk_self, size, verbose;
   double err;
   MPI_Comm comm_cart_2d;
-  pfft_complex *data;
+  double *rdata;
   pfft_gcplan ths;
   
   MPI_Init(&argc, &argv);
@@ -63,49 +63,53 @@ int main(int argc, char **argv){
   }
 
   /* Get parameters of data distribution */
-  alloc_local = pfft_local_size_dft_3d(n, comm_cart_2d, PFFT_TRANSPOSED_NONE,
+  alloc_local = pfft_local_size_dft_r2c_3d(n, comm_cart_2d, PFFT_TRANSPOSED_NONE,
       local_ni, local_i_start, local_no, local_o_start);
 
+  /* local_ni, local_i_start are given in real units */
+  /* alloc_local is given in complex units */
   alloc_local_gc = pfft_local_size_gc_3d(
-      local_ni, local_i_start, alloc_local, gc_below, gc_above,
+      local_ni, local_i_start, 2*alloc_local, gc_below, gc_above,
       local_ngc, local_gc_start);
+  /* alloc_local_gc is given in real units */
 
   /* Allocate memory */
-  data = pfft_alloc_complex(alloc_local_gc);
+  rdata = pfft_alloc_real(alloc_local_gc);
 
   /* Plan parallel ghost cell send */
-  ths = pfft_plan_cgc_3d(n, gc_below, gc_above,
-      data, comm_cart_2d, PFFT_GC_NONTRANSPOSED);
+  /* PFFT uses physical equal to logical size in real space */
+  ths = pfft_plan_rgc_3d(n, gc_below, gc_above,
+      rdata, comm_cart_2d, PFFT_GC_NONTRANSPOSED);
 
   /* Initialize input with random numbers */
-  pfft_init_input_complex_3d(n, local_ni, local_i_start,
-      data);
+  pfft_init_input_real_3d(n, local_ni, local_i_start,
+      rdata);
 
   /* check gcell input */
   if(verbose)
-    pfft_apr_complex_3d(data, local_ni, local_i_start, "gcell input", comm_cart_2d);
+    pfft_apr_real_3d(rdata, local_ni, local_i_start, "gcell input", comm_cart_2d);
 
   /* Execute parallel ghost cell send */
   pfft_exchange(ths);
 
   /* Check gcell output */
   if(verbose)
-    pfft_apr_complex_3d(data, local_ngc, local_gc_start, "exchanged gcells", comm_cart_2d);
+    pfft_apr_complex_3d(rdata, local_ngc, local_gc_start, "exchanged gcells", comm_cart_2d);
   
   /* Execute adjoint parallel ghost cell send */
   pfft_reduce(ths);
 
   /* check input */
   if(verbose)
-    pfft_apr_complex_3d(data, local_ni, local_i_start, "reduced gcells", comm_cart_2d);
+    pfft_apr_complex_3d(rdata, local_no, local_o_start, "reduced gcells", comm_cart_2d);
 
   /* Scale data */
   for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
-    data[l] /= 3;
+    rdata[l] /= 3;
 
   /* Print error of back transformed data */
   MPI_Barrier(comm_cart_2d);
-  err = pfft_check_output_complex_3d(n, local_ni, local_i_start, data, comm_cart_2d);
+  err = pfft_check_output_real_3d(n, local_ni, local_i_start, rdata, comm_cart_2d);
   pfft_printf(comm_cart_2d, "Error after one gcell exchange and reduce of size n=(%td, %td, %td),\n", n[0], n[1], n[2]); 
   pfft_printf(comm_cart_2d, "gc_below = (%td, %td, %td), gc_above = (%td, %td, %td):\n", gc_below[0], gc_below[1], gc_below[2], gc_above[0], gc_above[1], gc_above[2]); 
   pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
@@ -114,7 +118,7 @@ int main(int argc, char **argv){
   /* free mem and finalize */
   pfft_destroy_gcplan(ths);
   MPI_Comm_free(&comm_cart_2d);
-  pfft_free(data);
+  pfft_free(rdata);
   MPI_Finalize();
   return 0;
 }

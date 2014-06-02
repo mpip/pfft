@@ -3,46 +3,57 @@
 FFTWDIR=$HOME/local/fftw-3.3-debug
 SRCDIR=../../..
 
-## Extra checks:
-test_files="$test_files minimal_check_c2c minimal_check_c2c_transposed"
-
-## 3D:
-test_files="$test_files simple_check_c2c simple_check_c2c_transposed"
-test_files="$test_files simple_check_r2c simple_check_r2c_transposed"
-test_files="$test_files simple_check_r2r simple_check_r2r_transposed"
-
-## 4D:
-test_files="$test_files simple_check_c2c_4d simple_check_c2c_4d_transposed"
-test_files="$test_files simple_check_r2c_4d simple_check_r2c_4d_transposed"
-test_files="$test_files simple_check_r2r_4d simple_check_r2r_4d_transposed"
-
-## 3D on 3D procmesh:
-test_files="$test_files simple_check_c2c_3d_on_3d simple_check_c2c_3d_on_3d_transposed"
-test_files="$test_files simple_check_r2c_3d_on_3d simple_check_r2c_3d_on_3d_transposed"
-test_files="$test_files simple_check_r2r_3d_on_3d simple_check_r2r_3d_on_3d_transposed"
-
-## 4D on 3D procmesh:
-test_files="$test_files simple_check_c2c_4d_on_3d simple_check_c2c_4d_on_3d_transposed"
-test_files="$test_files simple_check_r2c_4d_on_3d simple_check_r2c_4d_on_3d_transposed"
-test_files="$test_files simple_check_r2r_4d_on_3d simple_check_r2r_4d_on_3d_transposed"
-
-
-
-## 3D Oversampled:
-test_files="$test_files simple_check_ousam_c2c simple_check_ousam_c2c_transposed"
-test_files="$test_files simple_check_ousam_r2c simple_check_ousam_r2c_transposed"
-
-## 4D Oversampled:
-test_files="$test_files simple_check_ousam_r2c_4d simple_check_ousam_r2c_4d_transposed"
-test_files="$test_files simple_check_ousam_c2c_4d simple_check_ousam_c2c_4d_transposed"
-
-## 4D on 3D procmesh, Oversampled:
-test_files="$test_files simple_check_ousam_c2c_4d_on_3d simple_check_ousam_c2c_4d_on_3d_transposed"
-test_files="$test_files simple_check_ousam_r2c_4d_on_3d simple_check_ousam_r2c_4d_on_3d_transposed"
-
-## Ghost cell send
+# test_files="$test_files adv_check_ghost_c2c"
+# test_files="$test_files manual_min_c2c"
+test_files="$test_files minimal_check_c2c"
+test_files="$test_files minimal_check_c2c_transposed"
+# test_files="$test_files serial_c2c"
+test_files="$test_files simple_check_c2c"
+test_files="$test_files simple_check_c2c_3d_on_3d"
+test_files="$test_files simple_check_c2c_3d_on_3d_transposed"
+test_files="$test_files simple_check_c2c_4d"
+test_files="$test_files simple_check_c2c_4d_on_3d"
+test_files="$test_files simple_check_c2c_4d_on_3d_transposed"
+test_files="$test_files simple_check_c2c_4d_transposed"
+test_files="$test_files simple_check_c2c_transposed"
+test_files="$test_files simple_check_c2r_c2c"
+test_files="$test_files simple_check_c2r_c2c_ousam_shifted"
+test_files="$test_files simple_check_c2r_c2c_shifted"
 test_files="$test_files simple_check_ghost_c2c"
 test_files="$test_files simple_check_ghost_c2c_3d_on_3d"
+test_files="$test_files simple_check_ghost_r2c_input"
+test_files="$test_files simple_check_ghost_r2c_output"
+test_files="$test_files simple_check_ousam_c2c"
+test_files="$test_files simple_check_ousam_c2c_4d"
+test_files="$test_files simple_check_ousam_c2c_4d_on_3d"
+test_files="$test_files simple_check_ousam_c2c_4d_on_3d_transposed"
+test_files="$test_files simple_check_ousam_c2c_4d_transposed"
+test_files="$test_files simple_check_ousam_c2c_transposed"
+test_files="$test_files simple_check_ousam_c2r"
+test_files="$test_files simple_check_ousam_r2c"
+test_files="$test_files simple_check_ousam_r2c_4d"
+test_files="$test_files simple_check_ousam_r2c_4d_on_3d"
+test_files="$test_files simple_check_ousam_r2c_4d_on_3d_transposed"
+test_files="$test_files simple_check_ousam_r2c_4d_transposed"
+test_files="$test_files simple_check_ousam_r2c_transposed"
+test_files="$test_files simple_check_ousam_r2r"
+test_files="$test_files simple_check_ousam_r2r_transposed"
+test_files="$test_files simple_check_r2c"
+test_files="$test_files simple_check_r2c_3d_on_3d"
+test_files="$test_files simple_check_r2c_3d_on_3d_transposed"
+test_files="$test_files simple_check_r2c_4d"
+test_files="$test_files simple_check_r2c_4d_on_3d"
+test_files="$test_files simple_check_r2c_4d_on_3d_transposed"
+test_files="$test_files simple_check_r2c_4d_transposed"
+test_files="$test_files simple_check_r2c_transposed"
+test_files="$test_files simple_check_r2r"
+test_files="$test_files simple_check_r2r_3d_on_3d"
+test_files="$test_files simple_check_r2r_3d_on_3d_transposed"
+test_files="$test_files simple_check_r2r_4d"
+test_files="$test_files simple_check_r2r_4d_on_3d"
+test_files="$test_files simple_check_r2r_4d_on_3d_transposed"
+test_files="$test_files simple_check_r2r_4d_transposed"
+test_files="$test_files simple_check_r2r_transposed"
 
 
 PFFTLIB=../.libs/lib*pfft*.a
