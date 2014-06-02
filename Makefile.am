@@ -14,8 +14,13 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = kernel gcell util api . doc
 DIST_SUBDIRS = $(SUBDIRS) tests
 
+# Tests work with double precision only.
 if ENABLE_TESTS
+if ! SINGLE
+if ! LDOUBLE
 SUBDIRS += tests
+endif
+endif
 endif
 
 EXTRA_DIST = bootstrap.sh CONVENTIONS pfft.pc.in
