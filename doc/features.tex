@@ -10,6 +10,18 @@ FFT of Complex inputs with complex outputs
 
 \subsection{r2c-FFT and c2r-FFT}
 FFT of real inputs with Hermitian symmetric complex outputs
+\begin{compactitem}
+  \item \code{local_size} functions give back number of complex numbers that must be allocated
+  \item real array does not use padding\todo{no padding for r2c-PFFT}
+  \item ghost cell send is based on r2r and c2c ghost cell send with appropriate parameters \todo{example for r2c ghost cell send}
+  \begin{compactitem}
+    \item use physical size for c2c ghost cell send
+    \item use \code{2*alloc_local} in \code{local_size_gc} function for r2r ghost cell send
+  \end{compactitem}
+\end{compactitem}
+
+
+
 
 \subsection{r2r-FFT}
 FFT of real inputs with real outputs

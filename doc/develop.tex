@@ -253,3 +253,36 @@ PX(gcplan) PX(plan_gc)(
 //          x {INPLACE, OUTOFPLACE} x {GC_RMA, GC_SENDRECV}
 \end{lstlisting}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{ToDo}\label{chap:todo}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{itemize}
+  \item \code{PFFT_FORWARD} is defined as \code{FFTW_FORWARD}
+  \item \code{FFTW_FORWARD} is defined as $-1$
+  \item PFFT allows to chose between \code{FFTW_FORWARD} and \code{FFTW_BACKWARD}, which is not implemented by FFTW.
+  \item Matlab uses the same sign convention, i.e., $-1$ for \code{fft} and $+1$ for \code{ifftn}
+\end{itemize}
+
+\section{Pruned FFT and Shifted Index Sets}
+\subsection{Pruned FFT}
+For pruned r2r- and c2c-FFT are defined as
+\begin{equation*}
+  g_l = \sum_{k=0}^{n_i-1} \hat g_k \eim{kl/n}, \quad l=0,\hdots,n_o-1,
+\end{equation*}
+where $n_i\le n$ and $n_o\le n$.
+
+\subsection{Shifted Index Sets}
+For $N\in 2\N$ we define the FFT with shifted inputs
+
+
+For $K,L,N\in 2\N$, $L<N$, $L<N$ we define
+
+
+
+
+
+\code{FFT_SHIFTED_IN} 
+
+

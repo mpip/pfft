@@ -34,9 +34,6 @@ static void execute_ousam_1d(
 static int illegal_params(
     int rnk, const INT *ni, const INT *no,
     unsigned ousam_flag);
-static INT local_size_ousam_1d(
-    INT n0, INT n1i, INT n1o, INT howmany,
-    unsigned trafo_flag);
 static ousam_plan_1d plan_ousam_1d(
     INT n0, INT n1i, INT n1o, INT howmany,
     R *in, R *out, unsigned trafo_flag,
@@ -49,45 +46,27 @@ static void execute_trunc(
     ousam_plan_1d ths);
 
 
-/* generalizes 'local_size_ousam_1d' to multiple dimensions */
 INT PX(local_size_ousam_dd)(
     INT nb, int rnk, const INT *ni, const INT *no, INT howmany, 
     unsigned trafo_flag
     )
 {
-  INT n0, tuple_size, n1i, n1o, mem=0;
-  INT *pno;
+  INT *pni = (INT*) malloc(sizeof(INT) * (size_t) rnk);
+  INT *pno = (INT*) malloc(sizeof(INT) * (size_t) rnk);
 
-  pno = (INT*) malloc(sizeof(INT) * (size_t) rnk);
-
+  PX(physical_dft_size)(rnk, ni, trafo_flag,
+      pni);
   PX(physical_dft_size)(rnk, no, trafo_flag,
       pno);
 
-  for(int t=0; t<rnk; t++){
-    tuple_size = howmany;
-    for(int s=rnk-t; s<rnk; s++)
-      tuple_size *= pno[s];
+  INT memi = nb * PX(prod_INT)(rnk, pni) * howmany;
+  INT memo = nb * PX(prod_INT)(rnk, pno) * howmany;
 
-    n0 = nb;
-    for(int s=0; s<rnk-t-1; s++)
-      n0 *= ni[s];
-    
-    n1i = ni[rnk-t-1];
-    n1o = no[rnk-t-1];
-
-    mem = local_size_ousam_1d(
-        n0, n1i, n1o, tuple_size, trafo_flag);
-
-    /* only first onedimensional trafo is r2c or c2r */
-    if(trafo_flag & PFFTI_TRAFO_RDFT)
-      trafo_flag = PFFTI_TRAFO_C2C;
-  }
-
+  free(pni);
   free(pno);
 
-  return MAX(mem,1);
+  return MAX(memi, memo);
 }
-
 
 
 /* generalizes 'plan_ousam_1d' to multiple dimensions */
@@ -98,14 +77,14 @@ INT PX(local_size_ousam_dd)(
  * 
  * */
 
-
 ousam_plan_dd PX(plan_ousam_dd)(
     INT nb, int rnk, const INT *ni, const INT *no, INT howmany, 
-    R *in, R *out, unsigned trafo_flag, unsigned si_flag, unsigned ousam_flag
+    R *in, R *out, unsigned trafo_flag_user, unsigned si_flag, unsigned ousam_flag
     )
 {
   INT n0, tuple_size, n1i, n1o;
-  INT *pno;
+  INT *pni, *pno;
+  unsigned trafo_flag = trafo_flag_user;
   ousam_plan_dd ths;
 
   if( illegal_params(rnk, ni, no, ousam_flag) )
@@ -113,42 +92,58 @@ ousam_plan_dd PX(plan_ousam_dd)(
 
   ths = ousam_dd_mkplan(rnk);
   
+  pni = (INT*) malloc(sizeof(INT) * (size_t) rnk);
   pno = (INT*) malloc(sizeof(INT) * (size_t) rnk);
 
+  PX(physical_dft_size)(rnk, ni, trafo_flag,
+      pni);
   PX(physical_dft_size)(rnk, no, trafo_flag,
       pno);
 
-  /* plan 1d ousam 'rnk' times from last to first dimension */
-  for(int t=0; t<rnk; t++){
+  /* Index 'r' determines the order of plan execution.
+   * Index 't' determines the dimensional order 1d embed/trunc. 
+   * Note that 't' runs backward for embed and forward for trunc. */  
+  for(int r=0; r<rnk; r++){
+    /* plan 1d trunc 'rnk' times from first to last dimension */
+    /* plan 1d embed 'rnk' times from last to first dimension */
+    int t = (ousam_flag & PFFTI_OUSAM_EMBED) ? rnk-1-r : r;
+
+    /* First 1d-r2c-embed creates padding. Afterward, we use C2C trunc on the physical array size. */
+    if(trafo_flag_user & PFFTI_TRAFO_R2C)
+      trafo_flag = (t == rnk-1) ? PFFTI_TRAFO_R2C : PFFTI_TRAFO_C2C;
+
+    /* First 'rnk-1' 1d-c2r-truncations work like C2C on the physical array size.
+     * Last 1d-c2r-truncation deletes the padding */
+    if(trafo_flag_user & PFFTI_TRAFO_C2R)
+      trafo_flag = (t == rnk-1) ? PFFTI_TRAFO_C2R : PFFTI_TRAFO_C2C;
+
     tuple_size = howmany;
-    for(int s=rnk-t; s<rnk; s++)
-      tuple_size *= pno[s];
+    for(int s=t+1; s<rnk; s++)
+      tuple_size *= (ousam_flag & PFFTI_OUSAM_EMBED) ? pno[s] : pni[s];
 
     n0 = nb;
-    for(int s=0; s<rnk-t-1; s++)
-      n0 *= ni[s];
+    for(int s=0; s<t; s++)
+      n0 *= (ousam_flag & PFFTI_OUSAM_EMBED) ? ni[s] : no[s];
     
-    n1i = ni[rnk-t-1];
-    n1o = no[rnk-t-1];
+    n1i = ni[t];
+    n1o = no[t];
 
     /* handle transposed layout for first dimension */
-    if( (ousam_flag & PFFTI_OUSAM_TRANSPOSED) && (t==rnk-1) ){
+    if( (ousam_flag & PFFTI_OUSAM_TRANSPOSED) && (t==0) ){
       tuple_size *= n0;
       n0 = 1;
     }
-  
-    ths->ousam_1d[t] = plan_ousam_1d(
+ 
+    ths->ousam_1d[r] = plan_ousam_1d(
         n0, n1i, n1o, tuple_size, in, out, trafo_flag, si_flag, ousam_flag);
-
-    /* only first onedimensional trafo is r2c or c2r */
-    if(trafo_flag & PFFTI_TRAFO_RDFT)
-      trafo_flag = PFFTI_TRAFO_C2C;
   }
 
+  free(pni);
   free(pno);
 
   return ths;
 }
+
 
 static int illegal_params(
     int rnk, const INT *ni, const INT *no,
@@ -171,22 +166,6 @@ static int illegal_params(
   }
 
   return 0;
-}
-
-
-static INT local_size_ousam_1d(
-    INT n0, INT n1i, INT n1o, INT howmany,
-    unsigned trafo_flag
-    )
-{
-  INT pni, pno, mem=1;
-
-  pni = PX(physical_dft_size_1d)(n1i, trafo_flag);
-  pno = PX(physical_dft_size_1d)(n1o, trafo_flag);
-
-  mem *= n0 * MAX(pni, pno) * howmany;
-
-  return mem;
 }
 
 static int work_on_r2c_input(
@@ -249,7 +228,7 @@ static ousam_plan_1d plan_ousam_1d(
   ths->N1i = n1i;
   ths->N1o = n1o;
 
-  /* default: no padding (valid for most trafos) */
+  /* default: no padding (only necessary for r2c and c2r) */
   ths->Pi = 0;
   ths->Po = 0;
 
@@ -288,11 +267,14 @@ static ousam_plan_1d plan_ousam_1d(
 
     /* generate padding for r2c input */
     if( ousam_flag & PFFTI_OUSAM_EMBED ){
-      ths->Zl = n1o - n1i;
+      ths->Zl = 0;
       ths->D  = n1i;
-      ths->Zr = 0;
+      ths->Zr = n1o - n1i;
       ths->Po  = 2*pno-n1o;
       ths->N1o = 2*pno;
+    
+      if(si_flag & PFFT_SHIFTED_IN)
+        ths->Zl = ths->Zr = ths->Zr/2;
     }
   }
 
@@ -311,11 +293,14 @@ static ousam_plan_1d plan_ousam_1d(
 
     /* truncate padding for c2r output */
     if( ousam_flag & PFFTI_OUSAM_TRUNC ){
-      ths->Zl = n1i - n1o;
+      ths->Zl = 0;
       ths->D  = n1o;
-      ths->Zr = 0;
+      ths->Zr = n1i - n1o;
       ths->Pi  = 2*pni-n1i;
       ths->N1i = 2*pni;
+    
+      if(si_flag & PFFT_SHIFTED_OUT)
+        ths->Zl = ths->Zr = ths->Zr/2;
     }
   }
 
@@ -323,7 +308,7 @@ static ousam_plan_1d plan_ousam_1d(
   ths->N1i *= howmany;
   ths->N1o *= howmany;
   ths->Zl  *= howmany;
-  ths->D  *= howmany;
+  ths->D   *= howmany;
   ths->Zr  *= howmany;
   ths->Pi  *= howmany;
   ths->Po  *= howmany;
@@ -474,7 +459,7 @@ static void execute_trunc(
 
     /* skip right zero block */
     mi += Zr;
-  } else{
+  } else {
     for(k0 = 0; k0 < N0; k0++){
       /* skip left zero block */
       mi += Zl;

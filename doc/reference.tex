@@ -425,8 +425,8 @@ For most applications it is sufficient to print run time of a plan \code{ths} av
 void pfft_print_average_timer(
     const pfft_plan ths, MPI_Comm comm);
 \end{lstlisting}
-Note, that the maximum of all local times is computed on the first process (rank 0) of communicator \code{comm}.
-Therefore, a call to \code{MPI_Reduce} is performed and the output is only printed on this process.
+Note, that for each timer the maximum over all processes is computed on the first process (rank 0) of communicator \code{comm},
+i.e., a call to \code{MPI_Reduce} is performed and the output is only printed on this process.
 The following function works in the same way but prints more verbose output
 \begin{lstlisting}
 void pfft_print_average_timer_adv(
@@ -456,7 +456,17 @@ The following function returns a copy of the timer corresponding to plan \code{t
 pfft_timer pfft_get_timer(
     const pfft_plan ths);
 \end{lstlisting}
-Whenever a timer is created as the return value, you must release it's memory with
+
+
+
+
+
+Note that all functions with a \code{pfft_timer} return value automatically allocate memory
+
+Note that the user must Whenever the return value of a function is a \code{pfft_timer}, the user is responsible 
+
+
+must release it's memory with
 \begin{lstlisting}
 void pfft_destroy_timer(
     pfft_timer ths);
