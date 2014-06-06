@@ -18,11 +18,11 @@
  *
  */
 
+#include <complex.h>
 #include "pfft.h"
 #include "ipfft.h"
 #include "util.h"
 
-#define DATA_INIT(i) (( (R)1000 ) / ( (R)( (i) == 0 ? 1 : i) ))
 
 /* Global infos about procmesh are only enabled in debug mode
  * Otherwise we do not use any global variables. */
@@ -43,13 +43,119 @@ static void execute_transposed(
 
 
 static INT plain_index(
-    int rnk, const INT *kvec, const INT *n);
+    int rnk, const INT *n, const INT *kvec);
 static void vector_index(
-    int rnk, INT k, const INT *n,
+    int rnk, const INT *n, INT k,
     INT *kvec);
 
 static void complex_conjugate(
     const R* in, R* out, const int rnk_n, const INT *local_n);
+
+
+static C init_scalar(
+    int rnk_n, const INT *n, const INT *i
+    )
+{
+  R m = (R) plain_index(rnk_n, n, i);
+  return 1000.0/(2*m+1) + 1000.0/(2*m+2) * _Complex_I;
+}
+
+static C init_scalar_periodic(
+    int rnk_n, const INT *n, const INT *ind
+    )
+{
+  INT *periodic_ind = PX(malloc_INT)(rnk_n);
+
+  /* assure periodicity in all directions */
+  for(int t=0; t<rnk_n; t++)
+    periodic_ind[t] = ind[t] % n[t];
+
+  C result = init_scalar(rnk_n, n, periodic_ind);
+
+  free(periodic_ind);
+
+  return result;
+}
+
+static void init_array(
+    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
+    unsigned arraytype,
+    void *data
+    )
+{
+  INT ln_tot;
+  INT *kvec_loc, *kvec_glob, *kvec_glob_mirrored;
+
+  kvec_loc  = PX(malloc_INT)(rnk_n);
+  kvec_glob = PX(malloc_INT)(rnk_n);
+  kvec_glob_mirrored = PX(malloc_INT)(rnk_n);
+ 
+  ln_tot = PX(prod_INT)(rnk_n, local_n);
+  for(INT k=0; k<ln_tot; k++){
+    vector_index(rnk_n, local_n, k, kvec_loc);
+    PX(vadd_INT)(rnk_n, kvec_loc, local_start, kvec_glob);
+    PX(vsub_INT)(rnk_n, n, kvec_glob, kvec_glob_mirrored);
+    C d1 = init_scalar_periodic(rnk_n, n, kvec_glob);
+    C d2 = init_scalar_periodic(rnk_n, n, kvec_glob_mirrored);
+    switch (arraytype){
+      case PFFTI_ARRAYTYPE_REAL: 
+        /* set padding element to zero */
+        ((R*)data)[k] = (kvec_glob[rnk_n-1] < n[rnk_n-1]) ? (R) d1 : 0.0; break;
+      case PFFTI_ARRAYTYPE_COMPLEX:
+        ((C*)data)[k] = d1; break;
+      case PFFTI_ARRAYTYPE_HERMITIAN_COMPLEX:
+        ((C*)data)[k] = 0.5 * (d1 + conj(d2)); break;
+    }
+  }
+
+  free(kvec_loc); free(kvec_glob); free(kvec_glob_mirrored);
+}
+
+static R check_array(
+    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
+    unsigned arraytype,
+    const void *data, MPI_Comm comm
+    )
+{
+  INT ln_tot;
+  INT *kvec_loc, *kvec_glob, *kvec_glob_mirrored;
+  R err, maxerr, globmaxerr;
+
+  err = maxerr = 0;
+
+  kvec_loc  = PX(malloc_INT)(rnk_n);
+  kvec_glob = PX(malloc_INT)(rnk_n);
+  kvec_glob_mirrored = PX(malloc_INT)(rnk_n);
+ 
+  ln_tot = PX(prod_INT)(rnk_n, local_n);
+  for(INT k=0; k<ln_tot; k++){
+    vector_index(rnk_n, local_n, k, kvec_loc);
+    PX(vadd_INT)(rnk_n, kvec_loc, local_start, kvec_glob);
+    PX(vsub_INT)(rnk_n, n, kvec_glob, kvec_glob_mirrored);
+    C d1 = init_scalar_periodic(rnk_n, n, kvec_glob);
+    C d2 = init_scalar_periodic(rnk_n, n, kvec_glob_mirrored);
+    switch (arraytype){
+      case PFFTI_ARRAYTYPE_REAL: 
+        /* ignore padding elements */
+        err = (kvec_glob[rnk_n-1] < n[rnk_n-1]) ? cabs( ((R*)data)[k] - (R) d1 ) : 0.0; break;
+      case PFFTI_ARRAYTYPE_COMPLEX:
+        err = cabs( ((C*)data)[k] - d1); break;
+      case PFFTI_ARRAYTYPE_HERMITIAN_COMPLEX:
+        err = cabs( ((C*)data)[k] - 0.5 * (d1 + conj(d2))); break;
+    }
+
+    if( err > maxerr )
+      maxerr = err;
+  }
+
+  free(kvec_loc); free(kvec_glob); free(kvec_glob_mirrored);
+
+  MPI_Allreduce(&maxerr, &globmaxerr, 1, PFFT_MPI_REAL_TYPE, MPI_MAX, comm);
+  return globmaxerr;
+}
+
+
+
 
 /* wrappers for fftw init and cleanup */
 void PX(init) (void){
@@ -85,20 +191,20 @@ void PX(destroy_plan)(
 
 
 static INT plain_index(
-    int rnk, const INT *kvec, const INT *n
+    int rnk, const INT *n, const INT *kvec
     )
 {
   INT k=0;
 
   for(INT t=0; t<rnk; t++)
-    k = k*n[t] + kvec[t];
+    k += k*n[t] + kvec[t];
 
   return k;
 }
 
   
 static void vector_index(
-    int rnk, INT k, const INT *n,
+    int rnk, const INT *n, INT k,
     INT *kvec
     )
 {
@@ -140,30 +246,31 @@ void PX(init_input_complex)(
     int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     C *data
     )
-{ /* initialize FFT input with random numbers */
-  INT m, ln_tot;
-  INT *kvec_loc, *kvec_glob;
-
-  kvec_loc  = PX(malloc_INT)(rnk_n);
-  kvec_glob = PX(malloc_INT)(rnk_n);
- 
-  ln_tot = PX(prod_INT)(rnk_n, local_n);
-  for(INT k=0; k<ln_tot; k++){
-    vector_index(rnk_n, k, local_n, kvec_loc);
-    PX(vadd_INT)(rnk_n, kvec_loc, local_start, kvec_glob);
-
-    /* take care of possible fftshift, e.g., index runs from -n/2 to n/2-1 */
-    for(int t=0; t<rnk_n; t++)
-      if(kvec_glob[t] < 0)
-        kvec_glob[t] += n[t];
-    
-    m = plain_index(rnk_n, kvec_glob, n);
-    data[k][0] = DATA_INIT(2*m);
-    data[k][1] = DATA_INIT(2*m+1);
-  }
-
-  free(kvec_loc); free(kvec_glob);
+{ 
+  init_array(rnk_n, n, local_n, local_start, PFFTI_ARRAYTYPE_COMPLEX,
+      data);
 }
+
+void PX(init_input_complex_hermitian_3d)(
+    const INT *n, const INT *local_n, const INT *local_start,
+    C *data
+    )
+{ 
+  int rnk_n=3;
+
+  PX(init_input_complex_hermitian)(rnk_n, n, local_n, local_start,
+      data);
+}
+
+void PX(init_input_complex_hermitian)(
+    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
+    C *data
+    )
+{ 
+  init_array(rnk_n, n, local_n, local_start, PFFTI_ARRAYTYPE_HERMITIAN_COMPLEX,
+      data);
+}
+
 
 void PX(init_input_real_3d)(
     const INT *n, const INT *local_n, const INT *local_start,
@@ -176,27 +283,14 @@ void PX(init_input_real_3d)(
       data);
 }
 
+
 void PX(init_input_real)(
     int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     R *data
     )
 { 
-  INT m, ln_tot;
-  INT *kvec_loc, *kvec_glob;
-
-  kvec_loc  = PX(malloc_INT)(rnk_n);
-  kvec_glob = PX(malloc_INT)(rnk_n);
- 
-  ln_tot = PX(prod_INT)(rnk_n, local_n);
-  for(INT k=0; k<ln_tot; k++){
-    vector_index(rnk_n, k, local_n, kvec_loc);
-    PX(vadd_INT)(rnk_n, kvec_loc, local_start, kvec_glob);
-    
-    m = plain_index(rnk_n, kvec_glob, n);
-    data[k] = DATA_INIT(2*m);
-  }
-
-  free(kvec_loc); free(kvec_glob);
+  init_array(rnk_n, n, local_n, local_start, PFFTI_ARRAYTYPE_REAL,
+      data);
 }
 
 
@@ -219,32 +313,26 @@ R PX(check_output_complex)(
     const C *data, MPI_Comm comm
     )
 { 
-  INT m, ln_tot;
-  INT *kvec_loc, *kvec_glob;
-  R re, im, err, maxerr, globmaxerr;
+  return check_array(rnk_n, n, local_n, local_start, PFFTI_ARRAYTYPE_COMPLEX, data, comm);
+}
 
-  err = maxerr = 0;
-  
-  kvec_loc  = PX(malloc_INT)(rnk_n);
-  kvec_glob = PX(malloc_INT)(rnk_n);
- 
-  ln_tot = PX(prod_INT)(rnk_n, local_n);
-  for(INT k=0; k<ln_tot; k++){
-    vector_index(rnk_n, k, local_n, kvec_loc);
-    PX(vadd_INT)(rnk_n, kvec_loc, local_start, kvec_glob);
-    
-    m = plain_index(rnk_n, kvec_glob, n);
-    re = data[k][0] - DATA_INIT(2*m);
-    im = data[k][1] - DATA_INIT(2*m+1);
-    err = pfft_sqrt(re*re + im*im);
-    if( err > maxerr )
-      maxerr = err;
-  }
+R PX(check_output_complex_hermitian_3d)(
+    const INT *n, const INT *local_n, const INT *local_start,
+    const C *data, MPI_Comm comm
+    )
+{
+  int rnk_n = 3; 
 
-  free(kvec_loc); free(kvec_glob);
+  return PX(check_output_complex_hermitian)(rnk_n, n, local_n, local_start,
+      data, comm);
+}
 
-  MPI_Allreduce(&maxerr, &globmaxerr, 1, PFFT_MPI_REAL_TYPE, MPI_MAX, comm);
-  return globmaxerr;
+R PX(check_output_complex_hermitian)(
+    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
+    const C *data, MPI_Comm comm
+    )
+{ 
+  return check_array(rnk_n, n, local_n, local_start, PFFTI_ARRAYTYPE_HERMITIAN_COMPLEX, data, comm);
 }
 
 R PX(check_output_real_3d)(
@@ -263,32 +351,7 @@ R PX(check_output_real)(
     const R *data, MPI_Comm comm
     )
 { 
-  INT m, ln_tot;
-  INT *kvec_loc, *kvec_glob;
-  R re, im, err, maxerr, globmaxerr;
-
-  err = maxerr = 0;
-  
-  kvec_loc  = PX(malloc_INT)(rnk_n);
-  kvec_glob = PX(malloc_INT)(rnk_n);
- 
-  ln_tot = PX(prod_INT)(rnk_n, local_n);
-  for(INT k=0; k<ln_tot; k++){
-    vector_index(rnk_n, k, local_n, kvec_loc);
-    PX(vadd_INT)(rnk_n, kvec_loc, local_start, kvec_glob);
-    
-    m = plain_index(rnk_n, kvec_glob, n);
-    re = data[k] - DATA_INIT(2*m);
-    im = 0;
-    err = pfft_sqrt(re*re + im*im);
-    if( err > maxerr )
-      maxerr = err;
-  }
-
-  free(kvec_loc); free(kvec_glob);
-
-  MPI_Allreduce(&maxerr, &globmaxerr, 1, PFFT_MPI_REAL_TYPE, MPI_MAX, comm);
-  return globmaxerr;
+  return check_array(rnk_n, n, local_n, local_start, PFFTI_ARRAYTYPE_REAL, data, comm);
 }
 
 
@@ -939,6 +1002,7 @@ static void twiddle_input(
   INT howmany = ths->howmany, l;
   R factor;
   INT *n = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->n);
+  INT *ni = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->ni);
   INT *local_ni = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->local_ni);
   INT *local_ni_start = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->local_ni_start);
   int *skip_trafos = malloc_and_transpose_int(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->skip_trafos);
@@ -953,8 +1017,10 @@ static void twiddle_input(
     factor = 1.0;
     for(int t=ths->rnk_n-1; t>=0; t--){
       INT kt = l%local_ni[t];
-      if(!skip_trafos[t])
-        factor *= (kt + local_ni_start[t] + n[t]/2) % 2 ? -1.0 : 1.0;
+      /* check for r2c/c2r padding elements and skipped trafos */
+      if(kt  + local_ni_start[t] < ni[t]/2)
+        if(!skip_trafos[t])
+          factor *= (kt + local_ni_start[t] + n[t]/2) % 2 ? -1.0 : 1.0;
       l /= local_ni[t];
     }
 
@@ -963,7 +1029,7 @@ static void twiddle_input(
 //     fprintf(stderr, "pfft: api-basic: in[%2td] = %.2e + I* %.2e\n", k, ths->in[howmany*k], ths->in[howmany*k+1]);
   }
 
-  free(n); free(local_ni); free(local_ni_start); free(skip_trafos);
+  free(n); free(ni); free(local_ni); free(local_ni_start); free(skip_trafos);
 }
 
 
@@ -977,6 +1043,7 @@ static void twiddle_output(
 
   INT howmany = ths->howmany, l;
   R factor;
+  INT *no = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->no);
   INT *local_no = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->local_no);
   INT *local_no_start = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->local_no_start);
   int *skip_trafos = malloc_and_transpose_int(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->skip_trafos);
@@ -991,8 +1058,10 @@ static void twiddle_output(
     factor = 1.0;
     for(int t=ths->rnk_n-1; t>=0; t--){
       INT kt = l%local_no[t];
-      if(!skip_trafos[t])
-        factor *= (kt + local_no_start[t]) % 2 ? -1.0 : 1.0;
+      /* check for r2c/c2r padding elements and skipped trafos */
+      if(kt + local_no_start[t] < no[t]/2)
+        if(!skip_trafos[t])
+          factor *= (kt + local_no_start[t]) % 2 ? -1.0 : 1.0;
       l /= local_no[t];
     }
 
@@ -1001,7 +1070,7 @@ static void twiddle_output(
 //     fprintf(stderr, "pfft: api-basic: out[%2td] = %.2e + I* %.2e\n", k, ths->out[howmany*k], ths->out[howmany*k+1]);
   }
 
-  free(local_no); free(local_no_start); free(skip_trafos);
+  free(no); free(local_no); free(local_no_start); free(skip_trafos);
 }
 
 

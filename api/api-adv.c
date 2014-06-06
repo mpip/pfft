@@ -49,9 +49,11 @@ INT PX(local_size_many_dft_r2c)(
     INT *local_no, INT *local_o_start
     )
 {
+  unsigned trafo_flag = (pfft_flags & PFFT_PAD_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
+
   return PX(local_size_partrafo)(
       rnk_n, n, ni, no, howmany, iblock, oblock,
-      comm_cart, PFFTI_TRAFO_R2C, pfft_flags,
+      comm_cart, trafo_flag, pfft_flags,
       local_ni, local_i_start, local_no, local_o_start);
 }
 
@@ -63,9 +65,11 @@ INT PX(local_size_many_dft_c2r)(
     INT *local_no, INT *local_o_start
     )
 {
+  unsigned trafo_flag = (pfft_flags & PFFT_PAD_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
+
   return PX(local_size_partrafo)(
       rnk_n, n, ni, no, howmany, iblock, oblock,
-      comm_cart, PFFTI_TRAFO_C2R, pfft_flags,
+      comm_cart, trafo_flag, pfft_flags,
       local_ni, local_i_start, local_no, local_o_start);
 }
 
@@ -107,13 +111,14 @@ PX(plan) PX(plan_many_dft_r2c)(
     int sign, unsigned pfft_flags
     )
 {
+  unsigned trafo_flag = (pfft_flags & PFFT_PAD_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
   X(r2r_kind) *kinds=NULL;
   int *skip_trafos=NULL;
 
   return PX(plan_partrafo)(
       rnk_n, n, ni, no, howmany, iblock, oblock,
       in, (R*) out, comm_cart, sign, kinds, skip_trafos,
-      PFFTI_TRAFO_R2C, pfft_flags);
+      trafo_flag, pfft_flags);
 }
 
 PX(plan) PX(plan_many_dft_c2r)(
@@ -123,13 +128,14 @@ PX(plan) PX(plan_many_dft_c2r)(
     int sign, unsigned pfft_flags
     )
 {
+  unsigned trafo_flag = (pfft_flags & PFFT_PAD_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
   X(r2r_kind) *kinds=NULL;
   int *skip_trafos=NULL;
 
   return PX(plan_partrafo)(
       rnk_n, n, ni, no, howmany, iblock, oblock,
       (R*) in, out, comm_cart, sign, kinds, skip_trafos,
-      PFFTI_TRAFO_C2R, pfft_flags);
+      trafo_flag, pfft_flags);
 }
 
 PX(plan) PX(plan_many_r2r)(
@@ -170,12 +176,13 @@ PX(plan) PX(plan_many_dft_r2c_skipped)(
     int sign, unsigned pfft_flags
     )
 {
+  unsigned trafo_flag = (pfft_flags & PFFT_PAD_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
   X(r2r_kind) *kinds=NULL;
 
   return PX(plan_partrafo)(
       rnk_n, n, ni, no, howmany, iblock, oblock,
       in, (R*) out, comm_cart, sign, kinds, skip_trafos,
-      PFFTI_TRAFO_R2C, pfft_flags);
+      trafo_flag, pfft_flags);
 }
 
 PX(plan) PX(plan_many_dft_c2r_skipped)(
@@ -185,12 +192,13 @@ PX(plan) PX(plan_many_dft_c2r_skipped)(
     int sign, unsigned pfft_flags
     )
 {
+  unsigned trafo_flag = (pfft_flags & PFFT_PAD_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
   X(r2r_kind) *kinds=NULL;
 
   return PX(plan_partrafo)(
       rnk_n, n, ni, no, howmany, iblock, oblock,
       (R*) in, out, comm_cart, sign, kinds, skip_trafos,
-      PFFTI_TRAFO_C2R, pfft_flags);
+      trafo_flag, pfft_flags);
 }
 
 PX(plan) PX(plan_many_r2r_skipped)(
@@ -313,9 +321,11 @@ void PX(local_block_many_dft_r2c)(
     INT *local_no, INT *local_o_start
     )
 {
+  unsigned trafo_flag = (pfft_flags & PFFT_PAD_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
+
   PX(local_block_partrafo)(
       rnk_n, ni, no, iblock, oblock,
-      comm_cart, pid, PFFTI_TRAFO_R2C, pfft_flags,
+      comm_cart, pid, trafo_flag, pfft_flags,
       local_ni, local_i_start, local_no, local_o_start);
 }
 
@@ -327,9 +337,11 @@ void PX(local_block_many_dft_c2r)(
     INT *local_no, INT *local_o_start
     )
 {
+  unsigned trafo_flag = (pfft_flags & PFFT_PAD_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
+
   PX(local_block_partrafo)(
       rnk_n, ni, no, iblock, oblock,
-      comm_cart, pid, PFFTI_TRAFO_C2R, pfft_flags,
+      comm_cart, pid, trafo_flag, pfft_flags,
       local_ni, local_i_start, local_no, local_o_start);
 }
 

@@ -111,7 +111,12 @@ BEGIN_C_DECLS
   PFFT_EXTERN void PX(init_input_complex)(                                              \
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       C *data);                                                                         \
-                                                                                        \
+  PFFT_EXTERN void PX(init_input_complex_hermitian_3d)(                                 \
+    const INT *n, const INT *local_n, const INT *local_n_start,                         \
+    C *data);                                                                           \
+  PFFT_EXTERN void PX(init_input_complex_hermitian)(                                    \
+      int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
+      C *data);                                                                         \
   PFFT_EXTERN void PX(init_input_real_3d)(                                              \
     const INT *n, const INT *local_n, const INT *local_n_start,                         \
     R *data);                                                                           \
@@ -125,7 +130,12 @@ BEGIN_C_DECLS
   PFFT_EXTERN R PX(check_output_complex)(                                               \
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       const C *data, MPI_Comm comm);                                                    \
-                                                                                        \
+  PFFT_EXTERN R PX(check_output_complex_hermitian_3d)(                                  \
+    const INT *n, const INT *local_n, const INT *local_n_start,                         \
+    const C *data, MPI_Comm comm);                                                      \
+  PFFT_EXTERN R PX(check_output_complex_hermitian)(                                     \
+      int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
+      const C *data, MPI_Comm comm);                                                    \
   PFFT_EXTERN R PX(check_output_real_3d)(                                               \
     const INT *n, const INT *local_n, const INT *local_n_start,                         \
     const R *data, MPI_Comm comm);                                                      \
@@ -513,6 +523,9 @@ PFFT_DEFINE_API(PFFT_MANGLE_LONG_DOUBLE, FFTW_MANGLE_LONG_DOUBLE, long double, p
 #define PFFT_PRESERVE_INPUT       (1U<< 8) /* out-of-place plans do not overwrite the input */ 
 #define PFFT_DESTROY_INPUT        (1U<< 9) /* default for out-of-place plans is: PRESERVE_INPUT*/
 #define PFFT_BUFFERED_INPLACE     (1U<<10) /* use second array of same size, similar to out-of-place but results end up in input array */
+#define PFFT_PAD_R2C              (1U<<11) /* Pad real values of r2c and c2r trafos in order to match the array size of the complex values */
+
+#define PFFT_PAD_C2R              (PFFT_PAD_R2C) /* synonym for PFFT_PAD_R2C */
 
 #define PFFT_DEFAULT_BLOCK        FFTW_MPI_DEFAULT_BLOCK
 

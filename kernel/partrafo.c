@@ -763,7 +763,7 @@ static void init_param_size_and_trafo_flags(
   if( trafo_flag & PFFTI_TRAFO_R2C ){
     /* Compute trafo on forward step */
     for(t=0; t<rnk_pm+1; t++)
-      trafo_flags_to[t] = ((t==rnk_pm) ? PFFTI_TRAFO_R2C : PFFTI_TRAFO_C2C) | get_skip_flag(skip_trafos, t);
+      trafo_flags_to[t] = ((t==rnk_pm) ? trafo_flag : PFFTI_TRAFO_C2C) | get_skip_flag(skip_trafos, t);
     PX(vcopy_INT)(rnk_n, ni, ni_to);
     PX(vcopy_INT)(rnk_n, n,  n_to);
     PX(vcopy_INT)(rnk_n, no, no_to);
@@ -788,7 +788,7 @@ static void init_param_size_and_trafo_flags(
 
     /* Compute trafo on backward step */
     for(t=0; t<rnk_pm+1; t++)
-      trafo_flags_ti[t] = ((t==rnk_pm) ? PFFTI_TRAFO_C2R : PFFTI_TRAFO_C2C) | get_skip_flag(skip_trafos, t);
+      trafo_flags_ti[t] = ((t==rnk_pm) ? trafo_flag : PFFTI_TRAFO_C2C) | get_skip_flag(skip_trafos, t);
     PX(vcopy_INT)(rnk_n, ni, ni_ti);
     PX(vcopy_INT)(rnk_n, n,  n_ti);
     PX(vcopy_INT)(rnk_n, no, no_ti);

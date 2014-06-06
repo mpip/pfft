@@ -64,15 +64,25 @@ void PX(local_block_partrafo_transposed)(
       rnk_pm, coords_pm, trafo_flag, transp_flag,
       local_ni, local_i_start, local_no, local_o_start);
 
-  /* overwrite physical size of r2c input, 
-   * since PFFT user interface does not use padding for real inputs */
-  if( trafo_flag & PFFTI_TRAFO_R2C )
-    local_ni[rnk_n-1] = ni[rnk_n-1];
+  /* Overwrite physical size of r2c input,
+   * since PFFT user interface returns number of real inputs.
+   * Distinguish the padded and non-padded case. */
+  if( trafo_flag & PFFTI_TRAFO_R2C ){
+    if( trafo_flag & PFFTI_TRAFO_PADDED )
+      local_ni[rnk_n-1] *= 2;
+    else
+      local_ni[rnk_n-1] = ni[rnk_n-1];
+  }
 
-  /* overwrite physical size of c2r output, 
-   * since PFFT user interface does not use padding for real outputs */
-  if( trafo_flag & PFFTI_TRAFO_C2R )
-    local_no[rnk_n-1] = no[rnk_n-1];
+  /* Overwrite physical size of c2r output, 
+   * since PFFT user interface returns number of real outputs.
+   * Distinguish the padded and non-padded case. */
+  if( trafo_flag & PFFTI_TRAFO_C2R ){
+    if( trafo_flag & PFFTI_TRAFO_PADDED )
+      local_no[rnk_n-1] *= 2;
+    else
+      local_no[rnk_n-1] = no[rnk_n-1];
+  }
 }
 
 INT PX(local_size_partrafo_transposed)(
@@ -145,15 +155,25 @@ INT PX(local_size_partrafo_transposed)(
     mem = MAX(mem, mem_tmp);
   }
 
-  /* overwrite physical size of r2c input, 
-   * since PFFT user interface does not use padding for real inputs */
-  if( trafo_flags[rnk_pm] & PFFTI_TRAFO_R2C )
-    local_ni[rnk_n-1] = ni[rnk_n-1];
+  /* Overwrite physical size of r2c input,
+   * since PFFT user interface returns number of real inputs.
+   * Distinguish the padded and non-padded case. */
+  if( trafo_flags[rnk_pm] & PFFTI_TRAFO_R2C ){
+    if( trafo_flags[rnk_pm] & PFFTI_TRAFO_PADDED )
+      local_ni[rnk_n-1] *= 2;
+    else
+      local_ni[rnk_n-1] = ni[rnk_n-1];
+  }
 
-  /* overwrite physical size of c2r output, 
-   * since PFFT user interface does not use padding for real outputs */
-  if( trafo_flags[rnk_pm] & PFFTI_TRAFO_C2R )
-    local_no[rnk_n-1] = no[rnk_n-1];
+  /* Overwrite physical size of c2r output, 
+   * since PFFT user interface returns number of real outputs.
+   * Distinguish the padded and non-padded case. */
+  if( trafo_flags[rnk_pm] & PFFTI_TRAFO_C2R ){
+    if( trafo_flags[rnk_pm] & PFFTI_TRAFO_PADDED )
+      local_no[rnk_n-1] *= 2;
+    else
+      local_no[rnk_n-1] = no[rnk_n-1];
+  }
 
   free(coords_pm);
   free(pni); free(pno);

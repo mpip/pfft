@@ -110,12 +110,12 @@ ousam_plan_dd PX(plan_ousam_dd)(
 
     /* First 1d-r2c-embed creates padding. Afterward, we use C2C trunc on the physical array size. */
     if(trafo_flag_user & PFFTI_TRAFO_R2C)
-      trafo_flag = (t == rnk-1) ? PFFTI_TRAFO_R2C : PFFTI_TRAFO_C2C;
+      trafo_flag = (t == rnk-1) ? trafo_flag_user : PFFTI_TRAFO_C2C;
 
     /* First 'rnk-1' 1d-c2r-truncations work like C2C on the physical array size.
      * Last 1d-c2r-truncation deletes the padding */
     if(trafo_flag_user & PFFTI_TRAFO_C2R)
-      trafo_flag = (t == rnk-1) ? PFFTI_TRAFO_C2R : PFFTI_TRAFO_C2C;
+      trafo_flag = (t == rnk-1) ? trafo_flag_user : PFFTI_TRAFO_C2C;
 
     tuple_size = howmany;
     for(int s=t+1; s<rnk; s++)
@@ -272,8 +272,14 @@ static ousam_plan_1d plan_ousam_1d(
       ths->Zr = n1o - n1i;
       ths->Po  = 2*pno-n1o;
       ths->N1o = 2*pno;
+
+      /* skip padding generation if the inputs are already padded */
+      if( trafo_flag & PFFTI_TRAFO_PADDED ){
+        ths->Pi  = 2*pni-n1i;
+        ths->N1i = 2*pni;
+      }
     
-      if(si_flag & PFFT_SHIFTED_IN)
+      if( si_flag & PFFT_SHIFTED_IN )
         ths->Zl = ths->Zr = ths->Zr/2;
     }
   }
@@ -298,8 +304,14 @@ static ousam_plan_1d plan_ousam_1d(
       ths->Zr = n1i - n1o;
       ths->Pi  = 2*pni-n1i;
       ths->N1i = 2*pni;
+   
+      /* do not truncate padding, if the user explicitly wants it */
+      if( trafo_flag & PFFTI_TRAFO_PADDED ){
+        ths->Po = 2*pno-n1o;
+        ths->N1o = 2*pno;
+      }
     
-      if(si_flag & PFFT_SHIFTED_OUT)
+      if( si_flag & PFFT_SHIFTED_OUT )
         ths->Zl = ths->Zr = ths->Zr/2;
     }
   }

@@ -72,7 +72,7 @@ data_cmpl = pfft_malloc(n);
 The following functions are useful tools but are not necessarily needed to perform parallel FFTs.
 
 \section{Three-dimensional parallel FFT}
-\subsection{Initializing inputs and checking outputs}\label{sec:init-data-3d}
+\subsection{Initializing inputs and checking outputs}\label{sec:init-data-3d-c2c}
 To fill a complex array \code{data} with reproducible, complex values use one of the functions
 \begin{lstlisting}
 void pfft_init_input_complex_3d(
@@ -117,6 +117,76 @@ err = pfft_check_output_complex_3d(n, local_ni, local_i_start, in, comm_cart_2d)
 pfft_printf(comm_cart_2d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]);
 pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
 \end{lstlisting}
+
+
+
+
+\subsection{Initializing real inputs and checking outputs}\label{sec:init-data-3d-r2r}
+To fill a real array \code{data} with reproducible, complex values use one of the functions
+\begin{lstlisting}
+void pfft_init_input_real_3d(
+    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
+    double *data);
+void pfft_init_input_real(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    double *data);
+\end{lstlisting}
+Hereby, the arrays \code{n}, \code{local_n} and \code{local_n_start} give the size of the FFT, the local array size and the local array offset;
+see \cite{sec:par-data-decomp} for details on the parallel data decomposition.
+The functions
+\begin{lstlisting}
+double pfft_check_output_real_3d(
+    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
+    const pfft_complex *data, MPI_Comm comm);
+double pfft_check_output_real(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    const pfft_complex *data, MPI_Comm comm);
+\end{lstlisting}
+compute the $l_1$-norm between the elements of array \code{data} and values produced by \code{pfft_init_input_real_3d}, \code{pfft_init_input_real}.
+
+Note, that both \code{pfft_init_input_real*} functions will set all array elements to zero were \code{local_n + local_n_start >= n}.
+In addition, both \code{pfft_check_output_real*} function will ignore all the errors resulting from these elements.
+Therefore, it is safe to use all these functions for a consistency check of a r2c transform followed by a c2r transform since all padding elements will be ignored.
+
+
+\subsection{Initializing r2c/c2r inputs and checking outputs}\label{sec:init-data-3d-r2c}
+The real inputs of a r2c transform can be initialized with the functions decribed in Section~\ref{sec:init-data-3d-r2r}.
+However, generating suitable inputs for a c2r transform requires more caution.
+In order to get real valued results of a DFT the complex input coefficients need to satisfy an radial Hermitian symmetry, i.e., $X[\mathbf k] = {X^*[-\mathbf k]}$.
+We use the following trick to generate the complex input values for c2r transforms.
+Assume any $\mathbf N$-periodic complex valued function $f$. It can be easily shown that the values
+$X[\mathbf k] := \frac{1}{2}\left(f(\mathbf k)+f^*(-\mathbf k)\right)$ satisfy the radial Hermitian symmetry. 
+
+To fill a complex array \code{data} with reproducible, complex values that fulfill the radial Hermitian symmetry use one of the functions
+\begin{lstlisting}
+void pfft_init_input_complex_hermitian_3d(
+    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
+    double *data);
+void pfft_init_input_complex_hermitian(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    double *data);
+\end{lstlisting}
+Hereby, the arrays \code{n}, \code{local_n} and \code{local_n_start} give the size of the FFT, the local array size and the local array offset;
+see \cite{sec:par-data-decomp} for details on the parallel data decomposition.
+The functions
+\begin{lstlisting}
+double pfft_check_output_complex_hermitian_3d(
+    const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_n_start,
+    const pfft_complex *data, MPI_Comm comm);
+double pfft_check_output_complex_hermitian(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    const pfft_complex *data, MPI_Comm comm);
+\end{lstlisting}
+compute the $l_1$-norm between the elements of array \code{data} and values produced by \code{pfft_init_input_complex_hermitian_3d}, \code{pfft_init_input_complex_hermitian}.
+
+Note, that these functions can also be used in order to generate complex inputs with radial Hermitian symmetry for ordinary c2c transforms. 
+Of course the results of such a c2c DFT will have all imaginary parts equal to zero up to machine precision.
+
+
+
+
+
+
 
 
 

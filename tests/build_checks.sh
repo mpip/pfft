@@ -55,6 +55,7 @@ test_files="$test_files simple_check_r2r_4d_on_3d_transposed"
 test_files="$test_files simple_check_r2r_4d_transposed"
 test_files="$test_files simple_check_r2r_transposed"
 
+test_files="$test_files simple_check_ousam_r2c_padded"
 
 PFFTLIB=../.libs/lib*pfft*.a
 

@@ -145,9 +145,14 @@ typedef ptrdiff_t INT;
 #define PFFTI_TRAFO_RO01           (1U<< 8)
 #define PFFTI_TRAFO_RO10           (1U<< 9)
 #define PFFTI_TRAFO_RO11           (1U<<10)
-#define PFFTI_TRAFO_RC2C           (1U<<11) /* TODO: Do we need this flag? */
-#define PFFTI_TRAFO_SKIP           (1U<<12)
-#define PFFTI_TRAFO_PHANTOM        (1U<<13)
+#define PFFTI_TRAFO_SKIP           (1U<<11)
+#define PFFTI_TRAFO_PHANTOM        (1U<<12)
+#define PFFTI_TRAFO_PADDED         (1U<<13)
+
+#define PFFTI_TRAFO_R2C_PADDED \
+  (PFFTI_TRAFO_R2C | PFFTI_TRAFO_PADDED)
+#define PFFTI_TRAFO_C2R_PADDED \
+  (PFFTI_TRAFO_C2R | PFFTI_TRAFO_PADDED)
 
 #define PFFTI_TRAFO_R2R   \
   (PFFTI_TRAFO_REDFT | PFFTI_TRAFO_RODFT)
@@ -171,7 +176,9 @@ typedef ptrdiff_t INT;
 #define PFFTI_ARRAY_INPUT          (1U<< 1)
 #define PFFTI_ARRAY_OUTPUT         (1U<< 2)
 
-
+#define PFFTI_ARRAYTYPE_REAL               (1)
+#define PFFTI_ARRAYTYPE_COMPLEX            (2)
+#define PFFTI_ARRAYTYPE_HERMITIAN_COMPLEX  (3)
 
 
 
