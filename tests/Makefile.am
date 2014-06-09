@@ -15,6 +15,30 @@ AM_CPPFLAGS += -I$(top_srcdir)/api
 # Libraries to add to all programs that are built.
 LDADD = $(top_builddir)/lib@PFFT_PREFIX@pfft@PREC_SUFFIX@.la $(fftw3_mpi_LIBS) $(fftw3_LIBS)
 
+SCRIPT_FILES = build_checks.sh run_checks.sh
+
+EXTRA_DIST = $(SCRIPT_FILES)
+
+SYMLINK_FILES = $(SCRIPT_FILES)
+
+# Generate symbolic link to several files
+all-local: make-data-symlink
+make-data-symlink:
+	-@for s in $(SYMLINK_FILES) ; do \
+          if test "$(srcdir)" != . && test ! -r $${s}; then \
+            ln -s "$(srcdir)/$${s}" .; \
+          fi \
+        done
+
+distclean-local: clean-data-symlink
+clean-data-symlink:
+	-@if test "$(srcdir)" != .; then \
+	  rm -f $(SYMLINK_FILES) ; \
+	fi
+
+.PHONY: make-data-symlink clean-data-symlink
+
+
 # These programs are built by 'make check' and may be tested afterwards.
 check_PROGRAMS = \
 	minimal_check_c2c minimal_check_c2c_transposed

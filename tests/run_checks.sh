@@ -55,15 +55,44 @@ test_files="$test_files simple_check_r2r_4d_transposed"
 test_files="$test_files simple_check_r2r_transposed"
 
 test_files="$test_files simple_check_ousam_r2c_padded"
- 
+
+tol="1e-12"
+
+failed="" 
 ## Run tests with 2d procmesh
 for name in $test_files; do
   echo "## mpirun -np 4 ${name}:"
-  mpirun -np 4 ./${name} | grep -i "error"
+  res=$(mpirun -np 4 ./${name} | grep -i "error")
+  echo $res
+  err=$(echo $res | sed -n 's/.*maxerror = \([^;]*\);/\1/p')
+  works=$(awk "BEGIN{print ($err < $tol)}")
+  if [ $works -eq 0 ]; then
+    failed="$failed $name"
+  fi
 done
 
 ## Run tests with 2d procmesh
+failed_3d=""
 for name in $test_files_3d; do
   echo "## mpirun -np 8 ${name}:"
-  mpirun -np 8 ./${name} | grep -i "error"
+  res=$(mpirun -np 8 ./${name} | grep -i "error")
+  echo $res
+  err=$(echo $res | sed -n 's/.*maxerror = \([^;]*\);/\1/p')
+  works=$(awk "BEGIN{print ($err < $tol)}")
+  if [ $works -eq 0 ]; then
+    failed_3d="$failed_3d $name"
+  fi
 done
+
+if test -z $failed && test -z $failed_3d; then
+  echo -e  "\nAll tests reached accuracy level $tol."
+else
+  echo -e  "\nThe following tests did not reach accuracy level $tol:"
+fi
+
+for name in $failed; do
+  echo "mpirun -np 4 $name"
+done 
+for name in $failed_3d; do
+  echo "mpirun -np 8 $name"
+done 
