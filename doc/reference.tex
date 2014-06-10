@@ -342,6 +342,19 @@ pfft_plan pfft_plan_many_r2r(
     const pfft_r2r_kind *kinds, unsigned pfft_flags);
 \end{lstlisting}
 
+\subsubsection{New-array execute}
+Similar to FFTW we have
+\begin{lstlisting}[escapechar=§]
+void pfft_execute(const pfft_plan plan);
+void pfft_execute_dft(const pfft_plan plan, pfft_complex *in, pfft_complex *out);
+void pfft_execute_dft_r2c(const pfft_plan plan, double *in, pfft_complex *out);
+void pfft_execute_dft_c2r(const pfft_plan plan, pfft_complex *in, double *out);
+void pfft_execute_r2r(const pfft_plan plan, double *in, double *out);
+void pfft_destroy_plan(const pfft_plan plan);
+\end{lstlisting}
+
+
+
 \subsubsection{Preliminary: Skip selected serial transformations}
 The \code{_skipped} interface is based on the \code{many} interface but adds the possibility to skip selected serial FFTs.
 \begin{lstlisting}[escapechar=§]
