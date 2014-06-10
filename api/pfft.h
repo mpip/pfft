@@ -103,6 +103,10 @@ BEGIN_C_DECLS
   PFFT_EXTERN void PX(free)(void *p);                                                   \
                                                                                         \
   PFFT_EXTERN void PX(execute)(PX(plan) fftplan);                                       \
+  PFFT_EXTERN void PX(execute_dft)(PX(plan) fftplan, C *in, C *out);                    \
+  PFFT_EXTERN void PX(execute_dft_r2c)(PX(plan) fftplan, R *in, C *out);                \
+  PFFT_EXTERN void PX(execute_dft_c2r)(PX(plan) fftplan, C *in, R *out);                \
+  PFFT_EXTERN void PX(execute_r2r)(PX(plan) fftplan, R *in, R *out);                    \
   PFFT_EXTERN void PX(destroy_plan)(PX(plan) fftplan);                                  \
                                                                                         \
   PFFT_EXTERN void PX(init_input_complex_3d)(                                           \

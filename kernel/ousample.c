@@ -29,7 +29,9 @@ static ousam_plan_1d ousam_1d_mkplan(void);
 static void ousam_1d_rmplan(
     ousam_plan_1d ths);
 static void execute_ousam_1d(
-    ousam_plan_1d ths);
+    ousam_plan_1d ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out);
 
 static int illegal_params(
     int rnk, const INT *ni, const INT *no,
@@ -41,9 +43,13 @@ static ousam_plan_1d plan_ousam_1d(
 static int is_complex_data(
     unsigned trafo_flag, unsigned ousam_flag);
 static void execute_embed(
-    ousam_plan_1d ths);
+    ousam_plan_1d ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out);
 static void execute_trunc(
-    ousam_plan_1d ths);
+    ousam_plan_1d ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out);
 
 
 INT PX(local_size_ousam_dd)(
@@ -352,34 +358,40 @@ static int is_complex_data(
 
 
 void PX(execute_ousam_dd)(
-    ousam_plan_dd ths
+    ousam_plan_dd ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out
     )
 {
   if(ths == NULL)
     return;
 
   for(int t=0; t<ths->rnk; t++)
-    execute_ousam_1d(ths->ousam_1d[t]);
+    execute_ousam_1d(ths->ousam_1d[t], planned_in, planned_out, executed_in, executed_out);
 }
 
 static void execute_ousam_1d(
-    ousam_plan_1d ths
+    ousam_plan_1d ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out
     )
 {
   if(ths == NULL)
     return;
 
   if( ths->ousam_flag & PFFTI_OUSAM_EMBED )
-    execute_embed(ths);
+    execute_embed(ths, planned_in, planned_out, executed_in, executed_out);
   else
-    execute_trunc(ths);
+    execute_trunc(ths, planned_in, planned_out, executed_in, executed_out);
 }
 
 
 /* oversampling in one local dimension:
  * split the array at Cl and add Cm zeros in the gap */
 static void execute_embed(
-    ousam_plan_1d ths
+    ousam_plan_1d ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out
     )
 {
   INT mi, mo, k0, k1;
@@ -387,7 +399,8 @@ static void execute_embed(
   const INT Zl = ths->Zl, Zr = ths->Zr; 
   const INT D = ths->D; 
   const INT Pi = ths->Pi, Po = ths->Po;
-  R *const in = ths->in, *const out = ths->out;
+  R *in  = (ths->in  == planned_in)  ? executed_in  : executed_out;
+  R *out = (ths->out == planned_out) ? executed_out : executed_in;
 
   if( (Zl == 0) && (Zr == 0) && (Pi == 0) && (Po == 0) ){
     if( in != out )
@@ -446,7 +459,9 @@ static void execute_embed(
 /* undersampling in one local dimension:
  * skip Zl coefficients starting at 0 and Zr coefficients starting at D */
 static void execute_trunc(
-    ousam_plan_1d ths
+    ousam_plan_1d ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out
     )
 {
   INT mi, mo, k0, k1;
@@ -454,7 +469,8 @@ static void execute_trunc(
   const INT Zl = ths->Zl, Zr = ths->Zr;
   const INT D = ths->D; 
   const INT Pi = ths->Pi, Po = ths->Po;
-  R *const in = ths->in, *const out = ths->out;
+  R *in  = (ths->in  == planned_in)  ? executed_in  : executed_out;
+  R *out = (ths->out == planned_out) ? executed_out : executed_in;
 
   if( (Zl == 0) && (Zr == 0) && (Pi == 0) && (Po == 0) ){
     if( in != out )

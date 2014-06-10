@@ -518,29 +518,29 @@ static void plan_trafo(
     plan->plan = X(plan_guru64_dft_r2c)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
         in, (C*) out, fftw_flags);
-    plan->plannedin = in;
-    plan->plannedout = out;
+    plan->planned_in = in;
+    plan->planned_out = out;
     plan->execute = (PX(fftw_execute)) X(execute_dft_r2c);
   } else if(trafo_flag & PFFTI_TRAFO_C2R){
     plan->plan = X(plan_guru64_dft_c2r)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
         (C*) in, out, fftw_flags);
-    plan->plannedin = in;
-    plan->plannedout = out;
+    plan->planned_in = in;
+    plan->planned_out = out;
     plan->execute = (PX(fftw_execute)) X(execute_dft_c2r);
   } else if(trafo_flag & PFFTI_TRAFO_R2R){
     plan->plan = X(plan_guru64_r2r)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
 	in, out, kinds, fftw_flags);
-    plan->plannedin = in;
-    plan->plannedout = out;
+    plan->planned_in = in;
+    plan->planned_out = out;
     plan->execute = (PX(fftw_execute)) X(execute_r2r);
   } else {
     plan->plan = X(plan_guru64_dft)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
         (C*) in, (C*) out, sign, fftw_flags);
-    plan->plannedin = in;
-    plan->plannedout = out;
+    plan->planned_in = in;
+    plan->planned_out = out;
     plan->execute = (PX(fftw_execute)) X(execute_dft);
   }
   
@@ -625,15 +625,15 @@ static void plan_remap(
     plan->plan = X(plan_guru64_dft)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
         (C*) in, (C*) out, sign, fftw_flags);
-    plan->plannedin = in;
-    plan->plannedout = out;
+    plan->planned_in = in;
+    plan->planned_out = out;
     plan->execute = (PX(fftw_execute)) X(execute_dft);
   } else {
     plan->plan = X(plan_guru64_r2r)(
         dims_rnk, dims, howmany_rnk, howmany_dims,
 	in, out, kinds, fftw_flags);
-    plan->plannedin = in;
-    plan->plannedout = out;
+    plan->planned_in = in;
+    plan->planned_out = out;
     plan->execute = (PX(fftw_execute)) X(execute_r2r);
   }
 #if PFFT_DEBUG_SERTRAFO
@@ -1058,34 +1058,20 @@ INT calc_n_total(
 #endif
 
 void PX(execute_fftw_plan)(
-            PX(fftw_plan) * fftwplan,
-            R * plannedin,
-            R * plannedout,
-            R * in, 
-            R * out) {
-    R * tmpin = in;
-    R * tmpout = out;
-    if(fftwplan->plannedin == plannedin) {
-        in = tmpin;
-    } else
-    if(fftwplan->plannedin == plannedout) {
-        in = tmpout;
-    } else {
-        abort();
-    }
-    if(fftwplan->plannedout == plannedin) {
-        out = tmpin;
-    } else
-    if(fftwplan->plannedout == plannedout) {
-        out = tmpout;
-    } else {
-        abort();
-    }
-    (fftwplan->execute)(fftwplan->plan, in, out);
+    PX(fftw_plan) *fftwplan,
+    R *planned_in,
+    R *planned_out,
+    R *executed_in, 
+    R *executed_out)
+{
+  R *in  = (fftwplan->planned_in  == planned_in)  ? executed_in  : executed_out;
+  R *out = (fftwplan->planned_out == planned_out) ? executed_out : executed_in;
+
+  (fftwplan->execute)(fftwplan->plan, in, out);
 }
 
 void PX(execute_sertrafo)(
-    sertrafo_plan ths, R * plannedin, R * plannedout, R * in, R * out
+    sertrafo_plan ths, R *planned_in, R *planned_out, R *executed_in, R *executed_out
     )
 {
   if(ths==NULL)
@@ -1163,7 +1149,7 @@ void PX(execute_sertrafo)(
   
   /* Serial trafo */ 
   if(ths->plan[0].plan != NULL) {
-    PX(execute_fftw_plan)(&ths->plan[0], plannedin, plannedout, in, out);
+    PX(execute_fftw_plan)(&ths->plan[0], planned_in, planned_out, executed_in, executed_out);
   } 
   /* Checksum outputs */ 
   lsum=0.0;
@@ -1236,7 +1222,7 @@ void PX(execute_sertrafo)(
     
   /* Serial trafo */ 
   if(ths->plan[1].plan != NULL) {
-    PX(execute_fftw_plan)(&ths->plan[1], plannedin, plannedout, in, out);
+    PX(execute_fftw_plan)(&ths->plan[1], planned_in, planned_out, executed_in, executed_out);
   }
   /* Checksum outputs */ 
   lsum=0.0;
@@ -1253,7 +1239,7 @@ void PX(execute_sertrafo)(
   /* execute all initialized serfft plans */
   for(int t=0; t<2; t++) {
     if(ths->plan[t].plan != NULL)
-    PX(execute_fftw_plan)(&ths->plan[t], plannedin, plannedout, in, out);
+    PX(execute_fftw_plan)(&ths->plan[t], planned_in, planned_out, executed_in, executed_out);
   }
 #endif
 }

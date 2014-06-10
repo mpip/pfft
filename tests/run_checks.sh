@@ -56,6 +56,19 @@ test_files="$test_files simple_check_r2r_transposed"
 
 test_files="$test_files simple_check_ousam_r2c_padded"
 
+test_files="$test_files simple_check_c2c_newarray"
+test_files="$test_files simple_check_c2c_transposed_newarray"
+test_files="$test_files simple_check_r2c_newarray"
+test_files="$test_files simple_check_r2c_transposed_newarray"
+test_files="$test_files simple_check_r2c_padded_newarray"
+test_files="$test_files simple_check_r2c_padded_transposed_newarray"
+test_files="$test_files simple_check_ousam_c2c_4d_newarray"
+test_files="$test_files simple_check_ousam_c2c_4d_transposed_newarray"
+test_files="$test_files simple_check_ousam_r2c_4d_newarray"
+test_files="$test_files simple_check_ousam_r2c_4d_transposed_newarray"
+
+
+
 tol="1e-12"
 
 failed="" 

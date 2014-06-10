@@ -173,8 +173,8 @@ gtransp_plan PX(plan_global_transp)(
   ths->plan.plan = XM(plan_many_transpose)(
       N[0], N[1], hm, blk[0], blk[1], in, out,
       comm, fftw_flags);
-  ths->plan.plannedin = in;
-  ths->plan.plannedout = out;
+  ths->plan.planned_in = in;
+  ths->plan.planned_out = out;
   ths->plan.execute = (PX(fftw_execute))(XM(execute_r2r));
   return ths;
 }
@@ -221,7 +221,9 @@ void PX(gtransp_rmplan)(
 
 
 void PX(execute_gtransp)(
-    gtransp_plan ths, R * plannedin, R * plannedout, R * in, R * out
+    gtransp_plan ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out
     )
 {
 #if PFFT_DEBUG_GTRANSP
@@ -259,7 +261,7 @@ void PX(execute_gtransp)(
   /* Global transposition */ 
   if(ths != NULL)
     if(ths->plan.plan != NULL) {
-        PX(execute_fftw_plan)(&ths->plan, plannedin, plannedout, in, out);
+        PX(execute_fftw_plan)(&ths->plan, planned_in, planned_out, executed_in, executed_out);
     }
     
 #if PFFT_DEBUG_GTRANSP

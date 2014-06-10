@@ -239,22 +239,21 @@ typedef sertrafo_dbg_s *sertrafo_dbg;
 typedef void (* PX(fftw_execute))(const X(plan) , R * in, R * out);
 typedef struct {
   X(plan) plan;
-  R * plannedin;  /* in and out array used at the time of plannning */
-  R * plannedout;
+  R *planned_in;  /* in and out array used at the time of plannning */
+  R *planned_out;
   PX(fftw_execute) execute;
 } PX(fftw_plan);
 /* this function is put in sertrafo.c, it should be in a different
  * file; as it is also used in transpose.c */
 void PX(execute_fftw_plan)(
-            PX(fftw_plan) * fftwplan,
-            R * plannedin,
-            R * plannedout,
-            R * in, 
-            R * out);
+    PX(fftw_plan) *fftwplan,
+    R *planned_in, /* in and out array used at the time of planning for the 'global' PFFT plan */
+    R *planned_out,
+    R *executed_in, 
+    R *executed_out);
 
 /* plan for serial trafo (c2c, r2c, c2r, r2r) */
 typedef struct{
-  
   PX(fftw_plan) plan[2]; 
 #if PFFT_DEBUG_SERTRAFO
   sertrafo_dbg dbg[2];
@@ -504,7 +503,9 @@ gtransp_plan PX(plan_global_transp)(
 void PX(gtransp_rmplan)(
     gtransp_plan ths);
 void PX(execute_gtransp)(
-    gtransp_plan ths, R *plannedin, R *plannedout, R *in, R *out);
+    gtransp_plan ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out);
 
 /* outrafo.c */
 
@@ -525,7 +526,9 @@ outrafo_plan PX(plan_outrafo)(
     unsigned trafo_flag, unsigned transp_flag, unsigned si_flag,
     unsigned opt_flag, unsigned fftw_flags);
 void PX(execute_outrafo)(
-    outrafo_plan ths, R *plannedout, R *plannedin, R *in, R *out);
+    outrafo_plan ths, 
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out);
 void PX(outrafo_rmplan)(
     outrafo_plan ths);
 
@@ -538,7 +541,9 @@ ousam_plan_dd PX(plan_ousam_dd)(
     INT nb, int rnk, const INT *ni, const INT *no, INT howmany, 
     R *in, R *out, unsigned trafo_flag, unsigned si_flag, unsigned ousam_flag);
 void PX(execute_ousam_dd)(
-    ousam_plan_dd ths);
+    ousam_plan_dd ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out);
 void PX(ousam_dd_rmplan)(
     ousam_plan_dd ths);
 

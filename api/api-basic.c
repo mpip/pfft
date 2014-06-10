@@ -33,9 +33,13 @@
 #endif
 
 static void twiddle_input(
-    PX(plan) ths);
+    PX(plan) ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out);
 static void twiddle_output(
-    PX(plan) ths);
+    PX(plan) ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out);
 
 static void execute_transposed(
     int rnk_pm, outrafo_plan *trafos, gtransp_plan *remaps,
@@ -897,7 +901,7 @@ void PX(local_block_r2r)(
 /* functions to execute and destroy PX(plan) */
 
 static void PX(execute_full)(
-    PX(plan) ths, R * in, R * out
+    PX(plan) ths, R *in, R *out
     )
 {
   int r;
@@ -917,15 +921,18 @@ static void PX(execute_full)(
 
   r = ths->rnk_pm;
 
-  if (ths->trafo_flag & PFFTI_TRAFO_C2R)
-    complex_conjugate(ths->conjugate_in, ths->conjugate_out, ths->rnk_n, ths->local_ni);
+  if (ths->trafo_flag & PFFTI_TRAFO_C2R){
+    R* conj_in  = (ths->conjugate_in  == ths->in)  ? in : out;
+    R* conj_out = (ths->conjugate_out == ths->out) ? out : in;
+    complex_conjugate(conj_in, conj_out, ths->rnk_n, ths->local_ni);
+  }
 
   ths->timer->whole -= MPI_Wtime();
 
   /* twiddle inputs in order to get outputs shifted by n/2 */
   ths->timer->itwiddle -= MPI_Wtime(); 
   if(ths->pfft_flags & PFFT_SHIFTED_OUT)
-    twiddle_input(ths);
+    twiddle_input(ths, ths->in, ths->out, in, out);
   ths->timer->itwiddle += MPI_Wtime(); 
 
   ths->timer->remap_3dto2d[0] -= MPI_Wtime(); 
@@ -945,11 +952,14 @@ static void PX(execute_full)(
   /* twiddle outputs in order to get inputs shifted by n/2 */
   ths->timer->otwiddle -= MPI_Wtime(); 
   if(ths->pfft_flags & PFFT_SHIFTED_IN)
-    twiddle_output(ths);
+    twiddle_output(ths, ths->in, ths->out, in, out);
   ths->timer->otwiddle += MPI_Wtime();
 
-  if (ths->trafo_flag & PFFTI_TRAFO_R2C)
-    complex_conjugate(ths->conjugate_in, ths->conjugate_out, ths->rnk_n, ths->local_no);
+  if (ths->trafo_flag & PFFTI_TRAFO_R2C){
+    R* conj_in  = (ths->conjugate_in  == ths->in)  ? in : out;
+    R* conj_out = (ths->conjugate_out == ths->out) ? out : in;
+    complex_conjugate(conj_in, conj_out, ths->rnk_n, ths->local_no);
+  }
 
   ths->timer->iter++;
   ths->timer->whole += MPI_Wtime();
@@ -1033,7 +1043,9 @@ static INT* malloc_and_transpose_INT(
 
 /* twiddle inputs in order to get outputs shifted by n/2 */
 static void twiddle_input(
-    PX(plan) ths
+    PX(plan) ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out
     )
 {
   if(ths->itwiddle_in == NULL)
@@ -1046,6 +1058,8 @@ static void twiddle_input(
   INT *local_ni = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->local_ni);
   INT *local_ni_start = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->local_ni_start);
   int *skip_trafos = malloc_and_transpose_int(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->skip_trafos);
+  R *in  = (ths->itwiddle_in  == planned_in)  ? executed_in  : executed_out;
+  R *out = (ths->itwiddle_out == planned_out) ? executed_out : executed_in;
 
   if( (ths->trafo_flag & PFFTI_TRAFO_C2C) || (ths->trafo_flag & PFFTI_TRAFO_C2R ) )
     howmany *= 2;
@@ -1065,7 +1079,7 @@ static void twiddle_input(
     }
 
     for(INT h=0; h<howmany; h++)
-      ths->itwiddle_out[howmany*k+h] = ths->itwiddle_in[howmany*k+h] * factor;
+      out[howmany*k+h] = in[howmany*k+h] * factor;
 //     fprintf(stderr, "pfft: api-basic: in[%2td] = %.2e + I* %.2e\n", k, ths->in[howmany*k], ths->in[howmany*k+1]);
   }
 
@@ -1075,7 +1089,9 @@ static void twiddle_input(
 
 /* twiddle outputs in order to get inputs shifted by n/2 */
 static void twiddle_output(
-    PX(plan) ths
+    PX(plan) ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out
     )
 {
   if(ths->otwiddle_in == NULL)
@@ -1087,6 +1103,8 @@ static void twiddle_output(
   INT *local_no = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->local_no);
   INT *local_no_start = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->local_no_start);
   int *skip_trafos = malloc_and_transpose_int(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->skip_trafos);
+  R *in  = (ths->otwiddle_in  == planned_in)  ? executed_in  : executed_out;
+  R *out = (ths->otwiddle_out == planned_out) ? executed_out : executed_in;
   
   if( (ths->trafo_flag & PFFTI_TRAFO_C2C) || (ths->trafo_flag & PFFTI_TRAFO_R2C ) )
     howmany *= 2;
@@ -1106,7 +1124,7 @@ static void twiddle_output(
     }
 
     for(INT h=0; h<howmany; h++)
-      ths->otwiddle_out[howmany*k+h] = ths->otwiddle_in[howmany*k+h] * factor;
+      out[howmany*k+h] = in[howmany*k+h] * factor;
 //     fprintf(stderr, "pfft: api-basic: out[%2td] = %.2e + I* %.2e\n", k, ths->out[howmany*k], ths->out[howmany*k+1]);
   }
 

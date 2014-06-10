@@ -9,14 +9,14 @@ int main(int argc, char **argv)
   ptrdiff_t local_ni[3], local_i_start[3];
   ptrdiff_t local_no[3], local_o_start[3];
   double err;
-  double *in, *in2;
-  pfft_complex *out, *out2;
+  double *planned_in, *executed_in;
+  pfft_complex *planned_out, *executed_out;
   pfft_plan plan_forw=NULL, plan_back=NULL;
   MPI_Comm comm_cart_2d;
   
   /* Set size of FFT and process mesh */
   n[0] = 29; n[1] = 27; n[2] = 31;
-  np[0] = 1; np[1] = 1;
+  np[0] = 2; np[1] = 2;
   
   /* Initialize MPI and PFFT */
   MPI_Init(&argc, &argv);
@@ -30,49 +30,44 @@ int main(int argc, char **argv)
   }
   
   /* Get parameters of data distribution */
-  alloc_local = pfft_local_size_dft_r2c_3d(n, comm_cart_2d, PFFT_TRANSPOSED_OUT,
+  alloc_local = pfft_local_size_dft_r2c_3d(n, comm_cart_2d, PFFT_TRANSPOSED_NONE,
       local_ni, local_i_start, local_no, local_o_start);
 
-  printf("%td %td %td \n", local_no[0], local_no[1], local_no[2]);
-
-
-  /* Allocate memory */
-  in  = pfft_alloc_real (2 * alloc_local);
-  out = pfft_alloc_complex(alloc_local);
-
-  in2  = pfft_alloc_real(2 * alloc_local);
-  out2 = pfft_alloc_complex(alloc_local);
+  /* Allocate memory for planning */
+  planned_in  = pfft_alloc_real (2 * alloc_local);
+  planned_out = pfft_alloc_complex(alloc_local);
 
   /* Plan parallel forward FFT */
   plan_forw = pfft_plan_dft_r2c_3d(
-      n, in2, out2, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_OUT| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+      n, planned_in, planned_out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
   
   /* Plan parallel backward FFT */
   plan_back = pfft_plan_dft_c2r_3d(
-      n, out2, in2, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_IN| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+      n, planned_out, planned_in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+
+  /* Free planning arrays since we use other arrays for execution */
+  pfft_free(planned_in); pfft_free(planned_out);
+
+  /* Allocate memory for execution */
+  executed_in  = pfft_alloc_real(2 * alloc_local);
+  executed_out = pfft_alloc_complex(alloc_local);
 
   /* Initialize input with random numbers */
-  pfft_init_input_r2c(3, n, local_ni, local_i_start,
-      in);
+  pfft_init_input_real(3, n, local_ni, local_i_start,
+      executed_in);
   
-  memset(in2, 0, sizeof(pfft_complex) * alloc_local);
-  memset(out2, 0, sizeof(pfft_complex) * alloc_local);
   /* execute parallel forward FFT */
-  pfft_execute_dft_r2c(plan_forw, in, out);
-  memset(in2, 0, sizeof(pfft_complex) * alloc_local);
-  memset(out2, 0, sizeof(pfft_complex) * alloc_local);
+  pfft_execute_dft_r2c(plan_forw, executed_in, executed_out);
+
   /* execute parallel backward FFT */
-  pfft_execute_dft_c2r(plan_back, out, in);
-  memset(in2, 0, sizeof(pfft_complex) * alloc_local);
-  memset(out2, 0, sizeof(pfft_complex) * alloc_local);
+  pfft_execute_dft_c2r(plan_back, executed_out, executed_in);
   
   /* Scale data */
-  ptrdiff_t l;
-  for(l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
-    in[l] /= (n[0]*n[1]*n[2]);
+  for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
+    executed_in[l] /= (n[0]*n[1]*n[2]);
 
   /* Print error of back transformed data */
-  err = pfft_check_output_c2r(3, n, local_ni, local_i_start, in, comm_cart_2d);
+  err = pfft_check_output_real(3, n, local_ni, local_i_start, executed_in, comm_cart_2d);
   pfft_printf(comm_cart_2d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]); 
   pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
   
@@ -80,7 +75,7 @@ int main(int argc, char **argv)
   pfft_destroy_plan(plan_forw);
   pfft_destroy_plan(plan_back);
   MPI_Comm_free(&comm_cart_2d);
-  pfft_free(in); pfft_free(out);
+  pfft_free(executed_in); pfft_free(executed_out);
   MPI_Finalize();
   return 0;
 }

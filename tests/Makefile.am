@@ -47,13 +47,18 @@ check_PROGRAMS += \
 	simple_check_c2c simple_check_c2c_transposed \
 	simple_check_c2r_c2c simple_check_c2r_c2c_shifted simple_check_c2r_c2c_ousam_shifted \
 	simple_check_r2c simple_check_r2c_transposed \
-	simple_check_r2r simple_check_r2r_transposed \
-	simple_check_c2c_newarray \
-    simple_check_r2c_newarray
+	simple_check_r2r simple_check_r2r_transposed
 
 #if ENABLE_COMMON_PFFT
 # do not compile checks
 #else
+check_PROGRAMS += \
+	simple_check_c2c_newarray simple_check_c2c_transposed_newarray \
+	simple_check_r2c_newarray simple_check_r2c_transposed_newarray \
+	simple_check_r2c_padded_newarray simple_check_r2c_padded_transposed_newarray \
+	simple_check_ousam_c2c_4d_newarray simple_check_ousam_c2c_4d_transposed_newarray \
+	simple_check_ousam_r2c_4d_newarray simple_check_ousam_r2c_4d_transposed_newarray
+
 check_PROGRAMS += \
 	simple_check_c2c_4d simple_check_c2c_4d_transposed \
 	simple_check_r2c_4d simple_check_r2c_4d_transposed \

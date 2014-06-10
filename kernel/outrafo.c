@@ -154,15 +154,17 @@ outrafo_plan PX(plan_outrafo)(
 
 
 void PX(execute_outrafo)(
-    outrafo_plan ths, R * plannedin, R * plannedout, R * in, R * out
+    outrafo_plan ths,
+    R *planned_in, R *planned_out,
+    R *executed_in, R *executed_out
     )
 {
   if(ths == NULL)
     return;
 
-  PX(execute_ousam_dd)(ths->embed);
-  PX(execute_sertrafo)(ths->trafo, plannedin, plannedout, in, out);
-  PX(execute_ousam_dd)(ths->trunc);
+  PX(execute_ousam_dd)(ths->embed, planned_in, planned_out, executed_in, executed_out);
+  PX(execute_sertrafo)(ths->trafo, planned_in, planned_out, executed_in, executed_out);
+  PX(execute_ousam_dd)(ths->trunc, planned_in, planned_out, executed_in, executed_out);
 }
 
 
