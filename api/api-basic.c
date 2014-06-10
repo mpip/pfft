@@ -33,11 +33,11 @@
 #endif
 
 static void twiddle_input(
-    PX(plan) ths,
+    const PX(plan) ths,
     R *planned_in, R *planned_out,
     R *executed_in, R *executed_out);
 static void twiddle_output(
-    PX(plan) ths,
+    const PX(plan) ths,
     R *planned_in, R *planned_out,
     R *executed_in, R *executed_out);
 
@@ -901,7 +901,7 @@ void PX(local_block_r2r)(
 /* functions to execute and destroy PX(plan) */
 
 static void PX(execute_full)(
-    PX(plan) ths, R *in, R *out
+    const PX(plan) ths, R *in, R *out
     )
 {
   int r;
@@ -966,14 +966,14 @@ static void PX(execute_full)(
 }
 
 void PX(execute)(
-    PX(plan) ths
+    const PX(plan) ths
     )
 {
     PX(execute_full)(ths, ths->in, ths->out);
 }
 
 void PX(execute_dft)(
-    PX(plan) ths,
+    const PX(plan) ths,
     C * in, C * out
     )
 {
@@ -982,7 +982,7 @@ void PX(execute_dft)(
 
 
 void PX(execute_dft_r2c)(
-    PX(plan) ths,
+    const PX(plan) ths,
     R * in, C * out
     )
 {
@@ -990,7 +990,7 @@ void PX(execute_dft_r2c)(
 }
 
 void PX(execute_dft_c2r)(
-    PX(plan) ths,
+    const PX(plan) ths,
     C * in, R * out
     )
 {
@@ -998,7 +998,7 @@ void PX(execute_dft_c2r)(
 }
 
 void PX(execute_r2r)(
-    PX(plan) ths,
+    const PX(plan) ths,
     R * in, R * out
     )
 {
@@ -1043,7 +1043,7 @@ static INT* malloc_and_transpose_INT(
 
 /* twiddle inputs in order to get outputs shifted by n/2 */
 static void twiddle_input(
-    PX(plan) ths,
+    const PX(plan) ths,
     R *planned_in, R *planned_out,
     R *executed_in, R *executed_out
     )
@@ -1089,7 +1089,7 @@ static void twiddle_input(
 
 /* twiddle outputs in order to get inputs shifted by n/2 */
 static void twiddle_output(
-    PX(plan) ths,
+    const PX(plan) ths,
     R *planned_in, R *planned_out,
     R *executed_in, R *executed_out
     )
