@@ -11,7 +11,7 @@ We explain the basic steps for computing a parallel FFT with the PFFT library at
 of the short test program given by Listing~\ref{lst:min_c2c}. This test computes a three-dimensional c2c-FFT on
 a two-dimensional process mesh. The source code can also be found in directory \code{tests/}
 of the library's source code tree. 
-\lstinputlisting[numbers=left, float, caption={Minimal parallel c2c-FFT test program.}, label=lst:min_c2c]{code/manual_min_c2c.c}
+\lstinputlisting[numbers=left, float, caption={Minimal parallel c2c-FFT test program.}, label=lst:min_c2c]{../tests/manual_min_c2c.c}
 
 After initializing MPI with \code{MPI_Init} and before calling any other PFFT routine initialize
 the parallel computations via
@@ -148,13 +148,14 @@ if( pfft_create_procmesh_2d(MPI_COMM_WORLD, np[0], np[1],
   return 1;
 }
 \end{lstlisting}
-Hereby, we print the error message with the help of the PFFT library function \code{pfft_fprintf}; see Section~\ref{sec:fprintf} for details.
+Hereby, we use the PFFT library function
 \begin{lstlisting}
 void pfft_fprintf(
     MPI_Comm comm, FILE *stream, const char *format, ...);
 \end{lstlisting}
-This function is similar to the standard C function \code{fprintf} with the exception, that all messages are restricted
-to the process of rank $0$ within the given communicator \code{comm}.
+to print the error message.
+This function is similar to the standard C function \code{fprintf} with the exception, that only the process with MPI rank $0$
+within the given communicator \code{comm} will produce some output; see Section~\ref{sec:fprintf} for details.
 
 \subsection{Inplace transforms}
 Similar to FFTW, PFFT is able to compute parallel FFTs completely in place, which means that beside some
@@ -169,29 +170,7 @@ plan = pfft_plan_dft_3d(n, in, in, comm_cart_2d,
     PFFT_FORWARD, PFFT_TRANSPOSED_NONE);
 \end{lstlisting}
 
-\subsection{PFFT flags}
-\begin{compactitem}
-  \item \code{PFFT_TRANSPOSED_IN}
-  \item \code{PFFT_TRANSPOSED_OUT}
-  \item \code{PFFT_SHIFTED_IN}
-  \item \code{PFFT_SHIFTED_OUT}
-  \item \code{PFFT_ESTIMATE}
-  \item \code{PFFT_MEASURE}
-  \item \code{PFFT_PATIENT}
-  \item \code{PFFT_EXHAUSIVE}
-  \item \code{PFFT_NO_TUNE}
-  \item \code{PFFT_TUNE}
-  \item \code{PFFT_PRESERVE_INPUT}
-  \item \code{PFFT_DESTROY_INPUT}
-  \item \code{PFFT_BUFFERED_INPLACE}
-\end{compactitem}
-
-
-\section{Parallel data distribution}
-
-\section{Three-dimensional FFTs with three-dimensional data decomposition}
-
-\section{Arbitrary dimensional data decomposition}
+\subsection{Higher dimensional data decomposition}
 Our first test program used a two-dimensional data decomposition of a three-dimensional data set.
 Moreover, PFFT support the computation of any $d$-dimensional FFT with $r$-dimensional data decomposition
 as long as $r\le d-1$. For example, one can use a one-dimensional data decomposition for any two- or higher-dimensional data set,
@@ -210,7 +189,14 @@ int pfft_create_procmesh(
 Hereby, the array \code{np} of length \code{rnk} gives the size of the Cartesian communicator \code{cart_comm}.
 
 
-\newpage
+\subsection{Transposed data layout}
+\begin{compactitem}
+  \item \code{PFFT_TRANSPOSED_NONE}
+  \item \code{PFFT_TRANSPOSED_IN}
+  \item \code{PFFT_TRANSPOSED_OUT}
+\end{compactitem}
+
+
 Transposed $d$-dimensional array distributed on $c$-dimensional process mesh ($c<d$)
 \begin{equation*}
   \frac{n_1}{P_0} \times \frac{n_2}{P_1} \times \hdots \times \frac{n_c}{P_{c-1}}  \times n_0 \times n_{c+1} \times \hdots \times n_{d-1}
@@ -221,19 +207,56 @@ Comparision of non-transposed (left) and transposed (right) $d$-dimensional arra
   n_0\times n_1\times \hdots n_{c-1} \times n_c \hdots \times n_{d-1} \Rightarrow n_1 \times \hdots n_{c-1} \times n_0 \times n_c \times \hdots \times n_{d-1}
 \end{equation*}
 
+\subsection{Planning effort}
+\begin{compactitem}
+  \item \code{PFFT_ESTIMATE}
+  \item \code{PFFT_MEASURE}
+  \item \code{PFFT_PATIENT}
+  \item \code{PFFT_EXHAUSIVE}
+  \item \code{PFFT_NO_TUNE}
+  \item \code{PFFT_TUNE}
+\end{compactitem}
+
+
+\subsection{Preserving input data}
+\begin{compactitem}
+  \item \code{PFFT_PRESERVE_INPUT}
+  \item \code{PFFT_DESTROY_INPUT}
+  \item \code{PFFT_BUFFERED_INPLACE}
+\end{compactitem}
+
+\subsection{FFTs with shifted index sets}
+\begin{compactitem}
+  \item \code{PFFT_SHIFTED_IN}
+  \item \code{PFFT_SHIFTED_OUT}
+\end{compactitem}
+
+\subsection{PFFT flags}
+\begin{compactitem}
+  \item \code{PFFT_TRANSPOSED_NONE}
+  \item \code{PFFT_TRANSPOSED_IN}
+  \item \code{PFFT_TRANSPOSED_OUT}
+  \item \code{PFFT_SHIFTED_IN}
+  \item \code{PFFT_SHIFTED_OUT}
+  \item \code{PFFT_ESTIMATE}
+  \item \code{PFFT_MEASURE}
+  \item \code{PFFT_PATIENT}
+  \item \code{PFFT_EXHAUSIVE}
+  \item \code{PFFT_NO_TUNE}
+  \item \code{PFFT_TUNE}
+  \item \code{PFFT_PRESERVE_INPUT}
+  \item \code{PFFT_DESTROY_INPUT}
+  \item \code{PFFT_BUFFERED_INPLACE}
+\end{compactitem}
+
+
+\subsection{Parallel data distribution}
+
+\subsection{Three-dimensional FFTs with three-dimensional data decomposition}
 
 
 
-
-
-
-% \code{n}
-% \code{comm\_cart\_2d}
-
-
-
-
-
+\newpage
 \section{Parallel FFT Frameworks}
 
 \subsection{Forward Framework A (transposed input)}

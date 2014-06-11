@@ -286,3 +286,13 @@ For $K,L,N\in 2\N$, $L<N$, $L<N$ we define
 \code{FFT_SHIFTED_IN} 
 
 
+
+\section{Some Comments on MPI}
+Following the MPI standard~\cite{MPI-2.2} we use the term process to denote the smallest MPI processing unit of a parallel, distributed memory machine.
+The term process abstracts form the widely used terms processor, node and core.
+Note that the term process abstracts the code development from the real physical architecture. For example we can \\
+
+\emph{An MPI program consists of autonomous processes, executing their own code, in an MIMD style.}
+( MPI: A Message-Passing Interface Standard, page 27)
+
+

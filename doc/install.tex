@@ -79,9 +79,7 @@ All programs using PFFT should include its header file
 \end{lstlisting}
 This header includes the FFTW headers \code{fftw.h}, \code{fftw-mpi.h} automatically. Make sure that the compiler can find them by setting
 the include flags appropriately.
-
 You must also link to the PFFT, FFTW and FFTW-MPI libraries. On Unix, this means adding \code{-lpfft -lfftw3_mpi -lfftw3 -lm} at the end of the link command.
-
 For example, to build \code{pfft_test.c} use the following compiler invocation
 \begin{lstlisting}[prebreak = {\textbackslash}]
 mpicc pfft_test.c -I$PFFTINC -I$FFTWINC -L$PFFTLIB -L$FFTWLIB -lpfft -lfftw3_mpi -lfftw3 -lm
