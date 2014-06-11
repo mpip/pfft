@@ -1,0 +1,113 @@
+#!/bin/sh
+
+FILES=$*
+
+IGNORE="${IGNORE} iso_c_binding"
+FORTEXT="f F f90 F90 f95 F95 f03 F03 f08 F08"
+
+UNIQSTR="QWERTZ"
+SEDTMP="qwertz_sed_tmp"
+FOREIGN=
+
+SED="sed"
+GREP="grep"
+
+for x in ${IGNORE} ; do
+  echo "s! ${x}\.${MODEXT}!!g"
+done > "${SEDTMP}"
+echo "/^.*:[ ]*$/d" >> "${SEDTMP}"
+
+echo "# This file is generated from running
+#  $0
+# with parameters
+#  SRCDIR: $SRCDIR
+#  FCCPP: $FCCPP
+#  OBJEXT: $OBJEXT
+#  MODEXT: $MODEXT
+#  IGNORE: $IGNORE
+#  TOUCH: $TOUCH
+#  FORTEXT: $FORTEXT
+#  PRE_INCLUDE: $PRE_INCLUDE
+#  POST_INCLUDE: $POST_INCLUDE
+# on input files:
+#  $FILES
+"
+
+for f in ${FILES} ${UNIQSTR} ; do
+#  echo "#f: ${f}"
+  if test "${f}" = "${UNIQSTR}" ; then
+#    echo "FOREIGN"
+    FOREIGN=yes
+    continue
+  fi
+  x="${f##*.}"
+#  echo "#x: ${x}"
+  case ${FORTEXT} in
+    " ${x} ") f= ;;
+  esac
+  if test -f "${f}" ; then
+    l="${f#${SRCDIR}/}"
+#    echo "#f: ${f}"
+#    echo "#l: ${l}"
+    cat ${PRE_INCLUDE} ${f} ${POST_INCLUDE} | \
+    ${FCCPP:-cat} 2>&1 - | \
+    ${SED} -e "/\/\*/{:l;s,\(.*\)/\*.*\*/,\1,;t l}" - | \
+    ${SED} -e "/\/\*/,/.*\*\//{s,.*\*/,,; t e; s,/\*.*,,; t e; d; :e;}" - | \
+    ${SED} -e "/\/\*/,/.*\*\//{s,.*\*/,,; t e; s,/\*.*,,; t e; d; :e;}" - | \
+    ${SED} -e "s/\!.*$//" | \
+    ${GREP} -e "use" -e "module" | \
+    ${SED} -n -e "s/^.*use[ \t][ \t]*\([a-zA-Z][a-zA-Z0-9_]*\).*$/${UNIQSTR}use \1/p" \
+           -e "s/^.*module[ \t][ \t]*\([a-zA-Z][a-zA-Z0-9_]*\)$/${UNIQSTR}mod \1/p" \
+           -e "\$i\\
+${UNIQSTR} ${UNIQSTR}" | \
+    while read w n ; do
+      if test "${w}" = "${UNIQSTR}use" ; then
+        eval "useswo=\${uses##* ${n} *}"
+        test "${uses}" = "${useswo}" && uses="${uses} ${n} "
+      elif test "${w}" = "${UNIQSTR}mod" ; then
+        eval "modswo=\${mods##* ${n} *}"
+        test "${mods}" = "${modswo}" && mods="${mods} ${n} "
+      elif test "${w} ${n}" = "${UNIQSTR} ${UNIQSTR}" ; then
+        for x in ${uses} ; do
+          eval "modswo=\${mods##* ${x} *}"
+          test "${mods}" = "${modswo}" && uses_="${uses_} ${x} "
+        done
+        if test -n "${FOREIGN}" ; then
+          d="${l%/*}"
+          if test "${d}" = "${l}" ; then
+            d="./"
+          else
+            d="${d}/"
+          fi
+        else
+          d="./"
+        fi
+        if test -z "${FOREIGN}" ; then
+          uses=${uses_}
+          if test -n "${uses}" ; then
+            printf "${l%.*}.${OBJEXT}:"
+            for x in ${uses} ; do
+              printf " ${x}.${MODEXT}"
+            done
+            echo ""
+          fi
+          for x in ${mods} ; do
+            echo "${x}.${MODEXT}: ${l%.*}.${OBJEXT}"
+            case " ${TOUCH} " in
+              *\ ${x}\ *)
+              echo "	touch $""@"
+              ;;
+            esac
+          done
+        fi
+        for x in ${mods} ; do
+          test -n "${d#./}" && echo "s!${x}.${MODEXT}!${d#./}${x}.${MODEXT}!g" >> "${SEDTMP}"
+        done
+      fi
+    done
+  fi
+done | ${SED} -f "${SEDTMP}"
+
+echo "# THIS IS THE END"
+
+rm -f "${SEDTMP}"
