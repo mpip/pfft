@@ -237,7 +237,7 @@ PX(gcplan) PX(plan_many_rgc)(
     int rnk_n, const INT *n,
     INT howmany, const INT *block,
     const INT *gc_below, const INT *gc_above,
-    R *data, MPI_Comm comm_cart,
+    R *data, MPI_Comm comm,
     unsigned gc_flags
     )
 {
@@ -245,6 +245,7 @@ PX(gcplan) PX(plan_many_rgc)(
   INT blk_3dto2d[3];
   MPI_Comm *comms_pm;
   PX(gcplan) ths;
+  MPI_Comm comm_cart = PX(assure_cart_comm)(comm);
 
   MPI_Cartdim_get(comm_cart, &rnk_pm);
   /* split comm cart into 1d comms */
@@ -268,6 +269,7 @@ PX(gcplan) PX(plan_many_rgc)(
   for(int t=0; t<rnk_pm; t++)
     MPI_Comm_free(comms_pm + t);
   free(comms_pm);  
+  MPI_Comm_free(&comm_cart);
 
   return ths;
 }

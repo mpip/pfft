@@ -62,6 +62,19 @@ int PX(create_procmesh)(
   return ret;
 }
 
+int PX(create_procmesh_1d)(
+    MPI_Comm comm, int np0,
+    MPI_Comm *comm_cart_1d
+    )
+{
+  int np[1], rnk=1;
+
+  np[0] = np0;
+
+  return PX(create_procmesh)(rnk, comm, np,
+      comm_cart_1d);
+}
+
 int PX(create_procmesh_2d)(
     MPI_Comm comm, int np0, int np1,
     MPI_Comm *comm_cart_2d
@@ -88,7 +101,6 @@ int PX(is_cart_procmesh_2d)(
   return ( (status == MPI_CART) && (ndims == 2) );
 }
 
-
 int PX(is_cart_procmesh)(
     MPI_Comm comm_cart
     )
@@ -99,6 +111,22 @@ int PX(is_cart_procmesh)(
   return (status == MPI_CART);
 }
 
+MPI_Comm PX(assure_cart_comm)(
+    MPI_Comm comm
+    )
+{
+  MPI_Comm comm_cart;
+
+  if(PX(is_cart_procmesh)(comm)){
+    MPI_Comm_dup(comm, &comm_cart);
+  } else {
+    int np;
+    MPI_Comm_size(comm, &np);
+    PX(create_procmesh_1d)(comm, np, &comm_cart);
+  }
+
+  return comm_cart;
+}
 
 /* allocate comms_1d before call of split_cart_procmesh */
 void PX(split_cart_procmesh)(

@@ -413,6 +413,9 @@ BEGIN_C_DECLS
   PFFT_EXTERN int PX(create_procmesh)(                                                  \
       int rnk, MPI_Comm comm, const int *np,                                            \
       MPI_Comm *comm_cart);                                                             \
+  PFFT_EXTERN int PX(create_procmesh_1d)(                                               \
+      MPI_Comm comm, int np0,                                                           \
+      MPI_Comm *comm_cart_1d);                                                          \
   PFFT_EXTERN int PX(create_procmesh_2d)(                                               \
       MPI_Comm comm, int np0, int np1,                                                  \
       MPI_Comm *comm_cart_2d);                                                          \

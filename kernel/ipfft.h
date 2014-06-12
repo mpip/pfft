@@ -439,21 +439,21 @@ void PX(die)(
 void PX(local_block_partrafo)(
     int rnk_n, const INT *ni, const INT *no,
     const INT *iblock_user, const INT *oblock_user,
-    MPI_Comm comm_cart, int pid,
+    MPI_Comm comm, int pid,
     unsigned trafo_flag_user, unsigned pfft_flags,
     INT *local_ni, INT *local_i_start,
     INT *local_no, INT *local_o_start);
 INT PX(local_size_partrafo)(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock, const INT *oblock,
-    MPI_Comm comm_cart,
+    MPI_Comm comm,
     unsigned trafo_flag_user, unsigned pfft_flags,
     INT *local_ni, INT *local_i_start,
     INT *local_no, INT *local_o_start);
 PX(plan) PX(plan_partrafo)(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock_user, const INT *oblock_user,
-    R *in, R *out, MPI_Comm comm_cart,
+    R *in, R *out, MPI_Comm comm,
     int sign, const X(r2r_kind) *kinds, const int *skip_trafos_user,
     unsigned trafo_flag, unsigned pfft_flags);
 void PX(rmplan)(
@@ -569,6 +569,8 @@ int PX(is_cart_procmesh)(
     MPI_Comm comm_cart);
 int PX(is_cart_procmesh_2d)(
     MPI_Comm comm_cart_2d);
+MPI_Comm PX(assure_cart_comm)(
+    MPI_Comm comm);
 void PX(split_cart_procmesh)(
     MPI_Comm comm_cart,
     MPI_Comm *comms_1d);

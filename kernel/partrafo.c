@@ -99,7 +99,7 @@ static unsigned extract_fftw_flags(
 void PX(local_block_partrafo)(
     int rnk_n, const INT *ni, const INT *no,
     const INT *iblock_user, const INT *oblock_user,
-    MPI_Comm comm_cart, int pid,
+    MPI_Comm comm, int pid,
     unsigned trafo_flag_user, unsigned pfft_flags,
     INT *local_ni, INT *local_i_start,
     INT *local_no, INT *local_o_start
@@ -113,6 +113,7 @@ void PX(local_block_partrafo)(
   INT *dummy_ln, *dummy_ls;
   INT *lni_to, *lis_to, *lno_to, *los_to; 
   INT *lni_ti, *lis_ti, *lno_ti, *los_ti;
+  MPI_Comm comm_cart = PX(assure_cart_comm)(comm);
 
   malloc_and_compute_cart_np_and_coords(rnk_n, transp_flag, comm_cart, pid,
       &rnk_pm, &np_pm, &coords_pm);
@@ -194,13 +195,14 @@ void PX(local_block_partrafo)(
   free(trafo_flags_to); free(trafo_flags_ti);
   free(pni_to); free(pn_to); free(pno_to);
   free(pni_ti); free(pn_ti); free(pno_ti);
+  MPI_Comm_free(&comm_cart);
 }
 
 
 INT PX(local_size_partrafo)(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock_user, const INT *oblock_user,
-    MPI_Comm comm_cart,
+    MPI_Comm comm,
     unsigned trafo_flag_user, unsigned pfft_flags,
     INT *local_ni, INT *local_i_start,
     INT *local_no, INT *local_o_start
@@ -216,6 +218,7 @@ INT PX(local_size_partrafo)(
   INT *lni_ti, *lis_ti, *lno_ti, *los_ti;
   int rnk_pm;
   MPI_Comm *comms_pm;
+  MPI_Comm comm_cart = PX(assure_cart_comm)(comm);
 
   malloc_and_split_cart_procmesh(rnk_n, transp_flag, comm_cart,
       &rnk_pm, &comms_pm);
@@ -305,6 +308,7 @@ INT PX(local_size_partrafo)(
   free(trafo_flags_to); free(trafo_flags_ti);
   free(pni_to); free(pn_to); free(pno_to);
   free(pni_ti); free(pn_ti); free(pno_ti);
+  MPI_Comm_free(&comm_cart);
   
   return mem;
 }
@@ -313,7 +317,7 @@ INT PX(local_size_partrafo)(
 PX(plan) PX(plan_partrafo)(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock_user, const INT *oblock_user,
-    R *in, R *out, MPI_Comm comm_cart,
+    R *in, R *out, MPI_Comm comm,
     int sign, const X(r2r_kind) *kinds, const int *skip_trafos_user,
     unsigned trafo_flag, unsigned pfft_flags
     )
@@ -356,6 +360,7 @@ PX(plan) PX(plan_partrafo)(
     if(transp_flag & PFFT_TRANSPOSED_OUT)
       return NULL;
 
+  MPI_Comm comm_cart = PX(assure_cart_comm)(comm);
   MPI_Cartdim_get(comm_cart, &rnk_pm);
 
   /* dimension of FFT is not allowed to be smaller than procmesh dimension */
@@ -514,6 +519,8 @@ PX(plan) PX(plan_partrafo)(
   free(trafo_flags_to); free(trafo_flags_ti);
   free(pni_to); free(pn_to); free(pno_to);
   free(pni_ti); free(pn_ti); free(pno_ti);
+  MPI_Comm_free(&comm_cart);
+
   return ths;
 }
 
