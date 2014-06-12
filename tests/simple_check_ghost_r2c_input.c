@@ -94,14 +94,14 @@ int main(int argc, char **argv){
 
   /* Check gcell output */
   if(verbose)
-    pfft_apr_complex_3d(rdata, local_ngc, local_gc_start, "exchanged gcells", comm_cart_2d);
+    pfft_apr_real_3d(rdata, local_ngc, local_gc_start, "exchanged gcells", comm_cart_2d);
   
   /* Execute adjoint parallel ghost cell send */
   pfft_reduce(ths);
 
   /* check input */
   if(verbose)
-    pfft_apr_complex_3d(rdata, local_no, local_o_start, "reduced gcells", comm_cart_2d);
+    pfft_apr_real_3d(rdata, local_no, local_o_start, "reduced gcells", comm_cart_2d);
 
   /* Scale data */
   for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
