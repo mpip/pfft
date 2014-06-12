@@ -1,5 +1,9 @@
+\abstract{
 This user manual describes the usage of PFFT~\pfftversion~\cite{pfft,Pi13}, a MPI-based, parallel software library for the
 computation of equispaced fast Fourier transforms (FFT) on parallel, distributed memory architectures.
+The reader of this manual should familiar with the basic usage of FFTW and MPI.
+For further information we refer to the well written FFTW user manual~\cite{fftw-manual} and
+the MPI Standard~\cite{MPI-2.2}, see also \cite{GrLuTh99} for detailed explanations.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}\label{chap:intro}
@@ -13,8 +17,11 @@ In contrast, using a two-dimensional data decomposition would increase the maxim
 The main goal of PFFT is to extend the MPI part of the FFTW software library to multi-dimensional data decompositions,
 i.e., $d$-dimensional FFTs of size $N^d$ can be computed in parallel with at most $N^{d-1}$ MPI processes.
 In addition, PFFT offers several extra features that are particular usefull for parallel, distributed memory FFTs but are not yet present in FFTW-MPI.
-The interface of PFFT is as close as possible to the FFTW-MPI interface. Porting code that uses FFTW-MPI to PFFT is almost trivial.
 We refer to the publication~\cite{Pi13} for a closer look on the different data decompositions and the underlying algorithms of the PFFT library.
+
+The interface of PFFT is as close as possible to the FFTW-MPI interface. 
+In fact, we consider every difference between PFFT and FFTW that is not explicitly mentioned within this manual as a bug that should be reported to \webpfft.
+Therefore, porting code that uses FFTW-MPI to PFFT is almost trivial, e.g. see Section~\ref{sec:porting}.
 
 Most features of PFFT are inherited from FFTW or similarily implemented. These include the following:
 \begin{compactitem}
@@ -50,23 +57,27 @@ Furthermore, we added some special features to support repeated tasks that often
 Finally, we complete this overview with a list of features that are (not yet) implemented in PFFT.
 \begin{compactitem}
   \item Parallel one-dimensional FFT based on MPI. FFTW-MPI uses another parallelization strategy for one-dimensional FFTs, which is not implemented in PFFT.
-        The reason is that we can achive a scalability benefit since all dimensions of the FFT are already distributed.
+        The reason is that we can not achive a scalability benefit due to higher dimensional data decomposition if the FFT has only one dimension.
+        Therefore, one can also call FFTW directly in this case.
+  \item There is no equivalent of FFTW \emph{wisdom} in PFFT, i.e., you can not save a PFFT plan to disk and restore it for later use.
   \item PFFT does not have full OpenMP support. All serial FFT computations and global communications are implemented with FFTW,
         which offers OpenMP support. See Section~\ref{sec:openmp}. However, most of the PFFT-only features, such as pruned FFT, ghost cell send and 3d decompostion of 3d FFTs are not yet parallelized with OpenMP.
+  \item PFFT does not have full SIMD support. All serial FFT computations and global communications are implemented with FFTW,
+        which offers SIMD support. See Section~\ref{sec:simd}. However, most of the PFFT-only features, such as pruned FFT, ghost cell send and 3d decompostion of 3d FFTs are not yet parallelized with SIMD.
   \item PFFT does not overlap communication and computation. The code of PFFT is build in a very modularized structure. Most of these modules consist
         of FFTWs routines. Therefore, the global transposition does not support non blocking communication.
-  \item We do not provide any parallel IO routines. The user is responsible for the load and store of parallel data.
-  \item PFFT depends on FFTW to perform its serial transforms. Since we use some of the most fancy features of FFTW, the serial transforms
-        could only be replaced partly by other FFT vendors. However, this is not a big drawback, since FFTW seems to perform very well on most platforms.
+  \item Similar to FFTW, we do not provide any parallel IO routines. The user is responsible of load and store of parallel data.
+  \item PFFT depends on FFTW to perform its serial transforms and does not support different vendor FFTs (such as Intel's MKL or IBM's ESSL).
+        However, this is not assumed to be a big drawback, since FFTW seems to perform very well on most platforms.
+%         We apply FFTW to multi-dimensional data sets in order to compute serial FFTs along single dimensions combined with transpositions of the multi-dimensional data in one step.
+%         As far as we know, there is no other FFT library that performs these two tasks. In addition, we use FFTW for local and global, i.e. serial and parallel, data transpositions.
+%         Thereby, changing the FFT vendor would affect only a 
+%         However, this is not assumed to be a big drawback, since FFTW seems to perform very well on most platforms.
   \item The global communication routines can not be called separately. However, it should be possible to implement a user interface to our global
         transposition routines.
   \item PFFT does not support GPU parallelization.
 \end{compactitem}
-You are welcome to add new PFFT features at \webpfft.
-
-The reader of this manual should familiar with the basic usage of FFTW and MPI.
-For further information we refer to the well written FFTW user manual~\cite{fftw-manual} and
-the MPI Standard~\cite{MPI-2.2}, see also \cite{GrLuTh99} for detailed explanations.
+You are welcome to propose new PFFT features at \webpfft.
 
 \section{Alternative parallel FFT implementations}
 There have been several FFT implementations that aim to circumvent the scalability bottleneck

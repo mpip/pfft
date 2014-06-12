@@ -21,6 +21,7 @@ EXTRA_DIST = \
 
 # These programs are built by 'make check' and may be tested afterwards.
 check_PROGRAMS = \
+	manual_c2c_3d \
 	minimal_check_c2c minimal_check_c2c_transposed
 
 check_PROGRAMS += \

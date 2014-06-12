@@ -17,6 +17,8 @@ FFT of real inputs with Hermitian symmetric complex outputs
   \begin{compactitem}
     \item use physical size for c2c ghost cell send
     \item use \code{2*alloc_local} in \code{local_size_gc} function for r2r ghost cell send
+    \item FFTW r2c computes \code{FFTW_FORWARD} and c2r computes \code{FFTW_BACKWARD} only~\cite{fftw-rdft}. In contrast, PFFT adds \code{sign} also for r2c/c2r transforms.
+          This is implemented with a conjugation of the complex values.
   \end{compactitem}
 \end{compactitem}
 
@@ -346,3 +348,10 @@ $\frac{n_1}{P_1Q_1} = \frac{674}{16\cdot 2}$:
 %------------------------------------------------------------------------------
 \section{Single and long double precision}
 %------------------------------------------------------------------------------
+
+
+%------------------------------------------------------------------------------
+\section{Local block functions}
+%------------------------------------------------------------------------------
+
+

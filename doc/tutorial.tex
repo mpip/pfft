@@ -2,16 +2,15 @@
 \chapter{Tutorial}\label{chap:tuto}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The following chapter describes the usage of the PFFT library corresponding to the simple test files,
-that are included in the library. If you are interested in the more advanced features of PFFT you
-should also have a look at Chapter~\ref{chap:feat}.
+The following chapter describes the usage of the PFFT library at the example of a simple test file in the first section,
+followed by the more advanced features of PFFT in the next sections.
 
 \section{A first parallel transform - Three-dimensional FFT with two-dimensional data decomposition}
 We explain the basic steps for computing a parallel FFT with the PFFT library at the example
-of the short test program given by Listing~\ref{lst:min_c2c}. This test computes a three-dimensional c2c-FFT on
-a two-dimensional process mesh. The source code can also be found in directory \code{tests/}
+of the short test program given by Listing~\ref{lst:man_c2c}. This test computes a three-dimensional c2c-FFT on
+a two-dimensional process mesh. The source code \code{manual_c2c_3d.c} can be found in directory \code{tests/}
 of the library's source code tree. 
-\lstinputlisting[numbers=left, float, caption={Minimal parallel c2c-FFT test program.}, label=lst:min_c2c]{../tests/manual_min_c2c.c}
+\lstinputlisting[numbers=left, float, caption={Minimal parallel c2c-FFT test program.}, label=lst:man_c2c]{../tests/manual_c2c_3d.c}
 
 After initializing MPI with \code{MPI_Init} and before calling any other PFFT routine initialize
 the parallel computations via
@@ -30,9 +29,9 @@ This routine uses the processes within the communicator \code{comm} to create a 
 grid of size \code{np0} x \code{np1} and stores it into the Cartesian communicator \code{comm\_cart\_2d}.
 Since \code{comm\_cart\_2d} is allocated by the routine, the user has to provide
 the pointer to a non-allocated communicator. Otherwise we end up with a memory leak.
+The input parameter \code{comm} is a communicator, indicating which processes will participate in the transform.
 Most users will choose \code{comm} as \code{MPI\_COMM\_WORLD}, which implies that the FFT is computed
-on all available processes. Nevertheless, it's important to note, that we follow the principles of MPI
-by allowing \code{comm} to be any arbitrary communicator and therefore any subset of all available processes.
+on all available processes.
 
 At the next step we need to know the data decomposition of the input and output array, that depends on
 the array sizes, the process grid and the chosen parallel algorithm. Therefore, we call
@@ -42,8 +41,8 @@ ptrdiff_t pfft_local_size_3d(
     ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
     ptrdiff_t *local_no, ptrdiff_t *local_o_start);
 \end{lstlisting}
-Hereby, \code{n}, \code{local_ni}, \code{local_i_start}, \code{local_no}, \code{local_o_start} are arrays of length $3$.
-This function returns the size of the local complex array that needs to be allocated by every process.
+Hereby, \code{n}, \code{local_ni}, \code{local_i_start}, \code{local_no}, \code{local_o_start} are arrays of length $3$ that must be allocated.
+The return value of this function equals the size of the local complex array that needs to be allocated by every process.
 In most cases, this coincides with the product of the local array sizes -- but may be bigger,
 whenever the parallel algorithm needs some extra storage.
 The input value \code{n} gives the three-dimensional FFT size and the flag \code{pfft_flags} serves to adjust
@@ -52,15 +51,16 @@ some details of the parallel execution. For the sake of simplicity, we restrict 
 The output arrays \code{local_ni} and \code{local_i_start} give the size and the offset of the local input array
 that result from the parallel block distribution of the global input array, i.e.,
 every process owns the input data \code{in[k[0],k[1],k[2]]} with \code{local_i_start[t] <= k[t] < local_i_start[t] + local_ni[t]}
-for \code{t=0,1,2}. Analogously, the output parameters \code{local_i_start} and \code{local_no} contain the size
+for \code{t=0,1,2}. Analogously, the output parameters \code{local_o_start} and \code{local_no} contain the size
 and the offset of the local output array.
 
-Next the input and output arrays must be allocated. For performance reasons this should be done using
+Afterward, the input and output arrays must be allocated. Hereby,
 \begin{lstlisting}
 pfft_complex* pfft_alloc_complex(size_t size);
 \end{lstlisting}
-Nevertheless, you can also use any other dynamic memory allocation. Have a look at the FFTW user manual~\cite{fftw-align-mem}
-for more details on SIMD alignment and \code{fftw_malloc}, which is called within all PFFT allocation functions.
+is a simple wrapper of \code{fftw_alloc_complex}, which in turn allocates the memory via \code{fftw_malloc} to ensure proper alignment for SIMD.
+Have a look at the FFTW user manual~\cite{fftw-align-mem} for more details on SIMD memory alignment and \code{fftw_malloc}.
+Nevertheless, you can also use any other dynamic memory allocation.
 
 The planning of a single three-dimensional parallel FFT of size \code{n[0]} x \code{n[1]} x \code{n[2]}
 is done by the function
@@ -70,19 +70,18 @@ pfft_plan pfft_plan_dft_3d(
     MPI_Comm comm_cart_2d, int sign, unsigned pfft_flags);
 \end{lstlisting}
 We provide the address of the input and output array by the pointers \code{in} and \code{out},
-respectively. An inplace transform is assumed if these pointers are equal. 
-Similar to FFTW the integer \code{sign} gives the sign in the exponential of the FFT.
-The \code{pfft\_flags} must coincide with the flags that were used to call \code{pfft_local_size_3d}.
+respectively. An inplace transform is assumed if these pointers are equal.
+The integer \code{sign} gives the sign in the exponential of the FFT. Possible values are \code{PFFT_FORWARD} ($-1$)
+and \code{PFFT_BACKWARD} ($+1$).
+Flags passed to the planner via \code{pfft\_flags} must coincide with the flags that were passed to \code{pfft_local_size_3d}.
 Otherwise the data layout of the parallel execution may not match calculated local array sizes.
-This function returns a plan, some structure that includes all the information we need to perform a
-parallel FFT.
+As return value we get a PFFT plan, some structure that stores all the information needed to perform a parallel FFT.
 
-Once the plan is generated, we are allowed to fill the input array \code{in}. Note, that in most cases
-the planning \code{pfft_plan_dft_3d} would overwrite the input array \code{in}. That's you should not
-write any sensitive data into \code{in} until the plan was generated.
+Once the plan is generated, we are allowed to fill the input array \code{in}. Note, that per default the planning step
+\code{pfft_plan_dft_3d} will overwrite input array \code{in}. Therefore, you should not write any sensitive data into \code{in} until the plan was generated.
 For simplicity, our test program makes use of the library function
 \begin{lstlisting}
-void pfft_init_input_c2c_3d(
+void pfft_init_input_complex_3d(
     ptrdiff_t *n, ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
     pfft_complex *in);
 \end{lstlisting}
@@ -97,9 +96,9 @@ for(ptrdiff_t k0=0; k0 < local_ni[0]; k0++)
                      k1 + local_i_start[1],
                      k2 + local_i_start[2]);
 \end{lstlisting}
-The parallel FFT is computed at the moment we execute the generated plan
+The parallel FFT is computed when we execute the generated plan via
 \begin{lstlisting}
-void pfft_execute(pfft_plan plan);
+void pfft_execute(const pfft_plan plan);
 \end{lstlisting}
 Now, the results can be read from \code{out} with an analogous three-dimensional loop.
 If we do not want to execute another parallel FFT of the same type, we free the allocated memory of the plan with
@@ -115,14 +114,164 @@ to free the communicator allocated by \code{pfft_create_procmesh_2d} and
 void pfft_free(void *ptr);
 \end{lstlisting}
 to free memory allocated by \code{pfft_alloc_complex}.
-Finally, we exit MPI by
+Finally, we exit MPI via
 \begin{lstlisting}
 int MPI_Finalize(void);
 \end{lstlisting}
 
-\section{More sophisticated options}
 
-\subsection{Errorcode for communicator creation}
+\section{Porting FFTW-MPI based code to PFFT}\label{sec:porting}
+We illustrate the close connection between FFTW-MPI and PFFT at a three-dimensional MPI example analogous to the example given in the FFTW manual~\cite{fftw-2dmpi}.
+\begin{lstlisting}
+#include <fftw3-mpi.h>
+     
+int main(int argc, char **argv)
+{
+    const ptrdiff_t N0 = ..., N1 = ..., N2 = ...;
+    fftw_plan plan;
+    fftw_complex *data;
+    ptrdiff_t alloc_local, local_N0, local_0_start, i, j, k;
+
+    MPI_Init(&argc, &argv);
+    fftw_mpi_init();
+
+    /* get local data size and allocate */
+    alloc_local = fftw_mpi_local_size_3d(N0, N1, N2, MPI_COMM_WORLD,
+					 &local_N0, &local_0_start);
+    data = fftw_alloc_complex(alloc_local);
+
+    /* create plan for in-place forward DFT */
+    plan = fftw_mpi_plan_dft_3d(N0, N1, N2, data, data, MPI_COMM_WORLD,
+				FFTW_FORWARD, FFTW_ESTIMATE);
+
+    /* initialize data to some function my_function(x,y) */
+    for (i = 0; i < local_N0; ++i) 
+      for (j = 0; j < N1; ++j) 
+        for (k = 0; k < N2; ++k)
+          data[i*N1*N2 + j*N2 + k] = my_function(local_0_start + i, j, k);
+
+    /* compute transforms, in-place, as many times as desired */
+    fftw_execute(plan);
+
+    fftw_destroy_plan(plan);
+
+    MPI_Finalize();
+}
+\end{lstlisting}
+
+Exactly the same task can be performed with PFFT as given in Listing~\ref{lst:pfft_3don1d}.
+\begin{lstlisting}
+#include <pfft.h>
+     
+int main(int argc, char **argv)
+{
+    const ptrdiff_t N[3] = {..., ..., ...};
+    pfft_plan plan;
+    pfft_complex *data;
+    ptrdiff_t alloc_local, local_Ni[3], local_i_start[3], local_No[3], local_o_start[3], i, j, k;
+    unsigned pfft_flags = 0;
+
+    MPI_Init(&argc, &argv);
+    pfft_init();
+
+    /* get local data size and allocate */
+    alloc_local = pfft_local_size_dft_3d(N, MPI_COMM_WORLD, pfft_flags,
+				         local_Ni, local_i_start,
+				         local_No, local_o_start);
+    data = pfft_alloc_complex(alloc_local);
+
+    /* create plan for in-place forward DFT */
+    plan = pfft_plan_dft_3d(N, data, data, MPI_COMM_WORLD,
+			    PFFT_FORWARD, PFFT_ESTIMATE);
+
+    /* initialize data to some function my_function(x,y) */
+    for (i = 0; i < local_N[0]; ++i) 
+      for (j = 0; j < N[1]; ++j) 
+        for (k = 0; k < N[2]; ++k)
+          data[i*N[1]*N[2] + j*N[2] + k] = my_function(local_i_start[0] + i, j, k);
+
+    /* compute transforms, in-place, as many times as desired */
+    pfft_execute(plan);
+
+    pfft_destroy_plan(plan);
+
+    MPI_Finalize();
+}
+\end{lstlisting}
+
+
+
+\begin{compactitem}
+  \item substitute \code{fftw3-mpi.h} by \code{pfft.h}
+  \item substitute all prefixes \code{fftw_} and \code{fftw_mpi_} by \code{pfft_}
+  \item substitute all prefixes \code{FFTW_} by \code{PFFT_}
+  \item the integers \code{N}, \code{local_n0}, \code{local_0_start} become arrays of length 3
+  \item \code{dft_} in \code{pfft_local_size_dft_3d}
+  \item \code{pfft_local_size_dft_3d} has additional input \code{pfft_flags} and additional outputs \code{local_no}, \code{local_o_start}
+  \item The loop that inits \code{data} becomes splitted along all three dimensions. We could also use 
+  
+  
+\end{compactitem}
+
+
+First, All prefixes \code{fftw_} are substituted by \code{pfft_}
+
+Now, the changes in order to use a two-dimensional process mesh are marginal as can be seen in Listing~\ref{lst:pfft_3don2d}.
+\begin{lstlisting}
+#include <pfft.h>
+     
+int main(int argc, char **argv)
+{
+    const ptrdiff_t N[3] = {..., ..., ...};
+    (*@\color{red}const int np0 = ..., np1 = ...;@*)
+    pfft_plan plan;
+    pfft_complex *data;
+    ptrdiff_t alloc_local, local_Ni[3], local_i_start[3], local_No[3], local_o_start[3], i, j, k;
+    unsigned pfft_flags = 0;
+    (*@\color{red}MPI\_Comm comm\_cart\_2d;@*)
+
+    MPI_Init(&argc, &argv);
+    pfft_init();
+
+    (*@\color{red}/* create two-dimensional process grid of size np0 x np1 */@*)
+    (*@\color{red}pfft\_create\_procmesh\_2d(MPI\_COMM\_WORLD, np0, np1,@*)
+        (*@\color{red}\&comm\_cart\_2d);@*)
+    
+    /* get local data size and allocate */
+    alloc_local = pfft_local_size_dft_3d(N, (*@\color{red}comm\_cart\_2d@*), pfft_flags,
+				         local_Ni, local_i_start,
+				         local_No, local_o_start);
+    data = pfft_alloc_complex(alloc_local);
+
+    /* create plan for in-place forward DFT */
+    plan = pfft_plan_dft_3d(N, data, data, MPI_COMM_WORLD,
+			    PFFT_FORWARD, PFFT_ESTIMATE);
+
+    /* initialize data to some function my_function(x,y) */
+    for (i = 0; i < local_n[0]; ++i) 
+      for (j = 0; j < (*@\color{red}local\_n[1]@*); ++j) 
+        for (k = 0; k < (*@\color{red}local\_n[2]@*); ++k)
+          data[i*(*@\color{red}local\_N[1]*local\_N[2]@*) + j*(*@\color{red}local\_N[2]@*) + k] =
+              my_function(local_i_start[0] + i,
+		          (*@\color{red}local\_i\_start[1] +@*) j,
+		          (*@\color{red}local\_i\_start[2] +@*) k);
+
+    /* compute transforms, in-place, as many times as desired */
+    pfft_execute(plan);
+
+    pfft_destroy_plan(plan);
+
+    MPI_Finalize();
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+\section{Errorcode for communicator creation}
 As we have seen the function
 \begin{lstlisting}
 int pfft_create_procmesh_2d(
@@ -157,7 +306,7 @@ to print the error message.
 This function is similar to the standard C function \code{fprintf} with the exception, that only the process with MPI rank $0$
 within the given communicator \code{comm} will produce some output; see Section~\ref{sec:fprintf} for details.
 
-\subsection{Inplace transforms}
+\section{Inplace transforms}
 Similar to FFTW, PFFT is able to compute parallel FFTs completely in place, which means that beside some
 constant buffers, no second data array beside the inputs is necessary. Especially, the global data communication
 can be performed in place. As far as we know, there is no other parallel FFT library beside FFTW and PFFT that
@@ -170,7 +319,7 @@ plan = pfft_plan_dft_3d(n, in, in, comm_cart_2d,
     PFFT_FORWARD, PFFT_TRANSPOSED_NONE);
 \end{lstlisting}
 
-\subsection{Higher dimensional data decomposition}
+\section{Higher dimensional data decomposition}
 Our first test program used a two-dimensional data decomposition of a three-dimensional data set.
 Moreover, PFFT support the computation of any $d$-dimensional FFT with $r$-dimensional data decomposition
 as long as $r\le d-1$. For example, one can use a one-dimensional data decomposition for any two- or higher-dimensional data set,
@@ -189,12 +338,24 @@ int pfft_create_procmesh(
 Hereby, the array \code{np} of length \code{rnk} gives the size of the Cartesian communicator \code{cart_comm}.
 
 
-\subsection{Transposed data layout}
+\section{Transposed data layout}
 \begin{compactitem}
   \item \code{PFFT_TRANSPOSED_NONE}
   \item \code{PFFT_TRANSPOSED_IN}
   \item \code{PFFT_TRANSPOSED_OUT}
 \end{compactitem}
+
+\subsection{Parallel data decomposition}
+
+A $d$-dimensional array of size $n_0 \times n_1\times \hdots \times n_{d-1}$ 
+
+Suppose a $r$-dimensional data decomposition
+Suppose a $d$-dimensional array that is 
+\code{PFFT_TRANSPOSED_NONE}
+\begin{equation*}
+  \frac{n_0}{P_0} \times \frac{n_1}{P_1} \times \hdots \times \frac{n_{r-1}}{P_{r-1}}  \times n_r \times n_{r+1} \times \hdots \times n_{d-1}
+\end{equation*}
+
 
 
 Transposed $d$-dimensional array distributed on $c$-dimensional process mesh ($c<d$)
@@ -207,7 +368,7 @@ Comparision of non-transposed (left) and transposed (right) $d$-dimensional arra
   n_0\times n_1\times \hdots n_{c-1} \times n_c \hdots \times n_{d-1} \Rightarrow n_1 \times \hdots n_{c-1} \times n_0 \times n_c \times \hdots \times n_{d-1}
 \end{equation*}
 
-\subsection{Planning effort}
+\section{Planning effort}
 \begin{compactitem}
   \item \code{PFFT_ESTIMATE}
   \item \code{PFFT_MEASURE}
@@ -218,20 +379,20 @@ Comparision of non-transposed (left) and transposed (right) $d$-dimensional arra
 \end{compactitem}
 
 
-\subsection{Preserving input data}
+\section{Preserving input data}
 \begin{compactitem}
   \item \code{PFFT_PRESERVE_INPUT}
   \item \code{PFFT_DESTROY_INPUT}
   \item \code{PFFT_BUFFERED_INPLACE}
 \end{compactitem}
 
-\subsection{FFTs with shifted index sets}
+\section{FFTs with shifted index sets}
 \begin{compactitem}
   \item \code{PFFT_SHIFTED_IN}
   \item \code{PFFT_SHIFTED_OUT}
 \end{compactitem}
 
-\subsection{PFFT flags}
+\section{PFFT flags}
 \begin{compactitem}
   \item \code{PFFT_TRANSPOSED_NONE}
   \item \code{PFFT_TRANSPOSED_IN}
@@ -250,9 +411,9 @@ Comparision of non-transposed (left) and transposed (right) $d$-dimensional arra
 \end{compactitem}
 
 
-\subsection{Parallel data distribution}
+\section{Parallel data distribution}
 
-\subsection{Three-dimensional FFTs with three-dimensional data decomposition}
+\section{Three-dimensional FFTs with three-dimensional data decomposition}
 
 
 
