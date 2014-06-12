@@ -13,7 +13,7 @@ of the library's source code tree.
 \lstinputlisting[numbers=left, float, caption={Minimal parallel c2c-FFT test program.}, label=lst:man_c2c]{../tests/manual_c2c_3d.c}
 
 After initializing MPI with \code{MPI_Init} and before calling any other PFFT routine initialize
-the parallel computations via
+the parallel FFT computations via
 \begin{lstlisting}
 void pfft_init(void);
 \end{lstlisting}
@@ -26,12 +26,10 @@ int pfft_create_procmesh_2d(
     MPI_Comm *comm_cart_2d);
 \end{lstlisting}
 This routine uses the processes within the communicator \code{comm} to create a two-dimensional process
-grid of size \code{np0} x \code{np1} and stores it into the Cartesian communicator \code{comm\_cart\_2d}.
-Since \code{comm\_cart\_2d} is allocated by the routine, the user has to provide
-the pointer to a non-allocated communicator. Otherwise we end up with a memory leak.
+grid of size \code{np0} x \code{np1} and stores it into the Cartesian communicator \code{comm_cart_2d}.
+Note that \code{comm_cart_2d} is allocated by the routine and must be freed with \code{MPI_Comm_free} after usage.
 The input parameter \code{comm} is a communicator, indicating which processes will participate in the transform.
-Most users will choose \code{comm} as \code{MPI\_COMM\_WORLD}, which implies that the FFT is computed
-on all available processes.
+Choosing \code{comm} as \code{MPI_COMM_WORLD} implies that the FFT is computed on all available processes.
 
 At the next step we need to know the data decomposition of the input and output array, that depends on
 the array sizes, the process grid and the chosen parallel algorithm. Therefore, we call
@@ -127,28 +125,28 @@ We illustrate the close connection between FFTW-MPI and PFFT at a three-dimensio
      
 int main(int argc, char **argv)
 {
-    const ptrdiff_t N0 = ..., N1 = ..., N2 = ...;
+    const ptrdiff_t n0 = ..., n1 = ..., n2 = ...;
     fftw_plan plan;
     fftw_complex *data;
-    ptrdiff_t alloc_local, local_N0, local_0_start, i, j, k;
+    ptrdiff_t alloc_local, local_n0, local_0_start, i, j, k;
 
     MPI_Init(&argc, &argv);
     fftw_mpi_init();
 
     /* get local data size and allocate */
-    alloc_local = fftw_mpi_local_size_3d(N0, N1, N2, MPI_COMM_WORLD,
+    alloc_local = fftw_mpi_local_size_3d(n0, n1, n2, MPI_COMM_WORLD,
 					 &local_N0, &local_0_start);
     data = fftw_alloc_complex(alloc_local);
 
     /* create plan for in-place forward DFT */
-    plan = fftw_mpi_plan_dft_3d(N0, N1, N2, data, data, MPI_COMM_WORLD,
+    plan = fftw_mpi_plan_dft_3d(n0, n1, n2, data, data, MPI_COMM_WORLD,
 				FFTW_FORWARD, FFTW_ESTIMATE);
 
     /* initialize data to some function my_function(x,y) */
-    for (i = 0; i < local_N0; ++i) 
-      for (j = 0; j < N1; ++j) 
-        for (k = 0; k < N2; ++k)
-          data[i*N1*N2 + j*N2 + k] = my_function(local_0_start + i, j, k);
+    for (i = 0; i < local_n0; ++i) 
+      for (j = 0; j < n1; ++j) 
+        for (k = 0; k < n2; ++k)
+          data[i*n1*n2 + j*n2 + k] = my_function(local_0_start + i, j, k);
 
     /* compute transforms, in-place, as many times as desired */
     fftw_execute(plan);
@@ -165,30 +163,30 @@ Exactly the same task can be performed with PFFT as given in Listing~\ref{lst:pf
      
 int main(int argc, char **argv)
 {
-    const ptrdiff_t N[3] = {..., ..., ...};
+    const ptrdiff_t n[3] = {..., ..., ...};
     pfft_plan plan;
     pfft_complex *data;
-    ptrdiff_t alloc_local, local_Ni[3], local_i_start[3], local_No[3], local_o_start[3], i, j, k;
+    ptrdiff_t alloc_local, local_ni[3], local_i_start[3], local_no[3], local_o_start[3], i, j, k;
     unsigned pfft_flags = 0;
 
     MPI_Init(&argc, &argv);
     pfft_init();
 
     /* get local data size and allocate */
-    alloc_local = pfft_local_size_dft_3d(N, MPI_COMM_WORLD, pfft_flags,
-				         local_Ni, local_i_start,
-				         local_No, local_o_start);
+    alloc_local = pfft_local_size_dft_3d(n, MPI_COMM_WORLD, pfft_flags,
+				         local_ni, local_i_start,
+				         local_no, local_o_start);
     data = pfft_alloc_complex(alloc_local);
 
     /* create plan for in-place forward DFT */
-    plan = pfft_plan_dft_3d(N, data, data, MPI_COMM_WORLD,
+    plan = pfft_plan_dft_3d(n, data, data, MPI_COMM_WORLD,
 			    PFFT_FORWARD, PFFT_ESTIMATE);
 
-    /* initialize data to some function my_function(x,y) */
-    for (i = 0; i < local_N[0]; ++i) 
-      for (j = 0; j < N[1]; ++j) 
-        for (k = 0; k < N[2]; ++k)
-          data[i*N[1]*N[2] + j*N[2] + k] = my_function(local_i_start[0] + i, j, k);
+    /* initialize data to some function my_function(x,y,z) */
+    for (i = 0; i < local_n[0]; ++i) 
+      for (j = 0; j < n[1]; ++j) 
+        for (k = 0; k < n[2]; ++k)
+          data[i*n[1]*n[2] + j*n[2] + k] = my_function(local_i_start[0] + i, j, k);
 
     /* compute transforms, in-place, as many times as desired */
     pfft_execute(plan);
@@ -222,11 +220,11 @@ Now, the changes in order to use a two-dimensional process mesh are marginal as 
      
 int main(int argc, char **argv)
 {
-    const ptrdiff_t N[3] = {..., ..., ...};
+    const ptrdiff_t n[3] = {..., ..., ...};
     (*@\color{red}const int np0 = ..., np1 = ...;@*)
     pfft_plan plan;
     pfft_complex *data;
-    ptrdiff_t alloc_local, local_Ni[3], local_i_start[3], local_No[3], local_o_start[3], i, j, k;
+    ptrdiff_t alloc_local, local_ni[3], local_i_start[3], local_no[3], local_o_start[3], i, j, k;
     unsigned pfft_flags = 0;
     (*@\color{red}MPI\_Comm comm\_cart\_2d;@*)
 
@@ -238,20 +236,20 @@ int main(int argc, char **argv)
         (*@\color{red}\&comm\_cart\_2d);@*)
     
     /* get local data size and allocate */
-    alloc_local = pfft_local_size_dft_3d(N, (*@\color{red}comm\_cart\_2d@*), pfft_flags,
-				         local_Ni, local_i_start,
-				         local_No, local_o_start);
+    alloc_local = pfft_local_size_dft_3d(n, (*@\color{red}comm\_cart\_2d@*), pfft_flags,
+				         local_ni, local_i_start,
+				         local_no, local_o_start);
     data = pfft_alloc_complex(alloc_local);
 
     /* create plan for in-place forward DFT */
-    plan = pfft_plan_dft_3d(N, data, data, MPI_COMM_WORLD,
+    plan = pfft_plan_dft_3d(n, data, data, MPI_COMM_WORLD,
 			    PFFT_FORWARD, PFFT_ESTIMATE);
 
-    /* initialize data to some function my_function(x,y) */
+    /* initialize data to some function my_function(x,y,z) */
     for (i = 0; i < local_n[0]; ++i) 
       for (j = 0; j < (*@\color{red}local\_n[1]@*); ++j) 
         for (k = 0; k < (*@\color{red}local\_n[2]@*); ++k)
-          data[i*(*@\color{red}local\_N[1]*local\_N[2]@*) + j*(*@\color{red}local\_N[2]@*) + k] =
+          data[i*(*@\color{red}local\_n[1]*local\_n[2]@*) + j*(*@\color{red}local\_n[2]@*) + k] =
               my_function(local_i_start[0] + i,
 		          (*@\color{red}local\_i\_start[1] +@*) j,
 		          (*@\color{red}local\_i\_start[2] +@*) k);
