@@ -221,22 +221,22 @@ Now, the changes in order to use a two-dimensional process mesh are marginal as 
 int main(int argc, char **argv)
 {
     const ptrdiff_t n[3] = {..., ..., ...};
-    (*@\color{red}const int np0 = ..., np1 = ...;@*)
+    (red@const int np0 = ..., np1 = ...;@*)
     pfft_plan plan;
     pfft_complex *data;
     ptrdiff_t alloc_local, local_ni[3], local_i_start[3], local_no[3], local_o_start[3], i, j, k;
     unsigned pfft_flags = 0;
-    (*@\color{red}MPI\_Comm comm\_cart\_2d;@*)
+    (red@MPI\_Comm comm\_cart\_2d;@*)
 
     MPI_Init(&argc, &argv);
     pfft_init();
 
-    (*@\color{red}/* create two-dimensional process grid of size np0 x np1 */@*)
-    (*@\color{red}pfft\_create\_procmesh\_2d(MPI\_COMM\_WORLD, np0, np1,@*)
-        (*@\color{red}\&comm\_cart\_2d);@*)
+    (red@/* create two-dimensional process grid of size np0 x np1 */@*)
+    (red@pfft\_create\_procmesh\_2d(MPI\_COMM\_WORLD, np0, np1,@*)
+        (red@\&comm\_cart\_2d);@*)
     
     /* get local data size and allocate */
-    alloc_local = pfft_local_size_dft_3d(n, (*@\color{red}comm\_cart\_2d@*), pfft_flags,
+    alloc_local = pfft_local_size_dft_3d(n, (red@comm\_cart\_2d@*), pfft_flags,
 				         local_ni, local_i_start,
 				         local_no, local_o_start);
     data = pfft_alloc_complex(alloc_local);
@@ -247,12 +247,12 @@ int main(int argc, char **argv)
 
     /* initialize data to some function my_function(x,y,z) */
     for (i = 0; i < local_n[0]; ++i) 
-      for (j = 0; j < (*@\color{red}local\_n[1]@*); ++j) 
-        for (k = 0; k < (*@\color{red}local\_n[2]@*); ++k)
-          data[i*(*@\color{red}local\_n[1]*local\_n[2]@*) + j*(*@\color{red}local\_n[2]@*) + k] =
+      for (j = 0; j < (red@local\_n[1]@*); ++j) 
+        for (k = 0; k < (red@local\_n[2]@*); ++k)
+          data[i*(red@local\_n[1]*local\_n[2]@*) + j*(red@local\_n[2]@*) + k] =
               my_function(local_i_start[0] + i,
-		          (*@\color{red}local\_i\_start[1] +@*) j,
-		          (*@\color{red}local\_i\_start[2] +@*) k);
+		          (red@local\_i\_start[1] +@*) j,
+		          (red@local\_i\_start[2] +@*) k);
 
     /* compute transforms, in-place, as many times as desired */
     pfft_execute(plan);

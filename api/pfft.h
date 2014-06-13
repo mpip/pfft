@@ -161,7 +161,8 @@ BEGIN_C_DECLS
       INT *local_no, INT *local_o_start);                                               \
   PFFT_EXTERN INT PX(local_size_r2r_3d)(                                                \
       const INT *n, MPI_Comm comm_cart, unsigned pfft_flags,                            \
-      INT *local_ni, INT *local_i_start, INT *local_no, INT *local_o_start);            \
+      INT *local_ni, INT *local_i_start,                                                \
+      INT *local_no, INT *local_o_start);                                               \
                                                                                         \
   PFFT_EXTERN INT PX(local_size_dft)(                                                   \
       int rnk, const INT *n,                                                            \

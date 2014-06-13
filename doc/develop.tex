@@ -2,256 +2,28 @@
 \chapter{Developers Guide}\label{chap:develop}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{PFFT Interface Layer Specification}
-\begin{compactitem}
-  \myitem start with internal interface and simplify it into basic interface
-\end{compactitem}
 
 
-\emph{Gcell Internal Interface}
-\begin{compactitem}
-  \item[+] \verb++
-  \item[+] \verb++
-  \item[+] \verb++
-\end{compactitem}
+\section{Search and replace patterns}
 
-
-
-
-\emph{Basic Interface}
-\begin{compactitem}
-  \item[+] \verb+const INT *n+
-  \item[+] \verb+C *in+
-  \item[+] \verb+C *out+
-  \item[+] \verb+MPI\_Comm comm\_cart\_2d+
-  \item[+] \verb+int sign+
-  \item[+] \red{unsigned pfft\_flags}
-  \item[+] \verb+unsigned fftw\_flags+
-\end{compactitem}
-
-\emph{3D Basic Interface}
-\begin{compactitem}
-  \item[-] \verb+const INT *n+
-  \item[+] \verb+INT n0, n1, n2+
-\end{compactitem}
-
-\emph{3D Basic Interface Transposed}
-\begin{compactitem}
-  \item[-] \verb+const INT *n+
-  \item[+] \verb+INT n0, n1, n2+
-  \item[+] \red{unsigned pfft\_flags}
-\end{compactitem}
-
-\emph{Advanced Interface}
-\begin{compactitem}
-  \item[+] \verb+const INT *ni+
-  \item[+] \verb+const INT *no+
-  \item[+] \verb+INT howmany+
-  \item[+] \verb+const INT *block_col+
-  \item[+] \verb+const INT *block_row+
-\end{compactitem}
-
-\emph{Guru Interface}
-\begin{compactitem}
-  \item[-] \red{unsigned pfft\_flags}
-  \item[+] \verb+pfft\_profile *prf+
-  \item[+] \verb+pfft\_permutation *perm+
-\end{compactitem}
-
-\emph{Internal Interface}
-\begin{compactitem}
-  \item[$-$] \verb+MPI_Comm comm_cart_2d+
-  \item[+] \red{MPI\_Comm comm\_col}
-  \item[+] \red{MPI\_Comm comm\_row}
-  \item[+] \verb+pfft_truncation *trc+
-  \item[+] \verb+user_blocksize+ $\Rightarrow$ \verb+block_size_internal+
-  \item[+] \verb+howmany+ $\Rightarrow$ \verb+tuplesize+
-  \item[+] \verb+fftw_flags+ $\Rightarrow$ \verb+fftw_planing_flags+
-\end{compactitem}
-
-
-\newcommand{\redlst}[1]{\lstinline+#1+}
-
-\newpage
-\subsection{PFFT Interface - Headers}
-\emph{New PFFT Interface: local size (Internal, Guru, Adv, Basic, 3d, 2d)}
+Correct alignment of pfft.h header
 \begin{lstlisting}
-INT PX(local_size_internal)(
-    int (*@\color{red}rnk\_nc@*), const INT *n, const INT *ni, const INT *no,
-    INT (*@\color{red}tuple\_size@*), const INT *iblock, const INT *oblock,
-    int (*@\color{red}rnk\_pm@*), MPI_Comm (*@\color{red}*comms\_pm@*),
-    INT *local_ni, INT *local_i_start,
-    INT *local_no, INT *local_o_start);
-// blocks are internal blocks (NULLs are substituted by default values)
-// use MPI_Cart_split multiple times to get comms_1d
-// canonical PFFT:
-// one more array dimension, than procmesh dimension
-// tuple_size includes howmany and the last dimensions
+%s/^\(    [^ ]\+[^\\]*\)  \\/  \1\\/g  
+\end{lstlisting}
 
-INT PX(local_size_guru)(
-    int rnk, const INT *n, const INT *ni, const INT *no,
-    const (*@\red{PX(profile) *prf}@*), const (*@\color{red}PX(permutation) *perm@*),
-    INT (*@\color{green}howmany@*), const INT *iblock, const INT *oblock,
-    MPI_Comm (*@\color{green}comm\_cart@*),
-    INT *local_ni, INT *local_i_start,
-    INT *local_no, INT *local_o_start,
-    PX(permutation) (*@\color{orange}*perm\_out)@*);
-/* !!! prf depends on perm !!! */
-/* !!! oblock depends on perm, prf, no !!! */
-
-INT PX(local_size_many_transposed)(
-    int rnk, const INT *n, const INT (*@\color{red}*ni@*), const INT (*@\color{red}*no@*),
-    INT (*@\color{red}howmany@*), const INT (*@\color{red}*iblock@*), const INT (*@\color{red}*oblock@*),
-    MPI_Comm comm_cart
-    INT *local_ni, INT *local_i_start,
-    INT *local_no, INT *local_o_start);
-INT PX(local_size_many)(
-    int rnk, const INT *n, const INT (*@\color{red}*ni@*), const INT (*@\color{red}*no@*),
-    INT (*@\color{red}howmany@*), const INT (*@\color{red}*iblock@*), const INT (*@\color{red}*oblock@*),
-    MPI_Comm comm_cart
-    INT *local_ni, INT *local_i_start,
-    INT (*@\color{red}*local\_no@*), INT (*@\color{red}*local\_o\_start@*));
-
-INT PX(local_size_transposed)(
-    int (*@\color{red}rnk@*), const INT (*@\color{red}*n@*), MPI_Comm comm_cart,
-    INT (*@\color{red}*local\_ni@*), INT (*@\color{red}*local\_i\_start@*)
-    INT (*@\color{red}*local\_no@*), INT (*@\color{red}*local\_o\_start@*));
-INT PX(local_size)(
-    int (*@\color{red}rnk@*), const INT (*@\color{red}*n@*), MPI_Comm comm_cart,
-    INT (*@\color{red}*local\_ni@*), INT (*@\color{red}*local\_i\_start@*));
-
-INT PX(local_size_3d_transposed)(
-    INT (*@\color{green}n0@*), INT (*@\color{green}n1@*), (*@\color{orange}INT n2@*), MPI_Comm (*@\color{red}comm\_cart@*),
-    INT (*@\color{green}*local\_ni0@*), INT (*@\color{green}*local\_i0\_start@*),
-    INT (*@\color{orange}*local\_ni1@*), INT (*@\color{orange}*local\_i1\_start@*),
-    INT (*@\color{green}*local\_no1@*), INT (*@\color{green}*local\_o1\_start@*),
-    INT (*@\color{orange}*local\_no2@*), INT (*@\color{orange}*local\_o2\_start@*));
-INT PX(local_size_3d)(
-    INT (*@\color{green}n0@*), INT (*@\color{green}n1@*), (*@\color{orange}INT n2@*), MPI_Comm (*@\color{red}comm\_cart@*),
-    INT (*@\color{green}*local\_n0@*), INT (*@\color{green}*local\_0\_start@*),
-    INT (*@\color{orange}*local\_n1@*), INT (*@\color{orange}*local\_1\_start@*));
-
-INT PX(local_size_2d_transposed)(
-    INT n0, INT n1, MPI_Comm (*@\color{green}comm@*),
-    INT *local_ni0, INT *local_i0_start,
-    INT *local_no1, INT *local_o1_start);
-INT PX(local_size_2d)(
-    INT n0, INT n1, MPI_Comm (*@\color{green}comm@*),
-    INT *local_n0, INT *local_0_start);
-/* allow arbitrary comm for backward compatibility with FFTW */
+Expand most macros of pfft.h to generate the function reference of this manual:
+\begin{lstlisting}[language=bash,prebreak=\textbackslash,]
+sed -e 's/ *\\$//g' -e 's/PFFT_EXTERN //g' \
+    -e 's/PX(\([^)]*\))/pfft_\1/g' -e 's/ INT/ ptrdiff_t/g' \
+    -e 's/ R/ double/g' -e 's/ C/ pfft_complex/g' \
+    -e 's/^  //g' pfft.h > pfft.h.expanded
 \end{lstlisting}
 
 
-\emph{New PFFT interface: plan (Guru, Adv, Basic, 3d, 2d)}
-\begin{lstlisting}
-PX(plan) PX(plan_guru_dft)(
-    int rnk, const INT *n, const INT *ni, const INT *no,
-    const PX(profile) (*@\color{red}*prf@*), const PX(permutation) (*@\color{red}*perm@*),
-    INT howmany, const INT *iblock, const INT *oblock,
-    C *data_in, C *data_out,
-    MPI_Comm comm_cart,
-    int sign, unsigned fftw_flags);
-/* !!! prf depends on perm !!! */
-/* !!! oblock depends on perm, prf, no !!! */
-
-PX(plan) PX(plan_many_dft)(
-    int rnk, const INT *n, const INT (*@\color{red}*ni@*), const INT (*@\color{red}*no@*),
-    INT (*@\color{red}howmany@*), const INT (*@\color{red}*iblock@*), const INT (*@\color{red}*oblock@*),
-    C *data_in, C *data_out,
-    MPI_Comm comm_cart,
-    int sign, unsigned pfft_flags, unsigned fftw_flags);
-
-PX(plan) PX(plan_dft)(
-    int (*@\color{red}rnk@*), const INT (*@\color{red}*n@*),
-    C *data_in, C *data_out,
-    MPI_Comm comm_cart,
-    int sign, unsigned pfft_flags, unsigned fftw_flags);
-
-PX(plan) PX(plan_dft_3d)(
-    INT (*@\color{green}n0@*), INT (*@\color{green}n1@*), INT (*@\color{orange}n2@*),
-    C *data_in, C *data_out,
-    MPI_Comm (*@\color{red}comm\_cart@*),
-    int sign, unsigned pfft_flags, unsigned fftw_flags);
-PX(plan) PX(plan_dft_2d)(
-    INT n0, INT n1, C *data_in, C *data_out,
-    MPI_Comm (*@\color{green}comm@*),
-    int sign, unsigned pfft_flags, unsigned fftw_flags);
-/* allow arbitrary comm for backward compatibility with FFTW */
-\end{lstlisting}
-
-\emph{Interface Layer Names (Like FFTW):}
-\begin{lstlisting}
-local_size[_internal, _guru, _many][_3d, _2d][_transposed]
-plan[_internal, _guru, _many]_dft[_3d, _2d]
-local_size[_internal, _guru, _many]_gc[_3d, _2d]
-plan[_internal, _guru, _many]_gc[_3d, _2d]
-\end{lstlisting}
-
-\emph{Interface Layer Names (Like FFTW) - Merged FFT and GC:}
-\begin{lstlisting}
-local_size[_internal, _guru, _many][_gc][_3d, _2d][_transposed]
-plan[_internal, _guru, _many][_dft, _gc][_3d, _2d]
-\end{lstlisting}
-No need for \lstinline{local_size[_dft, _rdft]}, since we put the physical dimensions into local size.
-
-\newpage
-\emph{New PFFT GCell Interface: local size (Basic, Advanced)}
-\begin{lstlisting}
-INT PX(gc_local_size_internal)(
-    int rnk, const INT *loc_array_size, INT tuple_size,
-    const INT *gc_below, const INT *gc_above);
-
-INT PX(gc_local_size_many)(
-    int rnk, const INT *local_n, const INT *local_start,
-    INT alloc_local, INT howmany,
-    const INT *num_gcells_below, const INT *num_gcells_above,
-    INT *local_ngc, INT *local_gc_start);
-
-INT PX(gc_local_size)(
-    int rnk, const INT *local_n, const INT *local_start,
-    INT alloc_local,
-    const INT *gc_below, const INT *gc_above,
-    INT *local_ngc, INT *local_gc_start);
-\end{lstlisting}
 
 
-\emph{New PFFT GCell Interface: plan (Basic, Advanced, Guru, Internal)}
-\begin{lstlisting}
-PX(gcplan) PX(plan_gcells_internal)(
-    int rnk, const INT *n, const PX(permutation) *perm,
-    INT howmany, const INT *block,
-    const INT *gc_below, const INT *gc_above,
-    R *data, MPI_Comm *comms_1d, MPI_Comm comm_cart,
-    unsigned gcflags);
-// tuple_size = 2*howmany*last_dims
 
-PX(gcplan) PX(plan_guru_gc)(
-    int rnk, const INT *n, const PX(permutation) *perm,
-    INT howmany, const INT *block,
-    const INT *gc_below, const INT *gc_above,
-    C *data, MPI_Comm comm_cart, unsigned gcflags);
-// gcflags in {ESTIMATE, MEASURE, PATIENT}
-//          x {INPLACE, OUTOFPLACE} x {GC_RMA, GC_SENDRECV}
-// default: flags = OUTOFPLACE
-//          flags += GC_RMA (if possible) otherwise GC_SENDRECV (always possible)
-/* !!! block depends on perm !!! */
 
-PX(gcplan) PX(plan_many_gc)(
-    int rnk, const INT *n,
-    INT howmany, const INT *block,
-    const INT *gc_below, const INT *gc_above,
-    C *data, MPI_Comm comm_cart, unsigned gcflags);
-// gcflags in {NONTRANSPOSED, TRANSPOSED} x {ESTIMATE, MEASURE, PATIENT}
-//          x {INPLACE, OUTOFPLACE} x {GC_RMA, GC_SENDRECV}
-// default: flags = NONTRANSPOSED
-
-PX(gcplan) PX(plan_gc)(
-    int rnk, const INT *n,
-    const INT *gc_below, const INT *gc_above,
-    C *data, MPI_Comm comm_cart, unsigned gcflags);
-// gcflags in {NONTRANSPOSED, TRANSPOSED} x {ESTIMATE, MEASURE, PATIENT}
-//          x {INPLACE, OUTOFPLACE} x {GC_RMA, GC_SENDRECV}
-\end{lstlisting}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -294,5 +66,6 @@ Note that the term process abstracts the code development from the real physical
 
 \emph{An MPI program consists of autonomous processes, executing their own code, in an MIMD style.}
 ( MPI: A Message-Passing Interface Standard, page 27)
+
 
 
