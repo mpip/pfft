@@ -72,24 +72,24 @@ BEGIN_C_DECLS
   typedef struct PX(gcplan_s) *PX(gcplan);                                              \
                                                                                         \
   typedef struct {                                                                      \
-    int rnk_pm;                                                                         \
-    int rnk_trafo;                                                                      \
-    int rnk_remap;                                                                      \
-    int iter;                                                                           \
-    double whole;                                                                       \
-    double *trafo;                                                                      \
-    double *remap;                                                                      \
-    double remap_3dto2d[2];                                                             \
-    double itwiddle;                                                                    \
-    double otwiddle;                                                                    \
+      int rnk_pm;                                                                       \
+      int rnk_trafo;                                                                    \
+      int rnk_remap;                                                                    \
+      int iter;                                                                         \
+      double whole;                                                                     \
+      double *trafo;                                                                    \
+      double *remap;                                                                    \
+      double remap_3dto2d[2];                                                           \
+      double itwiddle;                                                                  \
+      double otwiddle;                                                                  \
   } PX(timer_s);                                                                        \
   typedef PX(timer_s) *PX(timer);                                                       \
                                                                                         \
   typedef struct {                                                                      \
-    int iter;                                                                           \
-    double whole;                                                                       \
-    double pad_zeros;                                                                   \
-    double exchange;                                                                    \
+      int iter;                                                                         \
+      double whole;                                                                     \
+      double pad_zeros;                                                                 \
+      double exchange;                                                                  \
   } PX(gctimer_s);                                                                      \
   typedef PX(gctimer_s) *PX(gctimer);                                                   \
                                                                                         \
@@ -110,42 +110,42 @@ BEGIN_C_DECLS
   PFFT_EXTERN void PX(destroy_plan)(const PX(plan) plan);                               \
                                                                                         \
   PFFT_EXTERN void PX(init_input_complex_3d)(                                           \
-    const INT *n, const INT *local_n, const INT *local_n_start,                         \
-    C *data);                                                                           \
+      const INT *n, const INT *local_n, const INT *local_n_start,                       \
+      C *data);                                                                         \
   PFFT_EXTERN void PX(init_input_complex)(                                              \
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       C *data);                                                                         \
   PFFT_EXTERN void PX(init_input_complex_hermitian_3d)(                                 \
-    const INT *n, const INT *local_n, const INT *local_n_start,                         \
-    C *data);                                                                           \
+      const INT *n, const INT *local_n, const INT *local_n_start,                       \
+      C *data);                                                                         \
   PFFT_EXTERN void PX(init_input_complex_hermitian)(                                    \
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       C *data);                                                                         \
   PFFT_EXTERN void PX(init_input_real_3d)(                                              \
-    const INT *n, const INT *local_n, const INT *local_n_start,                         \
-    R *data);                                                                           \
+      const INT *n, const INT *local_n, const INT *local_n_start,                       \
+      R *data);                                                                         \
   PFFT_EXTERN void PX(init_input_real)(                                                 \
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       R *data);                                                                         \
                                                                                         \
   PFFT_EXTERN R PX(check_output_complex_3d)(                                            \
-    const INT *n, const INT *local_n, const INT *local_n_start,                         \
-    const C *data, MPI_Comm comm);                                                      \
+      const INT *n, const INT *local_n, const INT *local_n_start,                       \
+      const C *data, MPI_Comm comm);                                                    \
   PFFT_EXTERN R PX(check_output_complex)(                                               \
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       const C *data, MPI_Comm comm);                                                    \
   PFFT_EXTERN R PX(check_output_complex_hermitian_3d)(                                  \
-    const INT *n, const INT *local_n, const INT *local_n_start,                         \
-    const C *data, MPI_Comm comm);                                                      \
+      const INT *n, const INT *local_n, const INT *local_n_start,                       \
+      const C *data, MPI_Comm comm);                                                    \
   PFFT_EXTERN R PX(check_output_complex_hermitian)(                                     \
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       const C *data, MPI_Comm comm);                                                    \
   PFFT_EXTERN R PX(check_output_real_3d)(                                               \
-    const INT *n, const INT *local_n, const INT *local_n_start,                         \
-    const R *data, MPI_Comm comm);                                                      \
+      const INT *n, const INT *local_n, const INT *local_n_start,                       \
+      const R *data, MPI_Comm comm);                                                    \
   PFFT_EXTERN R PX(check_output_real)(                                                  \
-    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,                \
-    const R *data, MPI_Comm comm);                                                      \
+      int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
+      const R *data, MPI_Comm comm);                                                    \
                                                                                         \
   PFFT_EXTERN INT PX(local_size_dft_3d)(                                                \
       const INT *n, MPI_Comm comm_cart, unsigned pfft_flags,                            \
@@ -295,8 +295,8 @@ BEGIN_C_DECLS
       int rnk_n, const INT *n, C *in, R *out, MPI_Comm comm_cart,                       \
       int sign, unsigned pfft_flags);                                                   \
   PFFT_EXTERN PX(plan) PX(plan_r2r)(                                                    \
-    int rnk_n, const INT *n, R *in, R *out, MPI_Comm comm_cart,                         \
-    const PX(r2r_kind) *kinds, unsigned pfft_flags);                                    \
+      int rnk_n, const INT *n, R *in, R *out, MPI_Comm comm_cart,                       \
+      const PX(r2r_kind) *kinds, unsigned pfft_flags);                                  \
                                                                                         \
   PFFT_EXTERN PX(plan) PX(plan_many_dft)(                                               \
       int rnk, const INT *n, const INT *ni, const INT *no,                              \
@@ -325,20 +325,20 @@ BEGIN_C_DECLS
       const int *skip_trafos, C *in, C *out, MPI_Comm comm_cart,                        \
       int sign, unsigned pfft_flags);                                                   \
   PFFT_EXTERN PX(plan) PX(plan_many_dft_r2c_skipped)(                                   \
-    int rnk_n, const INT *n, const INT *ni, const INT *no,                              \
-    INT howmany, const INT *iblock, const INT *oblock,                                  \
-    const int *skip_trafos, R *in, C *out, MPI_Comm comm_cart,                          \
-    int sign, unsigned pfft_flags);                                                     \
+      int rnk_n, const INT *n, const INT *ni, const INT *no,                            \
+      INT howmany, const INT *iblock, const INT *oblock,                                \
+      const int *skip_trafos, R *in, C *out, MPI_Comm comm_cart,                        \
+      int sign, unsigned pfft_flags);                                                   \
   PFFT_EXTERN PX(plan) PX(plan_many_dft_c2r_skipped)(                                   \
-    int rnk_n, const INT *n, const INT *ni, const INT *no,                              \
-    INT howmany, const INT *iblock, const INT *oblock,                                  \
-    const int *skip_trafos, C *in, R *out, MPI_Comm comm_cart,                          \
-    int sign, unsigned pfft_flags);                                                     \
+      int rnk_n, const INT *n, const INT *ni, const INT *no,                            \
+      INT howmany, const INT *iblock, const INT *oblock,                                \
+      const int *skip_trafos, C *in, R *out, MPI_Comm comm_cart,                        \
+      int sign, unsigned pfft_flags);                                                   \
   PFFT_EXTERN PX(plan) PX(plan_many_r2r_skipped)(                                       \
-    int rnk_n, const INT *n, const INT *ni, const INT *no,                              \
-    INT howmany, const INT *iblock, const INT *oblock,                                  \
-    const int *skip_trafos, R *in, R *out, MPI_Comm comm_cart,                          \
-    const PX(r2r_kind) *kinds, unsigned pfft_flags);                                    \
+      int rnk_n, const INT *n, const INT *ni, const INT *no,                            \
+      INT howmany, const INT *iblock, const INT *oblock,                                \
+      const int *skip_trafos, R *in, R *out, MPI_Comm comm_cart,                        \
+      const PX(r2r_kind) *kinds, unsigned pfft_flags);                                  \
                                                                                         \
   PFFT_EXTERN INT PX(prod_INT)(                                                         \
       int d, const INT *vec);                                                           \
@@ -421,24 +421,24 @@ BEGIN_C_DECLS
       MPI_Comm *comm_cart_2d);                                                          \
                                                                                         \
   PFFT_EXTERN INT PX(local_size_gc_3d)(                                                 \
-    const INT *local_n, const INT *local_start,                                         \
-    INT alloc_local, const INT *gc_below, const INT *gc_above,                          \
-    INT *local_ngc, INT *local_gc_start);                                               \
+      const INT *local_n, const INT *local_start,                                       \
+      INT alloc_local, const INT *gc_below, const INT *gc_above,                        \
+      INT *local_ngc, INT *local_gc_start);                                             \
   PFFT_EXTERN INT PX(local_size_gc)(                                                    \
-    int rnk_n, const INT *local_n, const INT *local_start,                              \
-    INT alloc_local, const INT *gc_below, const INT *gc_above,                          \
-    INT *local_ngc, INT *local_gc_start);                                               \
+      int rnk_n, const INT *local_n, const INT *local_start,                            \
+      INT alloc_local, const INT *gc_below, const INT *gc_above,                        \
+      INT *local_ngc, INT *local_gc_start);                                             \
   PFFT_EXTERN INT PX(local_size_many_gc)(                                               \
-    int rnk_n, const INT *local_n, const INT *local_start, INT alloc_local,             \
-    INT howmany, const INT *gc_below, const INT *gc_above,                              \
-    INT *local_ngc, INT *local_gc_start);                                               \
+      int rnk_n, const INT *local_n, const INT *local_start, INT alloc_local,           \
+      INT howmany, const INT *gc_below, const INT *gc_above,                            \
+      INT *local_ngc, INT *local_gc_start);                                             \
                                                                                         \
   PFFT_EXTERN PX(gcplan) PX(plan_rgc_3d)(                                               \
       const INT *n, const INT *gc_below, const INT *gc_above,                           \
       R *data, MPI_Comm comm_cart, unsigned gc_flags);                                  \
   PFFT_EXTERN PX(gcplan) PX(plan_cgc_3d)(                                               \
-    const INT *n, const INT *gc_below, const INT *gc_above,                             \
-    C *data, MPI_Comm comm_cart, unsigned gc_flags);                                    \
+      const INT *n, const INT *gc_below, const INT *gc_above,                           \
+      C *data, MPI_Comm comm_cart, unsigned gc_flags);                                  \
   PFFT_EXTERN PX(gcplan) PX(plan_rgc)(                                                  \
       int rnk_n, const INT *n, const INT *gc_below, const INT *gc_above,                \
       R *data, MPI_Comm comm_cart, unsigned gc_flags);                                  \
