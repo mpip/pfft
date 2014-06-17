@@ -399,6 +399,11 @@ AC_ARG_ENABLE([doc],
  [AS_HELP_STRING([--disable-doc],[disable build of documents (PDF manual etc.)])],,
  [enable_doc=yes])
 
+if test "x$enable_doc" != xno -a ! -d "$srcdir/doc"; then
+  AC_MSG_WARN([disabling doc as it is not present in source tree])
+  enable_doc=no
+fi
+
 if test "x$enable_doc" != xno ; then
   AC_PATH_PROG(PDFLATEX,pdflatex,no)
   AC_PATH_PROG(MAKEINDEX,makeindex,no)
