@@ -11,7 +11,12 @@ libtool: $(LIBTOOL_DEPS)
 ACLOCAL_AMFLAGS = -I m4
 
 # Traverse these subdirectories, the current one first (for config.h).
-SUBDIRS = kernel gcell util api . doc
+SUBDIRS = kernel gcell util api .
+
+if ENABLE_DOC
+SUBDIRS += doc
+endif
+
 DIST_SUBDIRS = $(SUBDIRS) tests
 
 # Tests work with double precision only.
