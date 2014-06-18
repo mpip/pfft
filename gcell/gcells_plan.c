@@ -202,9 +202,9 @@ static int gc_RMA_applicable(
     int rnk_n, int rnk_pm, const INT *gc_below, const INT *gc_above
     )
 {
-  /* The RMA ghostcell implementation only supports data
-   * distributions where the first two dimensions
-   * are distributed among a two-dimensional processor grid. */
+  /* The RMA ghostcell implementation only supports data distributions 
+   * where the first two dimensions of a three-dimensional array
+   * are distributed on a two-dimensional process mesh. */
 
   if(rnk_n != 3)
     return 0;

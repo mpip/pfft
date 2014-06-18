@@ -83,8 +83,8 @@ static void create_mpi_datatype_slices(
     int rnk_n, const INT *n, INT tuple,
     int dim, INT num_slices, INT offset,
     MPI_Datatype *newtype);
-
 #endif
+
 /* FIXME: Generalize to arbitrary dimesions
  * Idea: canonicalize to three dims: n0 * slices * n1 */
 static void add_buffer_to_slices(
@@ -815,7 +815,7 @@ static void create_mpi_datatype_slices(
   starts[t]= 0;
 
   /* FIXME: array_of_sizes, array_of_subsizes, array_of_starts are integer */
-  /* TODO:  implement MPI_Type_create_subarray with INT similar MPI_Datatypes*/
+  /* TODO:  implement MPI_Type_create_subarray with MPI_Datatypes that represent INT */
   MPI_Type_create_subarray(rnk_n+1, sizes, subsizes, starts, MPI_ORDER_C, oldtype, newtype);
 
   free(sizes); free(subsizes); free(starts);

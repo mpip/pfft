@@ -1,9 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Interface layers of the PFFT library}\label{chap:api}
+\chapter{Interface Layers of the PFFT Library}\label{chap:api}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 We introduce the interface layers of PFFT in the order of increasing flexibility at the example of c2c-FFT.
 For r2c-, c2r-, and r2r-FFT similar interface layer specifications apply.
-\section{Basic interface}
+\section{Basic Interface}
 The \code{_3d} interface is the simplest interface layer. It is suitable for the planning of three-dimensional FFTs.
 \begin{lstlisting}
 ptrdiff_t pfft_local_size_dft_3d(
@@ -40,7 +40,7 @@ pfft_plan pfft_plan_dft(
 Therefore, \code{n}, \code{local_ni}, \code{local_i_start}, \code{local_no}, and \code{local_o_start} are
 \code{ptrdiff_t} arrays of length \code{rnk_n}.
 
-\section{Advanced interface}
+\section{Advanced Interface}
 The advanced interface introduces the arrays \code{ni} and \code{no} of length \code{rnk_n}
 that give the pruned FFT input and output size.
 Furthermore, the arrays \code{iblock} and \code{oblock} of length \code{rnk_pm} (\code{rnk_pm} being the dimension of the process mesh)
@@ -74,7 +74,7 @@ pfft_plan pfft_plan_many_dft(
 \end{lstlisting}
 
 
-\section{Preliminary: Skip selected serial transformations}
+\section{Preliminary: Skip Serial Transformations}
 The \code{_skipped} interface is based on the \code{many} interface but adds the possibility to skip selected serial FFTs.
 \begin{lstlisting}
 pfft_plan pfft_plan_many_dft_skipped(

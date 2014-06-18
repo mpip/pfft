@@ -3,25 +3,31 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Files and Data Types}
-Use
+You must include the PFFT header file by
 \begin{lstlisting}
 #include <pfft.h>
 \end{lstlisting}
-in preamble of each file calling PFFT. This header includes \code{fftw3-mpi.h} and \code{fftw.h} automatically.
-Therefore, PFFT uses the \code{fftw_complex} data type defined in \code{fftw.h}. For the sake of a clean namespace we
-define the data type \code{pfft_complex} via
+in the preamble of each source file that calls PFFT. This header automatically includes \code{fftw.h} and \code{fftw3-mpi.h}.
+Therefore, PFFT can use the \code{fftw_complex} data type defined in \code{fftw.h}, see~\cite{fftw-cplx-num}.
+Note that \code{fftw_complex} is defined to be the C99 native complex whenever \code{<complex.h>} is included \emph{before}
+\code{<fftw.h>}, \code{<fftw-mpi.h>} and \code{<pfft.h>}. Otherwise it is defined as 
+\begin{lstlisting}
+typedef double fftw_complex[2];
+\end{lstlisting}
+For the sake of a clean namespace we define the wrapper data type \code{pfft_complex} as
 \begin{lstlisting}
 typedef fftw_complex pfft_complex;
 \end{lstlisting}
-as a simple wrapper of \code{fftw_complex}.
-Analogously, we define the wrappers
+that can be used equivallently to \code{fftw_complex}.
+Futhermore, we define the wrapper functions
 \begin{lstlisting}
 void *pfft_malloc(size_t n);
 double *pfft_alloc_real(size_t n);
 pfft_complex *pfft_alloc_complex(size_t n);
 void pfft_free(void *p);
 \end{lstlisting}
-as substitues for their corresponding FFTW equivalents, see~\cite{fftw-malloc}. Note, that memory allocated by one
+as substitues for their corresponding FFTW equivalents, see~\cite{fftw-malloc}. 
+Note that memory allocated by one
 of these functions must be freed with \code{pfft_free} (or its equivalent \code{fftw_free}).
 Because of the performance reasons given in~\cite{fftw-align-mem}
 we recommend to use one of the \code{pfft_} (or its equivalent \code{fftw_}) allocation functions
@@ -43,7 +49,7 @@ that can be used as substitutes for \code{fftw_mpi_init} and \code{fftw_mpi_clea
 
 \section{Using PFFT Plans}
 PFFT follows exactly the same workflow as FFTW-MPI. 
-A plan created by one of the functions given in Section~\ref{sec:planning} is executed within
+A plan created by one of the functions given in Section~\ref{sec:planning} is executed with
 \begin{lstlisting}
 void pfft_execute(const pfft_plan plan);
 \end{lstlisting}
@@ -412,99 +418,228 @@ must be in the same order as above.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Ghost Cell Communication}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In the following we describe the PFFT ghost cell communication module.
+At the moment, PFFT ghost cell communication is restricted to three-dimensional arrays.
+Let us know if would like to have ghost cell communication also for higher dimensions.
+
+Assume a three-dimensional array \code{data} of size \code{n[3]} that is distributed in blocks such that each process has a local copy of
+\code{data[k[0],k[1],k[2]]} with 
+\begin{lstlisting}
+local_start[t] <= k[t] < local_start[t] + local_n[t] /* t=0,1,2 */
+\end{lstlisting}
+The ``classical'' ghost cell exchange communicates all the necessary data between neighboring processes,
+such that each process gets a local copy of \code{data[k[0],k[1],k[2]]} with
+\begin{lstlisting}
+local_gc_start[t] <= k[t] < local_gc_start[t] + local_ngc[t] /* t=0,1,2 */
+\end{lstlisting}
+where
+\begin{lstlisting}
+local_gc_start[t] = local_start[t] - gc_below[t]; /* t=0,1,2 */
+local_ngc[t] = local_n[t] + gc_below[t] + gc_above[t]; /* t=0,1,2 */
+\end{lstlisting}
+I.e., the local array block is increased in every dimension by \code{gc_below} elements below and \code{gc_above} elements above.
+Hereby, the \code{data} is wrapped periodically whenever \code{k[t]} exceeds the array dimensions.
+The number of ghost cells in every dimension can be chosen independently and can be arbitrary large, i.e.,
+PFFT ghost cell communication also handles the case where the requested data exceeds next neighbor communication.
+The number of ghost cells can even be bigger than the array size, which results in multiple local copies of the same data elements at every process. 
+
 \subsection{Using Ghost Cell Plans}
+We introduce a new datatype \code{pfft_gcplan} that stores all the necessary information for ghost cell communication.
+Using a ghost cell plan follows the typical workflow: At first, determine the parallel data distribution; cf. Section~\ref{sec:gc:local-size}.
+Next, create a ghost cell plan; cf. Section~\ref{sec:gc:plan-cdata} and Section~\ref{sec:gc:plan-rdata}. 
+Execute the ghost cell communication with one of the following two functions
 \begin{lstlisting}
 void pfft_exchange(
     pfft_gcplan ths);
 void pfft_reduce(
     pfft_gcplan ths);
+\end{lstlisting}
+Hereby, a ghost cell exchange creates duplicates of local data elements on next neighboring processes,  
+while a ghost cell reduce is the adjoint counter part of the exchange, i.e.,
+it adds the sum of all the duplicates of a local data element to the original data element.
+
+If the plan is not needed anymore, free the allocated memory with
+\begin{lstlisting}
 void pfft_destroy_gcplan(
     pfft_gcplan ths);
 \end{lstlisting}
+It is invalid to pass a freed plan to \code{pfft_exchange} or \code{pfft_reduce}.
 
-\subsection{Data Distribution}\label{sec:gc:local_size}
+\subsection{Data Distribution}\label{sec:gc:local-size}
+For a given three-dimensional local array of size \code{local_n} with offset \code{local_n_start} the following function
 \begin{lstlisting}
 ptrdiff_t pfft_local_size_gc_3d(
     const ptrdiff_t *local_n, const ptrdiff_t *local_start,
     ptrdiff_t alloc_local, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
     ptrdiff_t *local_ngc, ptrdiff_t *local_gc_start);
+\end{lstlisting}
+computes the local array plus ghost cell size \code{local_ngc} and the corresponding offset \code{local_gc_start}.
+The three-dimensional arrays \code{gc_below} and \code{gc_above} give the number of ghost cells below and above the local array.
+Return value is the necessary memory to store the array plus ghost cells.
+Hereby, \code{alloc_local}, \code{local_n}, \code{local_start} should be the return values of an appropriate
+\code{pfft_local_size} invocation; cf. Section~\ref{sec:local-size}.
+A generalization of the three-dimensional interface to \code{rnk_n}-dimensionsinal arrays is given by
+\begin{lstlisting}
 ptrdiff_t pfft_local_size_gc(
-    int rnk_n, const ptrdiff_t *local_n, const ptrdiff_t *local_start,
-    ptrdiff_t alloc_local, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
-    ptrdiff_t *local_ngc, ptrdiff_t *local_gc_start);
-ptrdiff_t pfft_local_size_many_gc(
-    int rnk_n, const ptrdiff_t *local_n, const ptrdiff_t *local_start, ptrdiff_t alloc_local,
-    ptrdiff_t howmany, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    int rnk_n, 
+    const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    ptrdiff_t alloc_local,
+    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
     ptrdiff_t *local_ngc, ptrdiff_t *local_gc_start);
 \end{lstlisting}
+Hereby, all \code{ptrdiff_t} arrays are of length \code{rnk_n}.
+However, only the case \code{rnk_n==3} is completely implemented at the moment. 
+
+You can substitute each data element in a ghost cell communication by tuples of size \code{howmany} with
+\begin{lstlisting}
+ptrdiff_t pfft_local_size_many_gc(
+    int rnk_n,
+    const ptrdiff_t *local_n, const ptrdiff_t *local_start,
+    ptrdiff_t alloc_local, ptrdiff_t howmany,
+    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    ptrdiff_t *local_ngc, ptrdiff_t *local_gc_start);
+\end{lstlisting}
+
+
 Works for complex and real arrays. R2c FFTs use the complex array decomposition for padded real values and the real array decomposition for non-padded real values.
 
-\subsection{Plan Creation for Complex Data}
+
+
+\subsection{Plan Creation for Complex Data}\label{sec:gc:plan-cdata}
 Data distribution functions are the same for complex and real data, see Section~\ref{sec:gc:local_size}.
 
 \begin{lstlisting}
 pfft_gcplan pfft_plan_cgc_3d(
-    const ptrdiff_t *n, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    const ptrdiff_t *n,
+    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
     pfft_complex *data, MPI_Comm comm_cart, unsigned gc_flags);
 pfft_gcplan pfft_plan_cgc(
-    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    int rnk_n, const ptrdiff_t *n,
+    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
     pfft_complex *data, MPI_Comm comm_cart, unsigned gc_flags);
 pfft_gcplan pfft_plan_many_cgc(
-    int rnk_n, const ptrdiff_t *n, ptrdiff_t howmany, const ptrdiff_t *block,
-    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above, pfft_complex *data, MPI_Comm comm_cart,
-    unsigned gc_flags);
+    int rnk_n, const ptrdiff_t *n,
+    ptrdiff_t howmany, const ptrdiff_t *block,
+    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    pfft_complex *data, MPI_Comm comm_cart, unsigned gc_flags);
 \end{lstlisting}
 
 
-\subsection{Plan Creation for Real Data}
+\subsection{Plan Creation for Real Data}\label{sec:gc:plan-rdata}
 Data distribution functions are the same for complex and real data, see Section~\ref{sec:gc:local_size}.
 
 \begin{lstlisting}
 pfft_gcplan pfft_plan_rgc_3d(
-    const ptrdiff_t *n, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    const ptrdiff_t *n,
+    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
     double *data, MPI_Comm comm_cart, unsigned gc_flags);
 pfft_gcplan pfft_plan_rgc(
-  int rnk_n, const ptrdiff_t *n, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+  int rnk_n, const ptrdiff_t *n,
+  const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
   double *data, MPI_Comm comm_cart, unsigned gc_flags);
 pfft_gcplan pfft_plan_many_rgc(
-  int rnk_n, const ptrdiff_t *n, ptrdiff_t howmany, const ptrdiff_t *block,
-  const ptrdiff_t *gc_below, const ptrdiff_t *gc_above, double *data, MPI_Comm comm_cart,
-  unsigned gc_flags);
+  int rnk_n, const ptrdiff_t *n,
+  ptrdiff_t howmany, const ptrdiff_t *block,
+  const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+  double *data, MPI_Comm comm_cart, unsigned gc_flags);
 \end{lstlisting}
 
 \subsection{Ghost Cell Execution Timer}
+PFFT ghost cell plans automatically accumulate the local run times of every call to \code{pfft_exchange} and \code{pfft_reduce}.
+For most applications it is sufficient to print run time of a plan \code{ths} averaged over all runs with
 \begin{lstlisting}
-void pfft_reset_gctimers(
-    pfft_gcplan ths);
-pfft_gctimer pfft_get_gctimer_exg(
-    const pfft_gcplan ths);
-pfft_gctimer pfft_get_gctimer_red(
-    const pfft_gcplan ths);
 void pfft_print_average_gctimer(
     const pfft_gcplan ths, MPI_Comm comm);
+\end{lstlisting}
+Note, that for each timer the maximum time over all processes is reduced to rank \code{0} of communicator \code{comm},
+i.e., a call to \code{MPI_Reduce} is performed and the output is only printed on this process.
+The following function works in the same way but prints more verbose output
+\begin{lstlisting}
 void pfft_print_average_gctimer_adv(
     const pfft_gcplan ths, MPI_Comm comm);
+\end{lstlisting}
+
+To write the averaged run time of a ghost cell plan \code{ths} into a file called \code{name} use
+\begin{lstlisting}
 void pfft_write_average_gctimer(
     const pfft_gcplan ths, const char *name, MPI_Comm comm);
 void pfft_write_average_gctimer_adv(
     const pfft_gcplan ths, const char *name, MPI_Comm comm);
+\end{lstlisting}
+Again, the output is only written on rank \code{0} of communicator \code{comm}.
 
-pfft_gctimer pfft_copy_gctimer(
-    const pfft_gctimer orig);
-void pfft_average_gctimer(
-    pfft_gctimer ths);
-pfft_gctimer pfft_add_gctimers(
-    const pfft_gctimer sum1, const pfft_gctimer sum2);
-pfft_gctimer pfft_reduce_max_gctimer(
-    const pfft_gctimer ths, MPI_Comm comm);
-void pfft_convert_gctimer2vec(
-    const pfft_gctimer ths, double *times);
-pfft_gctimer pfft_convert_vec2gctimer(
-    const double *times);
+Discard all the recorded run times with
+\begin{lstlisting}
+void pfft_reset_gctimers(
+    pfft_gcplan ths);
+\end{lstlisting}
+This function is called per default at the end of every ghost cell plan creation function.
+
+In order to access the run times directly a new typedef \code{pfft_timer} is introduced.
+The following functions return a copy of the timer corresponding to ghost cell plan \code{ths} that accumulated
+the time for ghost cell exchange or ghost cell reduce, respectively:
+\begin{lstlisting}
+pfft_gctimer pfft_get_gctimer_exg(
+    const pfft_gcplan ths);
+pfft_gctimer pfft_get_gctimer_red(
+    const pfft_gcplan ths);
+\end{lstlisting}
+Note that the memory of the returned \code{pfft_gctimer} must be released with
+\begin{lstlisting}
 void pfft_destroy_gctimer(
     pfft_gctimer ths);
 \end{lstlisting}
+as soon as the timer is not needed anymore. 
 
+In the following we introduce some routines to perform basic operations on timers.
+For all functions with a \code{pfft_gctimer} return value you must use \code{pfft_destroy_gctimer}
+in order to release the allocated memory of the timer.
+Create a copy of a ghost cell timer \code{orig} with
+\begin{lstlisting}
+pfft_gctimer pfft_copy_gctimer(
+    const pfft_gctimer orig);
+\end{lstlisting}
+Compute the average, local time over all runs of a timer \code{ths} with
+\begin{lstlisting}
+void pfft_average_gctimer(
+    pfft_gctimer ths);
+\end{lstlisting}
+Create a new timer that contains the sum of two timers \code{sum1} and \code{sum2} with
+\begin{lstlisting}
+pfft_gctimer pfft_add_gctimers(
+    const pfft_gctimer sum1, const pfft_gctimer sum2);
+\end{lstlisting}
+Create a timer that contains the maximum times of all the timers \code{ths} from all processes belonging to communicator \code{comm} with
+\begin{lstlisting}
+pfft_gctimer pfft_reduce_max_gctimer(
+    const pfft_gctimer ths, MPI_Comm comm);
+\end{lstlisting}
+Since this function calls \code{MPI_Reduce}, only the first process (rank 0) of \code{comm} will get the desired data while all
+the other processes have timers with undefined values.
+
+Note, that you can not access the elements of a timer directly, since it is only a pointer to a \code{struct}.
+However, PFFT offers a routine that creates an array and copies all the entries of the timer into it
+\begin{lstlisting}
+void pfft_convert_gctimer2vec(
+    const pfft_gctimer ths, double *times);
+\end{lstlisting}
+Remember to use \code{free} in order to release the allocated memory of the returned array at the moment it is not needed anymore.
+The entries of the returned array are ordered as follows:
+\begin{compactitem}
+  \item number of \code{pfft_execute} runs \code{iter}
+  \item local run time of all runs
+  \item local run time of zero padding (make room for incoming ghost cells and init with zeros)
+  \item local run time of the ghost cell exchange or reduce (depending on the timer)
+\end{compactitem}
+The complementary function
+\begin{lstlisting}
+pfft_gctimer pfft_convert_vec2gctimer(
+    const double *times);
+\end{lstlisting}
+creates a timer and fills it's entries with the data from array \code{times}. Thereby, the entries of \code{times}
+must be in the same order as above. 
+
+\todo[inline]{implement getters and setters for ghost cell timer}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -785,8 +920,9 @@ Hereby, \code{np} is an array of length \code{rnk_np}.
 Again, the memory of the generated communicator should be released with \code{MPI_Comm_free} after usage.
 
 
-
-\section{Ghost Cells}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Ghost Cell Communicaton}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Determine the Parallel Ghost Cell Layout}
 

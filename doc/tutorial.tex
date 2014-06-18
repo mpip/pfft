@@ -425,23 +425,5 @@ To use these interfaces, you must
   \item Replace double with float or long double for subroutine parameters.
 \end{compactitem}
 
-\section{Complex numbers}
-PFFT introduces the complex data type \code{pfft_complex} that is nothing else than a typedef to \code{fftw_complex}.
-According to the FFTW manual~\cite{fftw-cplx-num}:
-\begin{quote}
-  The default FFTW interface uses double precision for all floating-point numbers, and defines a \code{fftw_complex} type to hold complex numbers as:
-  \begin{lstlisting}
-    typedef double fftw_complex[2];
-  \end{lstlisting}
-  Here, the \code{[0]} element holds the real part and the \code{[1]} element holds the imaginary part.
-
-  Alternatively, if you have a C compiler (such as gcc) that supports the C99 revision of the ANSI C standard,
-  you can use C's new native complex type (which is binary-compatible with the typedef above).
-  In particular, if you \code{#include <complex.h>} before \code{<fftw.h>}, then \code{fftw_complex} is defined to be the native complex
-  type and you can manipulate it with ordinary arithmetic (e.g. x = y * (3+4*I), where x and y are \code{fftw_complex}
-  and I is the standard symbol for the imaginary unit);
-\end{quote}
-I.e., include \code{<complex.h>} \emph{before} \code{<pfft.h>}, \code{<fftw.h>} and \code{<fftw-mpi.h>} to be sure that \code{pfft_complex} is defined to be the native complex.
-
 \section{Measuring parallel run times}
 Use \code{MPI_Barrier} in front of every call to \code{pfft_} function to avoid unbalanced run times.
