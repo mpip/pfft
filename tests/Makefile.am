@@ -15,9 +15,23 @@ AM_CPPFLAGS += -I$(top_srcdir)/api
 # Libraries to add to all programs that are built.
 LDADD = $(top_builddir)/lib@PFFT_PREFIX@pfft@PREC_SUFFIX@.la $(fftw3_mpi_LIBS) $(fftw3_LIBS)
 
+
+.ctex.c:
+	sed -e 's/(\*@//g' -e 's/@\*)//g' -e 's/\\.*{.*}//g' $< > $@
+	sed -e 's/\\del§\([^§]*\)§//g' -e 's/\\red§\(.*\)§/(\*@\\color{red}\1@\*)/g' -e '/\\red§/,/§/{s/_/\\_/g}' versuch.ctex
+
+manual_FILES = man_fftw_3don1d.ctex
+
+
 EXTRA_DIST = \
 	build_checks.sh \
 	run_checks.sh
+
+
+
+
+
+
 
 # These programs are built by 'make check' and may be tested afterwards.
 check_PROGRAMS = \

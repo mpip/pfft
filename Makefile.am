@@ -21,10 +21,8 @@ DIST_SUBDIRS = $(SUBDIRS) tests
 
 # Tests work with double precision only.
 if ENABLE_TESTS
-if ! SINGLE
-if ! LDOUBLE
+if DOUBLE
 SUBDIRS += tests
-endif
 endif
 endif
 

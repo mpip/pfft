@@ -226,17 +226,17 @@ int main(int argc, char **argv)
     pfft_complex *data;
     ptrdiff_t alloc_local, local_ni[3], local_i_start[3], local_no[3], local_o_start[3], i, j, k;
     unsigned pfft_flags = 0;
-    (red@MPI\_Comm comm\_cart\_2d;@*)
+    (red@MPI_Comm comm_cart_2d;@*)
 
     MPI_Init(&argc, &argv);
     pfft_init();
 
     (red@/* create two-dimensional process grid of size np0 x np1 */@*)
-    (red@pfft\_create\_procmesh\_2d(MPI\_COMM\_WORLD, np0, np1,@*)
-        (red@\&comm\_cart\_2d);@*)
+    (red@pfft_create_procmesh_2d(MPI_COMM_WORLD, np0, np1,@*)
+        (red@&comm_cart_2d);@*)
     
     /* get local data size and allocate */
-    alloc_local = pfft_local_size_dft_3d(n, (red@comm\_cart\_2d@*), pfft_flags,
+    alloc_local = pfft_local_size_dft_3d(n, (red@comm_cart_2d@*), pfft_flags,
 				         local_ni, local_i_start,
 				         local_no, local_o_start);
     data = pfft_alloc_complex(alloc_local);
@@ -247,12 +247,12 @@ int main(int argc, char **argv)
 
     /* initialize data to some function my_function(x,y,z) */
     for (i = 0; i < local_n[0]; ++i) 
-      for (j = 0; j < (red@local\_n[1]@*); ++j) 
-        for (k = 0; k < (red@local\_n[2]@*); ++k)
-          data[i*(red@local\_n[1]*local\_n[2]@*) + j*(red@local\_n[2]@*) + k] =
+      for (j = 0; j < (red@local_n[1]@*); ++j) 
+        for (k = 0; k < (red@local_n[2]@*); ++k)
+          data[i*(red@local_n[1]*local_n[2]@*) + j*(red@local_n[2]@*) + k] =
               my_function(local_i_start[0] + i,
-		          (red@local\_i\_start[1] +@*) j,
-		          (red@local\_i\_start[2] +@*) k);
+		          (red@local_i_start[1] +@*) j,
+		          (red@local_i_start[2] +@*) k);
 
     /* compute transforms, in-place, as many times as desired */
     pfft_execute(plan);
@@ -304,7 +304,7 @@ to print the error message.
 This function is similar to the standard C function \code{fprintf} with the exception, that only the process with MPI rank $0$
 within the given communicator \code{comm} will produce some output; see Section~\ref{sec:fprintf} for details.
 
-\section{Inplace transforms}
+\section{Inplace Transforms}
 Similar to FFTW, PFFT is able to compute parallel FFTs completely in place, which means that beside some
 constant buffers, no second data array beside the inputs is necessary. Especially, the global data communication
 can be performed in place. As far as we know, there is no other parallel FFT library beside FFTW and PFFT that
@@ -317,54 +317,51 @@ plan = pfft_plan_dft_3d(n, in, in, comm_cart_2d,
     PFFT_FORWARD, PFFT_TRANSPOSED_NONE);
 \end{lstlisting}
 
-\section{Higher dimensional data decomposition}
+\section{Higher Dimensional Data Decomposition}
 Our first test program used a two-dimensional data decomposition of a three-dimensional data set.
 Moreover, PFFT support the computation of any $d$-dimensional FFT with $r$-dimensional data decomposition
 as long as $r\le d-1$. For example, one can use a one-dimensional data decomposition for any two- or higher-dimensional data set,
 while the data set must be at least four-dimensional to fit to a three-dimensional data decomposition.
 The case $r=d$ is not supported efficiently, since during the parallel computations
 there is always at least one dimension that remains local, i.e., one dimensions stays non-decomposed.
-However, for the case $d=r=3$ we offer some library
+The only exception from this rule is the case $d=r=3$ that is supported by PFFT in a special way, see Section~\ref{sec:3don3d} for details.
 
 The dimensionality of the data decomposition is given by the dimension of the Cartesian communicator that
 goes into the PFFT planing routines. Therefore, we present a generalization of communicator creation function
 \begin{lstlisting}
 int pfft_create_procmesh(
-    int rnk, MPI_Comm comm, const int *np,
+    int rnk_np, MPI_Comm comm, const int *np,
     MPI_Comm *comm_cart);
 \end{lstlisting}
-Hereby, the array \code{np} of length \code{rnk} gives the size of the Cartesian communicator \code{cart_comm}.
+Hereby, the array \code{np} of length \code{rnk_np} gives the size of the Cartesian communicator \code{cart_comm}.
 
-
-\section{Transposed data layout}
-\begin{compactitem}
-  \item \code{PFFT_TRANSPOSED_NONE}
-  \item \code{PFFT_TRANSPOSED_IN}
-  \item \code{PFFT_TRANSPOSED_OUT}
-\end{compactitem}
-
-\subsection{Parallel data decomposition}
-
-A $d$-dimensional array of size $n_0 \times n_1\times \hdots \times n_{d-1}$ 
-
-Suppose a $r$-dimensional data decomposition
-Suppose a $d$-dimensional array that is 
-\code{PFFT_TRANSPOSED_NONE}
+\section{Parallel Data Decomposition}\label{sec:par-data-decomp}
+The standard PFFT data decomposition of $h$ interleaved $d$-dimensional arrays of equal size $n_0 \times n_1\times \hdots \times n_{d-1}$
+on a $r$-dimensional process mesh of size $P_0\times \hdots \times P_{r-1}$ is given by the blocks
 \begin{equation*}
-  \frac{n_0}{P_0} \times \frac{n_1}{P_1} \times \hdots \times \frac{n_{r-1}}{P_{r-1}}  \times n_r \times n_{r+1} \times \hdots \times n_{d-1}
+  \frac{n_0}{P_0} \times \frac{n_1}{P_1} \times \hdots \times \frac{n_{r-1}}{P_{r-1}}  \times n_r \times n_{r+1} \times \hdots \times n_{d-1} \times h.
+\end{equation*}
+A PFFT created with planning flag \code{PFFT_TRANSPOSED_NONE} requires the inputs to be decomposed in this standard way and produces
+outputs that are decomposed in the same way.
+
+\subsection{Transposed data layout}
+PFFT can save half of the global communication amount, if the data reordering to standard decomposition is omitted. 
+The transposed data decomposition is given by
+\begin{equation*}
+  \frac{n_1}{P_0} \times \frac{n_2}{P_1} \times \hdots \times \frac{n_{r}}{P_{r-1}}  \times n_0 \times n_{r+1} \times \hdots \times n_{d-1} \times h
+\end{equation*}
+A PFFT plan created with planning flag \code{PFFT_TRANSPOSED_OUT} produces outputs with transposed data decomposition.
+Analogously, a PFFT plan created with planning flag \code{PFFT_TRANSPOSED_IN} requires its inputs to be decomposed in the transposed way.
+Typically, one creates a forward plan with \code{PFFT_TRANSPOSED_OUT} and uses a backward plan that was created with planning flag \code{PFFT_TRANSPOSED_IN}.
+
+Note that the flags \code{PFFT_TRANSPOSED_OUT} and \code{PFFT_TRANSPOSED_IN} must be passed to the array distribution function (see Section~\ref{sec:local_size})
+and the plan creation function (see Section~\ref{sec:planner}).
+
+\subsection{Three-Dimensional FFTs with Three-Dimensional Data Decomposition}
+\begin{equation*}
+  \frac{n_0}{P_0} \times \frac{n_1}{P_1} \times \frac{n_2}{P_2} \times h.
 \end{equation*}
 
-
-
-Transposed $d$-dimensional array distributed on $c$-dimensional process mesh ($c<d$)
-\begin{equation*}
-  \frac{n_1}{P_0} \times \frac{n_2}{P_1} \times \hdots \times \frac{n_c}{P_{c-1}}  \times n_0 \times n_{c+1} \times \hdots \times n_{d-1}
-\end{equation*}
-
-Comparision of non-transposed (left) and transposed (right) $d$-dimensional array for $c$-dimensional process mesh ($c<d$)
-\begin{equation*}
-  n_0\times n_1\times \hdots n_{c-1} \times n_c \hdots \times n_{d-1} \Rightarrow n_1 \times \hdots n_{c-1} \times n_0 \times n_c \times \hdots \times n_{d-1}
-\end{equation*}
 
 \section{Planning effort}
 \begin{compactitem}
@@ -409,221 +406,8 @@ Comparision of non-transposed (left) and transposed (right) $d$-dimensional arra
 \end{compactitem}
 
 
-\section{Parallel data distribution}
-
-\section{Three-dimensional FFTs with three-dimensional data decomposition}
 
 
-
-\newpage
-\section{Parallel FFT Frameworks}
-
-\subsection{Forward Framework A (transposed input)}
-\figurename{}~\ref{fig:fft_forw} lists the pseudo code of the parallel forward FFT framework.
-\begin{figure}[ht]
-  \begin{algorithmic}[1]
-  %   \State\Comment{Calculate the serial FFTs row wise}
-    \For{$t\gets0,\hdots,d-r-2$}
-      \State $h_0 \gets \bigtimes_{s=0}^{r-1} N_s/P_s \times \bigtimes_{s=r}^{d-2-t} N_s$
-      \State $N   \gets N_{d-1-t}$
-      \State $h_1 \gets \bigtimes_{s=d-t}^{d-1} \hat N_s \times h$
-      \State $h_0 \times N \times h_1 \osetarrow{FFT} h_0 \times \hat N \times h_1$
-    \EndFor
-    \For{$t\gets 0,\hdots,r-1$}
-      \State $h_0 \gets \bigtimes_{s=r-t}^{r-1} \hat N_{s+1}/P_s \times \bigtimes_{s=0}^{r-t-1} N_s/P_s$
-      \State $N   \gets N_{r-t}$
-      \State $h_1 \gets \bigtimes_{s=r+1}^{d-1} \hat N_s \times h$
-      \State $h_0 \times N \times h_1 \ousetarrow{FFT}{TO} \hat N \times h_0 \times h_1$
-      \State
-      \State $L_0 \gets \hat N_{r-t}$
-      \State $h_0 \gets \bigtimes_{s=r-t}^{r-1}\hat N_{s+1}/P_{s} \times \bigtimes_{s=0}^{r-t-2} N_s/P_s$
-      \State $L_1 \gets N_{r-t-1}$
-      \State $h_1 \gets 1$
-      \State $h_2 \gets \bigtimes_{s=r+1}^{d-1} \hat N_s \times h$
-      \State $P   \gets P_{r-t-1}$
-%       \State \mbox{$L_0 \times h_0 \times L_1/P \times h_1 \times h_2$} \mbox{$\ousetarrow{T}{TI} L_0/P \times h_0 \times L_1 \times h_1 \times h_2$}
-      \State $L_0 \times h_0 \times L_1/P \times h_1 \times h_2\ousetarrow{T}{TI} L_0/P \times h_0 \times L_1 \times h_1 \times h_2$
-    \EndFor
-    \State $h_0 \gets \bigtimes_{s=0}^{r-1}\hat N_{s+1}/P_s$
-    \State $N   \gets N_0$
-    \State $h_1 \gets \bigtimes_{s=r+1}^{d-1} \hat N_s \times h$
-    \State $h_0 \times N \times h_1 \osetarrow{FFT} h_0 \times \hat N \times h_1$
-  \end{algorithmic}
-  \caption{Parallel Forward FFT Framework}\label{fig:fft_forw}
-\end{figure}
-
-Within the first loop we use the serial FFT module~\eqref{eq:pruned_fft} to calculate
-the one-dimensional (pruned) FFTs along the last $d-r-1$ array dimensions.
-In the second loop we calculate $r$ one-dimensional pruned FFTs with transposed output~\eqref{eq:pruned_fft_to}
-interleaved by global data transpositions with transposed input~\eqref{eq:gtransp_ti}.
-Finally, a single non-transposed FFT~\eqref{eq:pruned_fft} must be computed to finish the full $d$-dimensional FFT.
-The data decomposition of the output is then given by
-\begin{equation*}
-  \hat N_1/P_0 \times \hdots \times \hat N_{r-2}/P_{r-1} \times \hat N_r \times \hdots \times \hat N_{d-1} \times h\,.
-\end{equation*}
-Note, that the dimensions of the output array are slightly transposed.
-
-\subsection{Backward Framework C (transposed output)}
-Now, the parallel backward FFT framework can be derived very easy since we only need to revert all the steps
-of the forward framework. The backward framework starts with the output decomposition of the forward framework
-\begin{equation*}
-  \hat N_1/P_0 \times \hdots \times \hat N_{r-2}/P_{r-1} \times \hat N_r \times \hdots \times \hat N_{d-1} \times h
-\end{equation*}
-and ends with the initial data decomposition
-\begin{equation*}
-  N_0/P_0 \times \hdots \times N_{r-1}/P_{r-1} \times N_r \times \hdots \times N_{d-1} \times h\,.
-\end{equation*}
-\figurename{}~\ref{fig:fft_back} lists the parallel backward FFT framework in pseudo code.
-\begin{figure}[ht]
-  \begin{algorithmic}[1]
-  %   \State\Comment{Calculate the serial FFTs row wise}
-    \State $h_0 \gets \bigtimes_{s=0}^{r-1}\hat N_{s+1}/P_s$
-    \State $N   \gets \hat N_0$
-    \State $h_1 \gets \bigtimes_{s=r+1}^{d-1} \hat N_s \times h$
-    \State $h_0 \times \hat N \times h_1 \osetarrow{FFT} h_0 \times N \times h_1$
-    \For{$t\gets r-1,\hdots,0$}
-      \State $L_1 \gets \hat N_{r-t}$
-      \State $h_1 \gets \bigtimes_{s=r-t}^{r-1}\hat N_{s+1}/P_{s} \times \bigtimes_{s=0}^{r-t-2} N_s/P_s$
-      \State $L_0 \gets N_{r-t-1}$
-      \State $h_0 \gets 1$
-      \State $h_2 \gets \bigtimes_{s=r+1}^{d-1} \hat N_s \times h$
-      \State $P   \gets P_{r-t-1}$
-      \State $L_1/P \times h_1 \times L_0 \times h_0 \times h_2\ousetarrow{T}{TO} L_1 \times h_1 \times L_0/P \times h_0 \times h_2$
-%       \State \mbox{$L_1/P \times h_1 \times L_0 \times h_0 \times h_2$} \mbox{$\ousetarrow{T}{TO} L_1 \times h_1 \times L_0/P \times h_0 \times h_2$}
-      \State
-      \State $h_0 \gets \bigtimes_{s=r-t}^{r-1} \hat N_{s+1}/P_s \times \bigtimes_{s=0}^{r-t-1} N_s/P_s$
-      \State $N   \gets \hat N_{r-t}$
-      \State $h_1 \gets \bigtimes_{s=r+1}^{d-1} \hat N_s \times h$
-      \State $\hat N \times h_0 \times h_1 \ousetarrow{FFT}{TI} h_0 \times N \times h_1 $
-    \EndFor
-    \For{$t\gets d-r-2,\hdots,0$}
-      \State $h_0 \gets \bigtimes_{s=0}^{r-1} N_s/P_s \times \bigtimes_{s=r}^{d-2-t} N_s$
-      \State $N   \gets \hat N_{d-1-t}$
-      \State $h_1 \gets \bigtimes_{s=d-t}^{d-1} \hat N_s \times h$
-      \State $h_0 \times \hat N \times h_1 \osetarrow{FFT} h_0 \times N \times h_1$
-    \EndFor
-  \end{algorithmic}
-  \caption{Parallel Backward FFT Framework}\label{fig:fft_back}
-\end{figure}
-
-\newpage
-\subsection{Backward Framework A (transposed input) - General \texorpdfstring{$r$, $d$}{r, d}}
-\setlength{\arraycolsep}{2pt}
-\begin{equation*}
-  \begin{array}{cc}
-    & \frac{\hat N_1}{P_0} \times \hdots \times \frac{\hat N_r}{P_{r-1}} \times \hat N_0 \times \hat N_{r+1} \times \hdots \times \hat N_{d-1} \times h \\
-    \ousetarrow{FFT}{TO} & N_0 \times \frac{\hat N_1}{P_0} \times \hdots \times \frac{\hat N_r}{P_{r-1}} \times \hat N_{r+1} \times \hdots \times \hat N_{d-1} \times h \\
-    \transposearrow{TI} & \frac{N_0}{P_0} \times \hat N_1 \times \frac{\hat N_2}{P_1} \times \hdots \times \frac{\hat N_r}{P_{r-1}} \times \hat N_{r+1} \times \hdots \times \hat N_{d-1} \times h \\
-    \ousetarrow{FFT}{TO} & N_1 \times \frac{N_0}{P_0} \times \frac{\hat N_2}{P_1} \times \hdots \times \frac{\hat N_r}{P_{r-1}} \times \hat N_{r+1} \times \hdots \times \hat N_{d-1} \times h \\
-    \vdots & \\
-    \transposearrow{TI} & \frac{N_{r-1}}{P_{r-1}} \times \hdots \times \frac{N_0}{P_0} \times \hat N_r \times \hat N_{r+1} \times \hdots \times \hat N_{d-1} \times h \\
-    \ousetarrow{FFT}{\red{T}} & \frac{N_0}{P_0} \times \hdots \times \frac{N_{r-1}}{P_{r-1}} \times N_r \times \hat N_{r+1} \times \hdots \times \hat N_{d-1} \times h \\
-    \ousetarrow{FFT}{} & \frac{N_0}{P_0} \times \hdots \times \frac{N_{r-1}}{P_{r-1}} \times N_r \times N_{r+1} \times \hat N_{r+2} \times \hdots \times \hat N_{d-1} \times h \\
-    \vdots & \\
-    \ousetarrow{FFT}{} & \frac{N_0}{P_0} \times \hdots \times \frac{N_{r-1}}{P_{r-1}} \times N_r \times N_{r+1} \times \hdots \times N_{d-1} \times h \\
-  \end{array}
-\end{equation*}
-
-\newpage
-\subsection{Backward Framework A (transposed input) for \texorpdfstring{$r=3$, $d=5$}{r=3 and d=5}}
-\setlength{\arraycolsep}{2pt}
-\begin{equation*}
-  \begin{array}{cccc}
-    & \left(\frac{\hat N_1}{P_0} \times \frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2}\right) \times \hat N_0 \times \left(\hat N_4 \times h\right)
-    & \ousetarrow{FFT}{TO} & \Big(N_0\Big) \times \left(\frac{\hat N_1}{P_0} \times \frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2}\right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TI} & \left(\frac{N_0}{P_0}\right) \times \hat N_1 \times \left(\frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2} \times \hat N_4 \times h\right)
-    & \ousetarrow{FFT}{TO} & \left(N_1 \times \frac{N_0}{P_0}\right) \times \left(\frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2} \right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TI} & \left(\frac{N_1}{P_1} \times \frac{N_0}{P_0}\right) \times \hat N_2 \times \left(\frac{\hat N_3}{P_2} \times \hat N_4 \times h \right)
-    & \ousetarrow{FFT}{TO} & \left(N_2 \times \frac{N_1}{P_1} \times \frac{N_0}{P_0}\right) \times \left(\frac{\hat N_3}{P_2} \right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TI} & \frac{N_2}{P_2} \times \frac{N_1}{P_1} \times \frac{N_0}{P_0} \times \left(\hat N_3 \times \hat N_4 \times h \right)
-    & \ousetarrow{FFT}{\red{T}} & \frac{N_0}{P_0} \times \frac{N_1}{P_1} \times \frac{N_2}{P_2} \times N_3 \times N_4 \times h
-  \end{array}
-\end{equation*}
-Last step need more general interface to serial FFT module!
-
-\subsection{Backward Framework B (transposed input and output) for \texorpdfstring{$r=3$, $d=5$}{r=3 and d=5}}
-\setlength{\arraycolsep}{2pt}
-\begin{equation*}
-  \begin{array}{cccc}
-    & \left(\frac{\hat N_1}{P_0} \times \frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2}\right) \times \hat N_0 \times \left(\hat N_4 \times h\right)
-    & \ousetarrow{FFT}{TO} & \Big(N_0\Big) \times \left(\frac{\hat N_1}{P_0} \times \frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2}\right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TIO} & \hat N_1 \times \left(\frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2} \times \frac{N_0}{P_0}\right) \times \left(\hat N_4 \times h\right)
-    & \osetarrow{FFT} & \Big(N_1\Big) \times \left(\frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2} \times \frac{N_0}{P_0}\right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TIO} & \hat N_2 \times \left(\frac{\hat N_3}{P_2} \times \frac{N_0}{P_0} \times \frac{N_1}{P_1}\right) \times \left(\hat N_4 \times h\right)
-    & \osetarrow{FFT} & \Big(N_2\Big) \times \left(\frac{\hat N_3}{P_2} \times \frac{N_0}{P_0} \times \frac{N_1}{P_1}\right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TIO} & \hat N_3 \times \left(\frac{N_0}{P_0} \times \frac{N_1}{P_1}  \times \frac{N_2}{P_2}\right) \times \left(\hat N_4 \times h\right)
-    & \ousetarrow{FFT}{TI} & \frac{N_0}{P_0} \times \frac{N_1}{P_1}  \times \frac{N_2}{P_2} \times N_3 \times N_4 \times h
-  \end{array}
-\end{equation*}
-
-\subsection{Forward Framework A (transposed input) for \texorpdfstring{$r=3$, $d=5$}{r=3 and d=5}}
-\setlength{\arraycolsep}{2pt}
-\begin{equation*}
-  \begin{array}{cccc}
-    & \left(\frac{N_0}{P_0} \times \frac{N_1}{P_1}  \times \frac{N_2}{P_2}\right) \times N_3 \times \left(\hat N_4 \times h\right)
-    & \ousetarrow{FFT}{TO} & \left(\hat N_3 \times \frac{N_0}{P_0} \times \frac{N_1}{P_1}\right) \times \left(\frac{N_2}{P_2}\right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TI} & \left(\frac{\hat N_3}{P_2} \times \frac{N_0}{P_0} \times \frac{N_1}{P_1}\right)  \times N_2 \times \left(\hat N_4 \times h\right)
-    & \ousetarrow{FFT}{TO} & \left(\hat N_2 \times \frac{\hat N_3}{P_2} \times \frac{N_0}{P_0}\right) \times \left(\frac{N_1}{P_1}\right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TI} & \left(\frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2} \times \frac{N_0}{P_0}\right) \times N_1 \times \left(\hat N_4 \times h\right)
-    & \ousetarrow{FFT}{TO} & \left(\hat N_1 \times \frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2}\right) \times \left(\frac{N_0}{P_0}\right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TI} & \left(\frac{\hat N_1}{P_0} \times \frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2}\right) \times N_0 \times \left(\hat N_4 \times h\right)
-    & \osetarrow{FFT} & \frac{\hat N_1}{P_0} \times \frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2} \times \hat N_0 \times \hat N_4 \times h
-  \end{array}
-\end{equation*}
-
-\subsection{Forward Framework B (transposed input and output) for \texorpdfstring{$r=3$, $d=5$}{r=3 and d=5}}
-\setlength{\arraycolsep}{2pt}
-\begin{equation*}
-  \begin{array}{cccc}
-    & \left(\frac{N_0}{P_0} \times \frac{N_1}{P_1}  \times \frac{N_2}{P_2}\right) \times N_3 \times \left(N_4 \times h\right)
-    & \ousetarrow{FFT}{TO} & \left(\hat N_3 \times \frac{N_0}{P_0} \times \frac{N_1}{P_1}\right)  \times \left(\frac{N_2}{P_2}\right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TIO} & N_2 \times \left(\frac{\hat N_3}{P_2} \times \frac{N_0}{P_0} \times \frac{N_1}{P_1} \right) \times \left( \hat N_4 \times h\right)
-    & \osetarrow{FFT} & \left(\hat N_2 \times \frac{\hat N_3}{P_2} \times \frac{N_0}{P_0}\right) \times \left(\frac{N_1}{P_1}\right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TIO} & N_1 \times \left(\frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2} \times \frac{N_0}{P_0}\right) \times \left( \hat N_4 \times h\right)
-    & \osetarrow{FFT} & \left(\hat N_1 \times \frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2}\right) \times \left(\frac{N_0}{P_0}\right) \times \left(\hat N_4 \times h\right) \\
-    \transposearrow{TIO} & N_0 \times \left(\frac{\hat N_1}{P_0} \times \frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2}\right) \times \left(\hat N_4 \times h\right)
-    & \ousetarrow{FFT}{TI} & \frac{\hat N_1}{P_0} \times \frac{\hat N_2}{P_1} \times \frac{\hat N_3}{P_2} \times \hat N_0 \times \hat N_4 \times h
-  \end{array}
-\end{equation*}
-
-\newpage
-\subsection{Backward Framework A (transposed input) - The general form}
-\figurename{}~\ref{fig:fft_back_A} lists the parallel backward FFT framework A in pseudo code.
-\begin{figure}[ht]
-  \begin{algorithmic}[1]
-  %   \State\Comment{Calculate the serial FFTs row wise}
-    \For{$t\gets 0,\hdots,r-1$}
-      \State $h_0 \gets \bigtimes_{s=t}^{r-1}\hat N_{s+1}/P_s$
-      \State $N   \gets \hat N_t$
-      \State $h_1 \gets \bigtimes_{s=t+1}^{r-1} \hat N_{s+1}/ P_{s} \times \hat N_{r}  \bigtimes_{s=r+1}^{d-1} \hat N_s \times h$
-      \State $h_0 \times \hat N \times h_1 \ousetarrow{FFT}{TO} N \times h_0 \times h_1$
-      \State
-      \State $L_1 \gets N_t$
-      \State $h_1 \gets \bigtimes_{s=0}^{t-1} N_{s}/P_{s}$
-      \State $L_0 \gets \hat N_{t+1}$
-      \State $h_0 \gets \bigtimes_{s=t+1}^{r-1}\hat N_{s+1}/P_{s}$
-      \State $h_2 \gets \bigtimes_{s=r+1}^{d-1} \hat N_s \times h$
-      \State $P   \gets P_{t}$
-      \State $L_1 \times h_1 \times L_0/P \times h_0 \times h_2\ousetarrow{T}{TI} L_1/P \times h_1 \times L_0 \times h_0 \times h_2$
-    \EndFor
-    \State $h_0 \gets \bigtimes_{s=r-t}^{r-1} \hat N_{s+1}/P_s \times \bigtimes_{s=0}^{r-t-1} N_s/P_s$
-    \State $N   \gets \hat N_{r-t}$
-    \State $h_1 \gets \bigtimes_{s=r+1}^{d-1} \hat N_s \times h$
-    \State $\hat N \times h_0 \times h_1 \ousetarrow{FFT}{TI} h_0 \times N \times h_1 $
-    \For{$t\gets d-r-2,\hdots,0$}
-      \State $h_0 \gets \bigtimes_{s=0}^{r-1} N_s/P_s \times \bigtimes_{s=r}^{d-2-t} N_s$
-      \State $N   \gets \hat N_{d-1-t}$
-      \State $h_1 \gets \bigtimes_{s=d-t}^{d-1} \hat N_s \times h$
-      \State $h_0 \times \hat N \times h_1 \osetarrow{FFT} h_0 \times N \times h_1$
-    \EndFor
-  \end{algorithmic}
-  \caption{Parallel Backward FFT Framework A}\label{fig:fft_back_A}
-\end{figure}
-
-
-\begin{compactitem}
-  \item[\mybox] \verb+#include <complex.h> #include <pfft.h>+
-\end{compactitem}
 
 
 \section{Precisions}\label{sec:prec}
