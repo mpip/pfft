@@ -90,7 +90,6 @@ if test "$ok" = "yes"; then
 else
   PRECISION=d
 fi
-AM_CONDITIONAL(SINGLE, test "$ok" = "yes")
 
 AC_ARG_ENABLE(long-double, [AS_HELP_STRING([--enable-long-double],[compile pfft in long-double precision])], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
@@ -100,8 +99,12 @@ if test "$ok" = "yes"; then
   AC_DEFINE(PFFT_LDOUBLE,1,[Define to compile in long-double precision.])
   PRECISION=l
 fi
-AM_CONDITIONAL(LDOUBLE, test "$ok" = "yes")
+
 AC_SUBST(PRECISION)
+
+AM_CONDITIONAL(SINGLE,  test "$PRECISION" = "s")
+AM_CONDITIONAL(DOUBLE,  test "$PRECISION" = "d")
+AM_CONDITIONAL(LDOUBLE, test "$PRECISION" = "l")
 
 # compute library suffix
 case "$PRECISION" in
@@ -110,6 +113,7 @@ case "$PRECISION" in
      l) PREC_SUFFIX=l;;
 esac
 AC_SUBST(PREC_SUFFIX)
+
 
 # Add options (--disable-header-install, --disable-library-install, and --disable-tests) and Automake conditionals to disable install of headers and libraries and build of tests on request.
 # If the AX_DISABLE macro is missing, then headers, libraries, and tests will be enabled on default.

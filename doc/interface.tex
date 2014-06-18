@@ -1,23 +1,88 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Interface layers of the PFFT library}\label{chap:api}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+We introduce the interface layers of PFFT in the order of increasing flexibility at the example of c2c-FFT.
+For r2c-, c2r-, and r2r-FFT similar interface layer specifications apply.
+\section{Basic interface}
+The \code{_3d} interface is the simplest interface layer. It is suitable for the planning of three-dimensional FFTs.
+\begin{lstlisting}
+ptrdiff_t pfft_local_size_dft_3d(
+    const ptrdiff_t *n, MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+void pfft_local_block_dft_3d(
+    const ptrdiff_t *n, MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+pfft_plan pfft_plan_dft_3d(
+    const ptrdiff_t *n, pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+\end{lstlisting}
+Hereby, \code{n}, \code{local_ni}, \code{local_i_start}, \code{local_no}, and \code{local_o_start} are
+\code{ptrdiff_t} arrays of length \code{3}.
 
-Similar to FFTW the PFFT interface splits into the following two layers
-\begin{compactitem}
-  \item The basic interface computes a single FFT in parallel.
-  \item The advanced interface computes FFTs of multiple arrays, gives a more sophisticated possibility
-        to influence the parallel data distribution and adds support of over- and undersampling.
-%   \item The guru interface allows to influence the combination of algorithmic steps to yield a parallel FFT.
-\end{compactitem}
-From basic to advanced the flexibility of the parallel algorithms increases but also the risk to set up the
-parallel execution in a wrong way. Users should stick to the basic interface layer as long as it is sufficiently
-flexible for their application.
+The basic interface generalizes the \code{_3d} interface to FFTs of arbitrary dimension \code{rnk_n}.
+\begin{lstlisting}
+ptrdiff_t pfft_local_size_dft(
+    int rnk_n, const ptrdiff_t *n,
+    MPI_Comm comm_cart, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+void pfft_local_block_dft(
+    int rnk_n, const ptrdiff_t *n,
+    MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+pfft_plan pfft_plan_dft(
+    int rnk_n, const ptrdiff_t *n, pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+\end{lstlisting}
+Therefore, \code{n}, \code{local_ni}, \code{local_i_start}, \code{local_no}, and \code{local_o_start} are
+\code{ptrdiff_t} arrays of length \code{rnk_n}.
 
-\section{Basic interface layer}
+\section{Advanced interface}
+The advanced interface introduces the arrays \code{ni} and \code{no} of length \code{rnk_n}
+that give the pruned FFT input and output size.
+Furthermore, the arrays \code{iblock} and \code{oblock} of length \code{rnk_pm} (\code{rnk_pm} being the dimension of the process mesh)
+serve to adjust the block size of the input and output block decomposition.
+\begin{lstlisting}
+ptrdiff_t pfft_local_size_many_dft(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    MPI_Comm comm_cart, unsigned pfft_plan pfft_plan_many_dft_skipped(
+    int rnk_n, const ptrdiff_t *n,
+    const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany,
+    const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    (red@const int *skip_trafos@*),
+    pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+void pfft_local_block_many_dft(
+    int rnk_n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
+    ptrdiff_t *local_no, ptrdiff_t *local_o_start);
+pfft_plan pfft_plan_many_dft(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+\end{lstlisting}
 
 
-
-\section{Advanced interface layer}
-
-\chapter{Support}
-\href{mailto:michael.pippig@mathematik.tu-chemnitz.de}{michael.pippig@mathematik.tu-chemnitz.de}
+\section{Preliminary: Skip selected serial transformations}
+The \code{_skipped} interface is based on the \code{many} interface but adds the possibility to skip selected serial FFTs.
+\begin{lstlisting}
+pfft_plan pfft_plan_many_dft_skipped(
+    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
+    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    (red@const int *skip_trafos,@*) pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int sign, unsigned pfft_flags);
+\end{lstlisting}
+Hereby, \code{skip_trafos} is an \code{int} array of length \code{rnk_pm+1} (\code{rnk_pm} being the mesh dimension of the communicator \code{comm_cart}).
+For \code{t=0,...,rnk_pm} set \code{skip_trafos[t]=1} if the \code{t}-th serial transformation should be computed, otherwise set \code{skip_trafos[t]=0}.
+Note that the local transpositions are always performed, since they are necessary for the global communication to work.

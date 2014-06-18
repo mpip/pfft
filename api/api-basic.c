@@ -507,7 +507,8 @@ static void print_real_array(
 
 
 void PX(apr_complex_3d)(
-     const C *data, const INT *local_n, const INT *local_start,
+     const C *data,
+     const INT *local_n, const INT *local_start,
      const char *name, MPI_Comm comm
      )
 {
@@ -529,7 +530,8 @@ void PX(apr_complex_3d)(
 
 
 void PX(apr_real_3d)(
-     const R *data, const INT *local_n, const INT *local_start,
+     const R *data,
+     const INT *local_n, const INT *local_start,
      const char *name, MPI_Comm comm
      )
 {
@@ -551,7 +553,8 @@ void PX(apr_real_3d)(
 
 
 void PX(apr_complex_permuted_3d)(
-     const C *data, const INT *local_n, const INT *local_start,
+     const C *data,
+     const INT *local_n, const INT *local_start,
      int perm0, int perm1, int perm2,
      const char *name, MPI_Comm comm
      )
@@ -570,6 +573,25 @@ void PX(apr_complex_permuted_3d)(
 }
 
 
+void PX(apr_real_permuted_3d)(
+     const R *data,
+     const INT *local_n, const INT *local_start,
+     int perm0, int perm1, int perm2,
+     const char *name, MPI_Comm comm
+     )
+{
+  int perm[3];
+  INT local_start_perm[3], local_n_perm[3];
+  
+  perm[0] = perm0; perm[1] = perm1; perm[2] = perm2;
+  
+  for(int t=0; t<3; t++){
+    local_n_perm[t] = local_n[perm[t]];
+    local_start_perm[t] = local_start[perm[t]];
+  }
+  
+  PX(apr_real_3d)(data, local_n_perm, local_start_perm, name, comm);
+}
 
 
 
