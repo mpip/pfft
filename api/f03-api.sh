@@ -35,8 +35,8 @@ echo "! shifted unsigned"
 perl -pe 'if (/#define +([A-Z0-9_]+) +\(([0-9]+)U? *<< *([0-9]+)\)/) { print "\n  integer\(C_INT\), parameter :: $1 = ",$2 << $3,"\n"; }' < pfft.h | grep 'integer(C_INT)'
 echo
 echo "! redirections"
-perl -pe 'if (/#define +([A-Z0-9_]+) +\(\(([A-Z0-9_| ]+)\)\)/) { print "\n  integer\(C_INT\), parameter :: $1 = $2\n"; }' < pfft.h | grep 'integer(C_INT)' | sed 's/| / \&\n      + /g'
-perl -pe 'if (/#define +(PFFT_[A-Z0-9_]+) +(FFTW_[A-Z0-9_]+)/) { print "\n  integer\(C_INT\), parameter :: $1 = $2\n"; }' < pfft.h | grep 'integer(C_INT)' | sed 's/| / \&\n      + /g'
+perl -pe 'if (/#define +([A-Z0-9_]+) +\(*(PFFT_[A-Z0-9_| ]+)\)*/) { print "\n  integer\(C_INT\), parameter :: $1 = $2\n"; }' < pfft.h | grep 'integer(C_INT)' | sed 's/| / \&\n      + /g'
+perl -pe 'if (/#define +(PFFT_[A-Z0-9_]+) +\(*(FFTW_[A-Z0-9_]+)\)*/) { print "\n  integer\(C_INT\), parameter :: $1 = $2\n"; }' < pfft.h | grep 'integer(C_INT)' | sed 's/| / \&\n      + /g'
 
 
 # Extract function declarations
