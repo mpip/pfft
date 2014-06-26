@@ -119,6 +119,7 @@ int MPI_Finalize(void);
 
 
 \section{Porting FFTW-MPI based code to PFFT}\label{sec:porting}
+\todo[inline]{finish FFTW2PFFT porting example}
 We illustrate the close connection between FFTW-MPI and PFFT at a three-dimensional MPI example analogous to the example given in the FFTW manual~\cite{fftw-2dmpi}.
 \begin{lstlisting}
 #include <fftw3-mpi.h>
@@ -352,10 +353,10 @@ The transposed data decomposition is given by
 \end{equation*}
 A PFFT plan created with planning flag \code{PFFT_TRANSPOSED_OUT} produces outputs with transposed data decomposition.
 Analogously, a PFFT plan created with planning flag \code{PFFT_TRANSPOSED_IN} requires its inputs to be decomposed in the transposed way.
-Typically, one creates a forward plan with \code{PFFT_TRANSPOSED_OUT} and uses a backward plan that was created with planning flag \code{PFFT_TRANSPOSED_IN}.
+Typically, one creates a forward plan with \code{PFFT_TRANSPOSED_OUT} and a backward plan with planning flag \code{PFFT_TRANSPOSED_IN}.
 
-Note that the flags \code{PFFT_TRANSPOSED_OUT} and \code{PFFT_TRANSPOSED_IN} must be passed to the array distribution function (see Section~\ref{sec:local_size})
-and the plan creation function (see Section~\ref{sec:planner}).
+Note that the flags \code{PFFT_TRANSPOSED_OUT} and \code{PFFT_TRANSPOSED_IN} must be passed to the array distribution function (see Section~\ref{sec:local-size})
+\emph{as well as} to the planner (see Section~\ref{sec:planner}).
 
 \subsection{Three-Dimensional FFTs with Three-Dimensional Data Decomposition}
 \begin{equation*}
@@ -411,7 +412,7 @@ and the plan creation function (see Section~\ref{sec:planner}).
 
 
 \section{Precisions}\label{sec:prec}
-This section an analog to part~\cite{fftw-prec} of the FFTW manual.
+PFFT handles multiple precisions exactly in the same way as FFTW. Therefore, we quote part~\cite{fftw-prec} of the FFTW manual in the context of PFFT:
 
 You can install single and long-double precision versions of PFFT, which replace double with float and long double, respectively; see \ref{sec:install}.
 To use these interfaces, you must
@@ -422,15 +423,11 @@ To use these interfaces, you must
   \item Replace all lowercase instances of ‘\code{pfft_}’ with ‘\code{pfftf_}’ or ‘\code{pfftl_}’ for single or long-double precision, respectively.
         (\code{pfft_complex} becomes \code{pfftf_complex}, \code{pfft_execute} becomes \code{pfftf_execute}, etcetera.)
   \item Uppercase names, i.e. names beginning with ‘\code{PFFT_}’, remain the same.
-  \item Replace double with float or long double for subroutine parameters.
+  \item Replace \code{double} with \code{float} or \code{long double} for subroutine parameters.
 \end{compactitem}
 
 \section{Measuring parallel run times}
 Use \code{MPI_Barrier} in front of every call to \code{pfft_} function to avoid unbalanced run times.
 
 \section{Ghost Cell Communication}
-\todo[inline]{explain ghost cell communication for test file}
-\begin{lstlisting}
-  double *rdata = pfft_alloc_real(alloc_local_gc > 2*alloc_local ? alloc_local_gc : 2*alloc_local);
-  pfft_complex *cdata = pfft_alloc_complex(alloc_local_gc > alloc_local ? alloc_local_gc : alloc_local);
-\end{lstlisting}
+\todo[inline]{explain ghost cell communication with a test file}

@@ -2,7 +2,7 @@
 \chapter{Interface Layers of the PFFT Library}\label{chap:api}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 We introduce the interface layers of PFFT in the order of increasing flexibility at the example of c2c-FFT.
-For r2c-, c2r-, and r2r-FFT similar interface layer specifications apply.
+For r2c-, c2r-, and r2r-FFT similar interface layer specifications apply. A full reference list of all PFFT functions is given in Chapter~\ref{chap:ref}. 
 \section{Basic Interface}
 The \code{_3d} interface is the simplest interface layer. It is suitable for the planning of three-dimensional FFTs.
 \begin{lstlisting}
@@ -11,11 +11,13 @@ ptrdiff_t pfft_local_size_dft_3d(
     ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
     ptrdiff_t *local_no, ptrdiff_t *local_o_start);
 void pfft_local_block_dft_3d(
-    const ptrdiff_t *n, MPI_Comm comm_cart, int pid, unsigned pfft_flags,
+    const ptrdiff_t *n, MPI_Comm comm_cart,
+    int pid, unsigned pfft_flags,
     ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
     ptrdiff_t *local_no, ptrdiff_t *local_o_start);
 pfft_plan pfft_plan_dft_3d(
-    const ptrdiff_t *n, pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    const ptrdiff_t *n,
+    pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
     int sign, unsigned pfft_flags);
 \end{lstlisting}
 Hereby, \code{n}, \code{local_ni}, \code{local_i_start}, \code{local_no}, and \code{local_o_start} are
@@ -34,7 +36,8 @@ void pfft_local_block_dft(
     ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
     ptrdiff_t *local_no, ptrdiff_t *local_o_start);
 pfft_plan pfft_plan_dft(
-    int rnk_n, const ptrdiff_t *n, pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int rnk_n, const ptrdiff_t *n,
+    pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
     int sign, unsigned pfft_flags);
 \end{lstlisting}
 Therefore, \code{n}, \code{local_ni}, \code{local_i_start}, \code{local_no}, and \code{local_o_start} are
@@ -47,17 +50,10 @@ Furthermore, the arrays \code{iblock} and \code{oblock} of length \code{rnk_pm} 
 serve to adjust the block size of the input and output block decomposition.
 \begin{lstlisting}
 ptrdiff_t pfft_local_size_many_dft(
-    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
-    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
-    MPI_Comm comm_cart, unsigned pfft_plan pfft_plan_many_dft_skipped(
     int rnk_n, const ptrdiff_t *n,
-    const ptrdiff_t *ni, const ptrdiff_t *no,
-    ptrdiff_t howmany,
+    const ptrdiff_t *ni, const ptrdiff_t *no, ptrdiff_t howmany,
     const ptrdiff_t *iblock, const ptrdiff_t *oblock,
-    (red@const int *skip_trafos@*),
-    pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
-    int sign, unsigned pfft_flags);
-pfft_flags,
+    MPI_Comm comm_cart, unsigned pfft_flags,
     ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
     ptrdiff_t *local_no, ptrdiff_t *local_o_start);
 void pfft_local_block_many_dft(
@@ -67,8 +63,9 @@ void pfft_local_block_many_dft(
     ptrdiff_t *local_ni, ptrdiff_t *local_i_start,
     ptrdiff_t *local_no, ptrdiff_t *local_o_start);
 pfft_plan pfft_plan_many_dft(
-    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
-    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    int rnk_n, const ptrdiff_t *n,
+    const ptrdiff_t *ni, const ptrdiff_t *no, ptrdiff_t howmany,
+    const ptrdiff_t *iblock, const ptrdiff_t *oblock,
     pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
     int sign, unsigned pfft_flags);
 \end{lstlisting}
@@ -78,9 +75,11 @@ pfft_plan pfft_plan_many_dft(
 The \code{_skipped} interface is based on the \code{many} interface but adds the possibility to skip selected serial FFTs.
 \begin{lstlisting}
 pfft_plan pfft_plan_many_dft_skipped(
-    int rnk_n, const ptrdiff_t *n, const ptrdiff_t *ni, const ptrdiff_t *no,
-    ptrdiff_t howmany, const ptrdiff_t *iblock, const ptrdiff_t *oblock,
-    (red@const int *skip_trafos,@*) pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
+    int rnk_n, const ptrdiff_t *n,
+    const ptrdiff_t *ni, const ptrdiff_t *no, ptrdiff_t howmany,
+    const ptrdiff_t *iblock, const ptrdiff_t *oblock,
+    (red@const int *skip_trafos,@*)
+    pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
     int sign, unsigned pfft_flags);
 \end{lstlisting}
 Hereby, \code{skip_trafos} is an \code{int} array of length \code{rnk_pm+1} (\code{rnk_pm} being the mesh dimension of the communicator \code{comm_cart}).
