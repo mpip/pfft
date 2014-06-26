@@ -4,6 +4,7 @@
 
 ! unsigned
   integer(C_INT), parameter :: PFFT_TRANSPOSED_NONE = 0
+  integer(C_INT), parameter :: PFFT_SHIFTED_NONE = 0
   integer(C_INT), parameter :: PFFT_MEASURE = 0
   integer(C_INT), parameter :: PFFT_NO_TUNE = 0
   integer(C_INT), parameter :: FPFFT_DEFAULT_BLOCKS = -1
@@ -13,7 +14,7 @@
   integer(C_INT), parameter :: PFFT_FLOAT = 3
   integer(C_INT), parameter :: PFFT_DOUBLE = 4
   integer(C_INT), parameter :: PFFT_UNSIGNED = 5
-  integer(C_INT), parameter :: PFFT_GC_NONTRANSPOSED = 0
+  integer(C_INT), parameter :: PFFT_GC_TRANSPOSED_NONE = 0
 
 ! shifted unsigned
   integer(C_INT), parameter :: PFFT_TRANSPOSED_IN = 1
@@ -27,11 +28,20 @@
   integer(C_INT), parameter :: PFFT_PRESERVE_INPUT = 256
   integer(C_INT), parameter :: PFFT_DESTROY_INPUT = 512
   integer(C_INT), parameter :: PFFT_BUFFERED_INPLACE = 1024
+  integer(C_INT), parameter :: PFFT_PADDED_R2C = 2048
   integer(C_INT), parameter :: PFFT_GC_TRANSPOSED = 1
   integer(C_INT), parameter :: PFFT_GC_SENDRECV = 2
   integer(C_INT), parameter :: PFFT_GC_RMA = 4
+  integer(C_INT), parameter :: PFFT_GC_R2C = 8
+  integer(C_INT), parameter :: PFFT_GC_PADDED = 16
 
 ! redirections
+  integer(C_INT), parameter :: PFFT_PADDED_C2R = PFFT_PADDED_R2C
+  integer(C_INT), parameter :: PFFT_GC_C2R = PFFT_GC_R2C
+  integer(C_INT), parameter :: PFFT_GC_PADDED_R2C = PFFT_GC_R2C  &
+      + PFFT_GC_PADDED
+  integer(C_INT), parameter :: PFFT_GC_PADDED_C2R = PFFT_GC_C2R  &
+      + PFFT_GC_PADDED
   integer(C_INT), parameter :: PFFT_R2HC = FFTW_R2HC
   integer(C_INT), parameter :: PFFT_HC2R = FFTW_HC2R
   integer(C_INT), parameter :: PFFT_DHT = FFTW_DHT
@@ -77,14 +87,42 @@
       type(C_PTR), value :: p
     end subroutine pfftl_free
     
-    subroutine pfftl_execute(fftplan) bind(C, name='pfftl_execute')
+    subroutine pfftl_execute(plan) bind(C, name='pfftl_execute')
       import
-      type(C_PTR), value :: fftplan
+      type(C_PTR), value :: plan
     end subroutine pfftl_execute
     
-    subroutine pfftl_destroy_plan(fftplan) bind(C, name='pfftl_destroy_plan')
+    subroutine pfftl_execute_dft(plan,in,out) bind(C, name='pfftl_execute_dft')
       import
-      type(C_PTR), value :: fftplan
+      type(C_PTR), value :: plan
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(inout) :: in
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: out
+    end subroutine pfftl_execute_dft
+    
+    subroutine pfftl_execute_dft_r2c(plan,in,out) bind(C, name='pfftl_execute_dft_r2c')
+      import
+      type(C_PTR), value :: plan
+      real(C_LONG_DOUBLE), dimension(*), intent(inout) :: in
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: out
+    end subroutine pfftl_execute_dft_r2c
+    
+    subroutine pfftl_execute_dft_c2r(plan,in,out) bind(C, name='pfftl_execute_dft_c2r')
+      import
+      type(C_PTR), value :: plan
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(inout) :: in
+      real(C_LONG_DOUBLE), dimension(*), intent(out) :: out
+    end subroutine pfftl_execute_dft_c2r
+    
+    subroutine pfftl_execute_r2r(plan,in,out) bind(C, name='pfftl_execute_r2r')
+      import
+      type(C_PTR), value :: plan
+      real(C_LONG_DOUBLE), dimension(*), intent(inout) :: in
+      real(C_LONG_DOUBLE), dimension(*), intent(out) :: out
+    end subroutine pfftl_execute_r2r
+    
+    subroutine pfftl_destroy_plan(plan) bind(C, name='pfftl_destroy_plan')
+      import
+      type(C_PTR), value :: plan
     end subroutine pfftl_destroy_plan
     
     subroutine pfftl_init_input_complex_3d(Nos,local_n,local_n_start,data) bind(C, name='pfftl_init_input_complex_3d')
@@ -103,6 +141,25 @@
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
       complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: data
     end subroutine pfftl_init_input_complex
+    
+    subroutine pfftl_init_input_complex_hermitian_3d(Nos,local_n,local_n_start,data) &
+               bind(C, name='pfftl_init_input_complex_hermitian_3d')
+      import
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: data
+    end subroutine pfftl_init_input_complex_hermitian_3d
+    
+    subroutine pfftl_init_input_complex_hermitian(rnk_n,Nos,local_n,local_start,data) &
+               bind(C, name='pfftl_init_input_complex_hermitian')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: data
+    end subroutine pfftl_init_input_complex_hermitian
     
     subroutine pfftl_init_input_real_3d(Nos,local_n,local_n_start,data) bind(C, name='pfftl_init_input_real_3d')
       import
@@ -141,6 +198,27 @@
       complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(in) :: data
       integer(@C_MPI_FINT@), value :: comm
     end function pfftl_check_output_complex
+    
+    real(C_LONG_DOUBLE) function pfftl_check_output_complex_hermitian_3d(Nos,local_n,local_n_start,data,comm) &
+                                 bind(C, name='pfftl_check_output_complex_hermitian_3d_f03')
+      import
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(in) :: data
+      integer(@C_MPI_FINT@), value :: comm
+    end function pfftl_check_output_complex_hermitian_3d
+    
+    real(C_LONG_DOUBLE) function pfftl_check_output_complex_hermitian(rnk_n,Nos,local_n,local_start,data,comm) &
+                                 bind(C, name='pfftl_check_output_complex_hermitian_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(in) :: data
+      integer(@C_MPI_FINT@), value :: comm
+    end function pfftl_check_output_complex_hermitian
     
     real(C_LONG_DOUBLE) function pfftl_check_output_real_3d(Nos,local_n,local_n_start,data,comm) &
                                  bind(C, name='pfftl_check_output_real_3d_f03')
@@ -211,10 +289,10 @@
       integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
     end function pfftl_local_size_r2r_3d
     
-    integer(C_INTPTR_T) function pfftl_local_size_dft(rnk,Nos,comm_cart,pfft_flags,local_ni,local_i_start,local_no,local_o_start) &
-                                 bind(C, name='pfftl_local_size_dft_f03')
+    integer(C_INTPTR_T) function pfftl_local_size_dft(rnk_n,Nos,comm_cart,pfft_flags,local_ni,local_i_start,local_no, &
+                                                      local_o_start) bind(C, name='pfftl_local_size_dft_f03')
       import
-      integer(C_INT), value :: rnk
+      integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(@C_MPI_FINT@), value :: comm_cart
       integer(C_INT), value :: pfft_flags
@@ -224,10 +302,10 @@
       integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
     end function pfftl_local_size_dft
     
-    integer(C_INTPTR_T) function pfftl_local_size_dft_r2c(rnk,Nos,comm_cart,pfft_flags,local_ni,local_i_start,local_no, &
+    integer(C_INTPTR_T) function pfftl_local_size_dft_r2c(rnk_n,Nos,comm_cart,pfft_flags,local_ni,local_i_start,local_no, &
                                                           local_o_start) bind(C, name='pfftl_local_size_dft_r2c_f03')
       import
-      integer(C_INT), value :: rnk
+      integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(@C_MPI_FINT@), value :: comm_cart
       integer(C_INT), value :: pfft_flags
@@ -237,10 +315,10 @@
       integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
     end function pfftl_local_size_dft_r2c
     
-    integer(C_INTPTR_T) function pfftl_local_size_dft_c2r(rnk,Nos,comm_cart,pfft_flags,local_ni,local_i_start,local_no, &
+    integer(C_INTPTR_T) function pfftl_local_size_dft_c2r(rnk_n,Nos,comm_cart,pfft_flags,local_ni,local_i_start,local_no, &
                                                           local_o_start) bind(C, name='pfftl_local_size_dft_c2r_f03')
       import
-      integer(C_INT), value :: rnk
+      integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(@C_MPI_FINT@), value :: comm_cart
       integer(C_INT), value :: pfft_flags
@@ -263,11 +341,11 @@
       integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
     end function pfftl_local_size_r2r
     
-    integer(C_INTPTR_T) function pfftl_local_size_many_dft(rnk,Nos,ni,no,howmany,iblock,oblock,comm_cart,pfft_flags,local_ni, &
+    integer(C_INTPTR_T) function pfftl_local_size_many_dft(rnk_n,Nos,ni,no,howmany,iblock,oblock,comm_cart,pfft_flags,local_ni, &
                                                            local_i_start,local_no,local_o_start) &
                                  bind(C, name='pfftl_local_size_many_dft_f03')
       import
-      integer(C_INT), value :: rnk
+      integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: ni
       integer(C_INTPTR_T), dimension(*), intent(in) :: no
@@ -339,6 +417,182 @@
       integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
     end function pfftl_local_size_many_r2r
     
+    subroutine pfftl_local_block_dft_3d(Nos,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no,local_o_start) &
+               bind(C, name='pfftl_local_block_dft_3d_f03')
+      import
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_dft_3d
+    
+    subroutine pfftl_local_block_dft_r2c_3d(Nos,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no,local_o_start) &
+               bind(C, name='pfftl_local_block_dft_r2c_3d_f03')
+      import
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_dft_r2c_3d
+    
+    subroutine pfftl_local_block_dft_c2r_3d(Nos,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no,local_o_start) &
+               bind(C, name='pfftl_local_block_dft_c2r_3d_f03')
+      import
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_dft_c2r_3d
+    
+    subroutine pfftl_local_block_r2r_3d(Nos,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no,local_o_start) &
+               bind(C, name='pfftl_local_block_r2r_3d_f03')
+      import
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_r2r_3d
+    
+    subroutine pfftl_local_block_dft(rnk_n,Nos,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no,local_o_start) &
+               bind(C, name='pfftl_local_block_dft_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_dft
+    
+    subroutine pfftl_local_block_dft_r2c(rnk_n,Nos,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no,local_o_start) &
+               bind(C, name='pfftl_local_block_dft_r2c_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_dft_r2c
+    
+    subroutine pfftl_local_block_dft_c2r(rnk_n,Nos,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no,local_o_start) &
+               bind(C, name='pfftl_local_block_dft_c2r_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_dft_c2r
+    
+    subroutine pfftl_local_block_r2r(rnk_n,Nos,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no,local_o_start) &
+               bind(C, name='pfftl_local_block_r2r_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_r2r
+    
+    subroutine pfftl_local_block_many_dft(rnk_n,ni,no,iblock,oblock,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no, &
+                                          local_o_start) bind(C, name='pfftl_local_block_many_dft_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: ni
+      integer(C_INTPTR_T), dimension(*), intent(in) :: no
+      integer(C_INTPTR_T), dimension(*), intent(in) :: iblock
+      integer(C_INTPTR_T), dimension(*), intent(in) :: oblock
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_many_dft
+    
+    subroutine pfftl_local_block_many_dft_r2c(rnk_n,ni,no,iblock,oblock,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no, &
+                                              local_o_start) bind(C, name='pfftl_local_block_many_dft_r2c_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: ni
+      integer(C_INTPTR_T), dimension(*), intent(in) :: no
+      integer(C_INTPTR_T), dimension(*), intent(in) :: iblock
+      integer(C_INTPTR_T), dimension(*), intent(in) :: oblock
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_many_dft_r2c
+    
+    subroutine pfftl_local_block_many_dft_c2r(rnk_n,ni,no,iblock,oblock,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no, &
+                                              local_o_start) bind(C, name='pfftl_local_block_many_dft_c2r_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: ni
+      integer(C_INTPTR_T), dimension(*), intent(in) :: no
+      integer(C_INTPTR_T), dimension(*), intent(in) :: iblock
+      integer(C_INTPTR_T), dimension(*), intent(in) :: oblock
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_many_dft_c2r
+    
+    subroutine pfftl_local_block_many_r2r(rnk_n,ni,no,iblock,oblock,comm_cart,pid,pfft_flags,local_ni,local_i_start,local_no, &
+                                          local_o_start) bind(C, name='pfftl_local_block_many_r2r_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: ni
+      integer(C_INTPTR_T), dimension(*), intent(in) :: no
+      integer(C_INTPTR_T), dimension(*), intent(in) :: iblock
+      integer(C_INTPTR_T), dimension(*), intent(in) :: oblock
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: pid
+      integer(C_INT), value :: pfft_flags
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_ni
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_i_start
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_no
+      integer(C_INTPTR_T), dimension(*), intent(out) :: local_o_start
+    end subroutine pfftl_local_block_many_r2r
+    
     type(C_PTR) function pfftl_plan_dft_3d(Nos,in,out,comm_cart,sign,pfft_flags) bind(C, name='pfftl_plan_dft_3d_f03')
       import
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
@@ -379,9 +633,9 @@
       integer(C_INT), value :: pfft_flags
     end function pfftl_plan_r2r_3d
     
-    type(C_PTR) function pfftl_plan_dft(rnk,Nos,in,out,comm_cart,sign,pfft_flags) bind(C, name='pfftl_plan_dft_f03')
+    type(C_PTR) function pfftl_plan_dft(rnk_n,Nos,in,out,comm_cart,sign,pfft_flags) bind(C, name='pfftl_plan_dft_f03')
       import
-      integer(C_INT), value :: rnk
+      integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: in
       complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: out
@@ -412,10 +666,21 @@
       integer(C_INT), value :: pfft_flags
     end function pfftl_plan_dft_c2r
     
-    type(C_PTR) function pfftl_plan_many_dft(rnk,Nos,ni,no,howmany,iblock,oblock,in,out,comm_cart,sign,pfft_flags) &
+    type(C_PTR) function pfftl_plan_r2r(rnk_n,Nos,in,out,comm_cart,kinds,pfft_flags) bind(C, name='pfftl_plan_r2r_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      real(C_LONG_DOUBLE), dimension(*), intent(out) :: in
+      real(C_LONG_DOUBLE), dimension(*), intent(out) :: out
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_FFTW_R2R_KIND), dimension(*), intent(in) :: kinds
+      integer(C_INT), value :: pfft_flags
+    end function pfftl_plan_r2r
+    
+    type(C_PTR) function pfftl_plan_many_dft(rnk_n,Nos,ni,no,howmany,iblock,oblock,in,out,comm_cart,sign,pfft_flags) &
                          bind(C, name='pfftl_plan_many_dft_f03')
       import
-      integer(C_INT), value :: rnk
+      integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: ni
       integer(C_INTPTR_T), dimension(*), intent(in) :: no
@@ -480,10 +745,10 @@
       integer(C_INT), value :: pfft_flags
     end function pfftl_plan_many_r2r
     
-    type(C_PTR) function pfftl_plan_many_dft_skipped(rnk,Nos,ni,no,howmany,iblock,oblock,skip_trafos,in,out,comm_cart,sign, &
+    type(C_PTR) function pfftl_plan_many_dft_skipped(rnk_n,Nos,ni,no,howmany,iblock,oblock,skip_trafos,in,out,comm_cart,sign, &
                                                      pfft_flags) bind(C, name='pfftl_plan_many_dft_skipped_f03')
       import
-      integer(C_INT), value :: rnk
+      integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
       integer(C_INTPTR_T), dimension(*), intent(in) :: ni
       integer(C_INTPTR_T), dimension(*), intent(in) :: no
@@ -497,6 +762,60 @@
       integer(C_INT), value :: sign
       integer(C_INT), value :: pfft_flags
     end function pfftl_plan_many_dft_skipped
+    
+    type(C_PTR) function pfftl_plan_many_dft_r2c_skipped(rnk_n,Nos,ni,no,howmany,iblock,oblock,skip_trafos,in,out,comm_cart,sign, &
+                                                         pfft_flags) bind(C, name='pfftl_plan_many_dft_r2c_skipped_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: ni
+      integer(C_INTPTR_T), dimension(*), intent(in) :: no
+      integer(C_INTPTR_T), value :: howmany
+      integer(C_INTPTR_T), dimension(*), intent(in) :: iblock
+      integer(C_INTPTR_T), dimension(*), intent(in) :: oblock
+      integer(C_INT), dimension(*), intent(in) :: skip_trafos
+      real(C_LONG_DOUBLE), dimension(*), intent(out) :: in
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: out
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: sign
+      integer(C_INT), value :: pfft_flags
+    end function pfftl_plan_many_dft_r2c_skipped
+    
+    type(C_PTR) function pfftl_plan_many_dft_c2r_skipped(rnk_n,Nos,ni,no,howmany,iblock,oblock,skip_trafos,in,out,comm_cart,sign, &
+                                                         pfft_flags) bind(C, name='pfftl_plan_many_dft_c2r_skipped_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: ni
+      integer(C_INTPTR_T), dimension(*), intent(in) :: no
+      integer(C_INTPTR_T), value :: howmany
+      integer(C_INTPTR_T), dimension(*), intent(in) :: iblock
+      integer(C_INTPTR_T), dimension(*), intent(in) :: oblock
+      integer(C_INT), dimension(*), intent(in) :: skip_trafos
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: in
+      real(C_LONG_DOUBLE), dimension(*), intent(out) :: out
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_INT), value :: sign
+      integer(C_INT), value :: pfft_flags
+    end function pfftl_plan_many_dft_c2r_skipped
+    
+    type(C_PTR) function pfftl_plan_many_r2r_skipped(rnk_n,Nos,ni,no,howmany,iblock,oblock,skip_trafos,in,out,comm_cart,kinds, &
+                                                     pfft_flags) bind(C, name='pfftl_plan_many_r2r_skipped_f03')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: ni
+      integer(C_INTPTR_T), dimension(*), intent(in) :: no
+      integer(C_INTPTR_T), value :: howmany
+      integer(C_INTPTR_T), dimension(*), intent(in) :: iblock
+      integer(C_INTPTR_T), dimension(*), intent(in) :: oblock
+      integer(C_INT), dimension(*), intent(in) :: skip_trafos
+      real(C_LONG_DOUBLE), dimension(*), intent(out) :: in
+      real(C_LONG_DOUBLE), dimension(*), intent(out) :: out
+      integer(@C_MPI_FINT@), value :: comm_cart
+      integer(C_FFTW_R2R_KIND), dimension(*), intent(in) :: kinds
+      integer(C_INT), value :: pfft_flags
+    end function pfftl_plan_many_r2r_skipped
     
     integer(C_INTPTR_T) function pfftl_prod_INT(d,vec) bind(C, name='pfftl_prod_INT')
       import
@@ -539,6 +858,50 @@
       integer(C_INTPTR_T), dimension(*), intent(in) :: vec2
       integer(C_INTPTR_T), dimension(*), intent(out) :: sum
     end subroutine pfftl_vsub_INT
+    
+    subroutine pfftl_apr_complex_3d(data,local_n,local_start,name,comm) bind(C, name='pfftl_apr_complex_3d_f03')
+      import
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(in) :: data
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
+      character(C_CHAR), dimension(*), intent(in) :: name
+      integer(@C_MPI_FINT@), value :: comm
+    end subroutine pfftl_apr_complex_3d
+    
+    subroutine pfftl_apr_complex_permuted_3d(data,local_n,local_start,perm0,perm1,perm2,name,comm) &
+               bind(C, name='pfftl_apr_complex_permuted_3d_f03')
+      import
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(in) :: data
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
+      integer(C_INT), value :: perm0
+      integer(C_INT), value :: perm1
+      integer(C_INT), value :: perm2
+      character(C_CHAR), dimension(*), intent(in) :: name
+      integer(@C_MPI_FINT@), value :: comm
+    end subroutine pfftl_apr_complex_permuted_3d
+    
+    subroutine pfftl_apr_real_3d(data,local_n,local_start,name,comm) bind(C, name='pfftl_apr_real_3d_f03')
+      import
+      real(C_LONG_DOUBLE), dimension(*), intent(in) :: data
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
+      character(C_CHAR), dimension(*), intent(in) :: name
+      integer(@C_MPI_FINT@), value :: comm
+    end subroutine pfftl_apr_real_3d
+    
+    subroutine pfftl_apr_real_permuted_3d(data,local_n,local_start,perm0,perm1,perm2,name,comm) &
+               bind(C, name='pfftl_apr_real_permuted_3d_f03')
+      import
+      real(C_LONG_DOUBLE), dimension(*), intent(in) :: data
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
+      integer(C_INT), value :: perm0
+      integer(C_INT), value :: perm1
+      integer(C_INT), value :: perm2
+      character(C_CHAR), dimension(*), intent(in) :: name
+      integer(@C_MPI_FINT@), value :: comm
+    end subroutine pfftl_apr_real_permuted_3d
     
     subroutine pfftl_reset_timer(ths) bind(C, name='pfftl_reset_timer')
       import
@@ -613,13 +976,20 @@
       type(C_PTR), value :: ths
     end subroutine pfftl_destroy_timer
     
-    integer(C_INT) function pfftl_create_procmesh(rnk,comm,np,comm_cart) bind(C, name='pfftl_create_procmesh_f03')
+    integer(C_INT) function pfftl_create_procmesh(rnk_n,comm,np,comm_cart) bind(C, name='pfftl_create_procmesh_f03')
       import
-      integer(C_INT), value :: rnk
+      integer(C_INT), value :: rnk_n
       integer(@C_MPI_FINT@), value :: comm
       integer(C_INT), dimension(*), intent(in) :: np
       integer(@C_MPI_FINT@), intent(out) :: comm_cart
     end function pfftl_create_procmesh
+    
+    integer(C_INT) function pfftl_create_procmesh_1d(comm,np0,comm_cart_1d) bind(C, name='pfftl_create_procmesh_1d_f03')
+      import
+      integer(@C_MPI_FINT@), value :: comm
+      integer(C_INT), value :: np0
+      integer(@C_MPI_FINT@), intent(out) :: comm_cart_1d
+    end function pfftl_create_procmesh_1d
     
     integer(C_INT) function pfftl_create_procmesh_2d(comm,np0,np1,comm_cart_2d) bind(C, name='pfftl_create_procmesh_2d_f03')
       import
@@ -629,38 +999,35 @@
       integer(@C_MPI_FINT@), intent(out) :: comm_cart_2d
     end function pfftl_create_procmesh_2d
     
-    integer(C_INTPTR_T) function pfftl_local_size_gc_3d(local_n,local_start,alloc_local,gc_below,gc_above,local_ngc, &
-                                                        local_gc_start) bind(C, name='pfftl_local_size_gc_3d')
+    integer(C_INTPTR_T) function pfftl_local_size_gc_3d(local_n,local_start,gc_below,gc_above,local_ngc,local_gc_start) &
+                                 bind(C, name='pfftl_local_size_gc_3d')
       import
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
-      integer(C_INTPTR_T), value :: alloc_local
       integer(C_INTPTR_T), dimension(*), intent(in) :: gc_below
       integer(C_INTPTR_T), dimension(*), intent(in) :: gc_above
       integer(C_INTPTR_T), dimension(*), intent(out) :: local_ngc
       integer(C_INTPTR_T), dimension(*), intent(out) :: local_gc_start
     end function pfftl_local_size_gc_3d
     
-    integer(C_INTPTR_T) function pfftl_local_size_gc(rnk_n,local_n,local_start,alloc_local,gc_below,gc_above,local_ngc, &
-                                                     local_gc_start) bind(C, name='pfftl_local_size_gc')
+    integer(C_INTPTR_T) function pfftl_local_size_gc(rnk_n,local_n,local_start,gc_below,gc_above,local_ngc,local_gc_start) &
+                                 bind(C, name='pfftl_local_size_gc')
       import
       integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
-      integer(C_INTPTR_T), value :: alloc_local
       integer(C_INTPTR_T), dimension(*), intent(in) :: gc_below
       integer(C_INTPTR_T), dimension(*), intent(in) :: gc_above
       integer(C_INTPTR_T), dimension(*), intent(out) :: local_ngc
       integer(C_INTPTR_T), dimension(*), intent(out) :: local_gc_start
     end function pfftl_local_size_gc
     
-    integer(C_INTPTR_T) function pfftl_local_size_many_gc(rnk_n,local_n,local_start,alloc_local,howmany,gc_below,gc_above, &
-                                                          local_ngc,local_gc_start) bind(C, name='pfftl_local_size_many_gc')
+    integer(C_INTPTR_T) function pfftl_local_size_many_gc(rnk_n,local_n,local_start,howmany,gc_below,gc_above,local_ngc, &
+                                                          local_gc_start) bind(C, name='pfftl_local_size_many_gc')
       import
       integer(C_INT), value :: rnk_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
-      integer(C_INTPTR_T), value :: alloc_local
       integer(C_INTPTR_T), value :: howmany
       integer(C_INTPTR_T), dimension(*), intent(in) :: gc_below
       integer(C_INTPTR_T), dimension(*), intent(in) :: gc_above

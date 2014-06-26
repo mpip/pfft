@@ -256,7 +256,7 @@ PFFT_VOIDFUNC FORT(plan_rgc_3d, PLAN_RGC_3D)(
     );
 PFFT_VOIDFUNC FORT(local_size_gc_3d, LOCAL_SIZE_GC_3D)(
     INT *alloc_local_gc,
-    const INT *local_n, const INT *local_n_start, INT *alloc_local,
+    const INT *local_n, const INT *local_n_start,
     const INT *gc_below, const INT *gc_above,
     INT *local_ngc, INT *local_gc_start
     );
@@ -267,7 +267,7 @@ PFFT_VOIDFUNC FORT(plan_cgc_3d, PLAN_CGC_3D)(
     );
 PFFT_VOIDFUNC FORT(local_size_gc, LOCAL_SIZE_GC)(
     INT *alloc_local_gc,
-    int *rnk, const INT *local_n, const INT *local_n_start, INT *alloc_local,
+    int *rnk, const INT *local_n, const INT *local_n_start,
     const INT *gc_below, const INT *gc_above,
     INT *local_ngc, INT *local_gc_start
     );
@@ -292,7 +292,7 @@ PFFT_VOIDFUNC FORT(destroy_gcplan, DESTROY_GCPLAN)(
     );
 PFFT_VOIDFUNC FORT(local_size_many_gc, LOCAL_SIZE_MANY_GC)(
     INT *alloc_local_gc,
-    int *rnk, const INT *local_n, const INT *local_n_start, INT *alloc_local,
+    int *rnk, const INT *local_n, const INT *local_n_start,
     INT *howmany, const INT *gc_below, const INT *gc_above,
     INT *local_ngc, INT *local_gc_start
     );

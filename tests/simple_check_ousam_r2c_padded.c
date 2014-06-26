@@ -41,12 +41,12 @@ int main(int argc, char **argv){
   /* Get parameters of data distribution */
   alloc_local_forw = pfft_local_size_many_dft_r2c(3, n, ni, n, howmany,
       PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-      comm_cart_2d, PFFT_TRANSPOSED_NONE | PFFT_PAD_R2C,
+      comm_cart_2d, PFFT_TRANSPOSED_NONE | PFFT_PADDED_R2C,
       local_ni, local_i_start, local_n, local_start);
 
   alloc_local_back = pfft_local_size_many_dft_c2r(3, n, n, no, howmany,
       PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-      comm_cart_2d, PFFT_TRANSPOSED_NONE | PFFT_PAD_R2C,
+      comm_cart_2d, PFFT_TRANSPOSED_NONE | PFFT_PADDED_R2C,
       local_n, local_start, local_no, local_o_start);
 
   /* Allocate enough memory for both trafos */
@@ -58,12 +58,12 @@ int main(int argc, char **argv){
   /* Plan parallel forward FFT */
   plan_forw = pfft_plan_many_dft_r2c(
       3, n, ni, n, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-      in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_PAD_R2C);
+      in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_PADDED_R2C);
 
   /* Plan parallel backward FFT */
   plan_back = pfft_plan_many_dft_c2r(
       3, n, n, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-      out, in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_PAD_R2C);
+      out, in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_PADDED_R2C);
 
   /* Initialize input with random numbers */
   pfft_init_input_real(3, ni, local_ni, local_i_start,

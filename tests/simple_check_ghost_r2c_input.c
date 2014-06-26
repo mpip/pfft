@@ -1,13 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
-#include <math.h>
 #include <complex.h>
-/* return value 0 on success */
-
 #include <pfft.h>
-
-#define MAX(a,b) (((a)>(b))?(a):(b))
 
 static void init_parameters(
     int argc, char **argv,
@@ -41,7 +33,7 @@ int main(int argc, char **argv){
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   
   /* default values */
-  n[0] = n[1] = n[2] = 8; /*  n[0] = 3; n[1] = 5; n[2] = 7;*/
+  n[0] = n[1] = n[2] = 8;
   np[0]=2; np[1]=2; np[2] = 1;
 
   verbose = 0;
@@ -50,7 +42,7 @@ int main(int argc, char **argv){
     gc_above[t] = 0;
   }
   gc_below[0] = 0;
-  gc_above[0] = 8;
+  gc_above[0] = 4;
 
   /* set values by commandline */
   init_parameters(argc, argv, n, np, gc_below, gc_above, &verbose);
@@ -63,23 +55,23 @@ int main(int argc, char **argv){
   }
 
   /* Get parameters of data distribution */
+  /* alloc_local, local_no, local_o_start are given in complex units */
+  /* local_ni, local_i_start are given in real units */
   alloc_local = pfft_local_size_dft_r2c_3d(n, comm_cart_2d, PFFT_TRANSPOSED_NONE,
       local_ni, local_i_start, local_no, local_o_start);
 
-  /* local_ni, local_i_start are given in real units */
-  /* alloc_local is given in complex units */
+  /* alloc_local_gc, local_ngc, local_gc_start are given in real units */
   alloc_local_gc = pfft_local_size_gc_3d(
-      local_ni, local_i_start, 2*alloc_local, gc_below, gc_above,
+      local_ni, local_i_start, gc_below, gc_above,
       local_ngc, local_gc_start);
-  /* alloc_local_gc is given in real units */
 
-  /* Allocate memory */
-  rdata = pfft_alloc_real(alloc_local_gc);
+  /* Allocate enough memory for FFT and ghost cells */
+  rdata = pfft_alloc_real(alloc_local_gc > 2*alloc_local ? alloc_local_gc : 2*alloc_local);
 
   /* Plan parallel ghost cell send */
   /* PFFT uses physical equal to logical size in real space */
   ths = pfft_plan_rgc_3d(n, gc_below, gc_above,
-      rdata, comm_cart_2d, PFFT_GC_NONTRANSPOSED);
+      rdata, comm_cart_2d, PFFT_GC_TRANSPOSED_NONE);
 
   /* Initialize input with random numbers */
   pfft_init_input_real_3d(n, local_ni, local_i_start,
@@ -101,11 +93,11 @@ int main(int argc, char **argv){
 
   /* check input */
   if(verbose)
-    pfft_apr_real_3d(rdata, local_no, local_o_start, "reduced gcells", comm_cart_2d);
+    pfft_apr_real_3d(rdata, local_ni, local_i_start, "reduced gcells", comm_cart_2d);
 
   /* Scale data */
   for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
-    rdata[l] /= 3;
+    rdata[l] /= 2;
 
   /* Print error of back transformed data */
   MPI_Barrier(comm_cart_2d);

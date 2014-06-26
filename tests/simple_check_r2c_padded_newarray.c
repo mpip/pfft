@@ -30,7 +30,7 @@ int main(int argc, char **argv)
   }
   
   /* Get parameters of data distribution */
-  alloc_local = pfft_local_size_dft_r2c_3d(n, comm_cart_2d, PFFT_TRANSPOSED_NONE| PFFT_PAD_R2C,
+  alloc_local = pfft_local_size_dft_r2c_3d(n, comm_cart_2d, PFFT_TRANSPOSED_NONE| PFFT_PADDED_R2C,
       local_ni, local_i_start, local_no, local_o_start);
 
   /* Allocate memory for planning */
@@ -39,11 +39,11 @@ int main(int argc, char **argv)
 
   /* Plan parallel forward FFT */
   plan_forw = pfft_plan_dft_r2c_3d(
-      n, planned_in, planned_out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_PAD_R2C);
+      n, planned_in, planned_out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_PADDED_R2C);
   
   /* Plan parallel backward FFT */
   plan_back = pfft_plan_dft_c2r_3d(
-      n, planned_out, planned_in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_PAD_C2R);
+      n, planned_out, planned_in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_PADDED_C2R);
 
   /* Free planning arrays since we use other arrays for execution */
   pfft_free(planned_in); pfft_free(planned_out);

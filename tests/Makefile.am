@@ -84,6 +84,7 @@ check_PROGRAMS += \
 	simple_check_ghost_c2c \
 	simple_check_ghost_c2c_3d_on_3d \
 	simple_check_ghost_r2c_input \
+	simple_check_ghost_r2c_input_padded \
 	simple_check_ghost_r2c_output
 
 check_PROGRAMS += \

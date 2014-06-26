@@ -362,27 +362,27 @@ R PX(check_output_real)(
 
 INT PX(local_size_gc_3d)(
     const INT *local_n, const INT *local_start,
-    INT alloc_local, const INT *gc_below, const INT *gc_above,
+    const INT *gc_below, const INT *gc_above,
     INT *local_ngc, INT *local_gc_start
     )
 {
   int rnk_n = 3;
   
   return PX(local_size_gc)(
-      rnk_n, local_n, local_start, alloc_local, gc_below, gc_above,
+      rnk_n, local_n, local_start, gc_below, gc_above,
       local_ngc, local_gc_start);
 }
 
 INT PX(local_size_gc)(
     int rnk_n, const INT *local_n, const INT *local_start,
-    INT alloc_local, const INT *gc_below, const INT *gc_above,
+    const INT *gc_below, const INT *gc_above,
     INT *local_ngc, INT *local_gc_start
     )
 {
   INT howmany = 1;
   
   return PX(local_size_many_gc)(
-      rnk_n, local_n, local_start, alloc_local, howmany, gc_below, gc_above,
+      rnk_n, local_n, local_start, howmany, gc_below, gc_above,
       local_ngc, local_gc_start);
 }
 

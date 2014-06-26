@@ -9,8 +9,8 @@ manual_FILES = \
 	tutorial.tex \
 	features.tex \
 	bibliography.bib \
-	latex-manual.sh \
-	code/manual_min_c2c.c
+	latex-manual.sh
+# 	code/manual_min_c2c.c
 
 EXTRA_DIST = $(manual_FILES)
 CLEANFILES =

@@ -431,14 +431,14 @@ BEGIN_C_DECLS
                                                                                         \
   PFFT_EXTERN INT PX(local_size_gc_3d)(                                                 \
       const INT *local_n, const INT *local_start,                                       \
-      INT alloc_local, const INT *gc_below, const INT *gc_above,                        \
+      const INT *gc_below, const INT *gc_above,                                         \
       INT *local_ngc, INT *local_gc_start);                                             \
   PFFT_EXTERN INT PX(local_size_gc)(                                                    \
       int rnk_n, const INT *local_n, const INT *local_start,                            \
-      INT alloc_local, const INT *gc_below, const INT *gc_above,                        \
+      const INT *gc_below, const INT *gc_above,                                         \
       INT *local_ngc, INT *local_gc_start);                                             \
   PFFT_EXTERN INT PX(local_size_many_gc)(                                               \
-      int rnk_n, const INT *local_n, const INT *local_start, INT alloc_local,           \
+      int rnk_n, const INT *local_n, const INT *local_start,                            \
       INT howmany, const INT *gc_below, const INT *gc_above,                            \
       INT *local_ngc, INT *local_gc_start);                                             \
                                                                                         \
@@ -539,9 +539,9 @@ PFFT_DEFINE_API(PFFT_MANGLE_LONG_DOUBLE, FFTW_MANGLE_LONG_DOUBLE, long double, p
 #define PFFT_PRESERVE_INPUT       (1U<< 8) /* out-of-place plans do not overwrite the input */ 
 #define PFFT_DESTROY_INPUT        (1U<< 9) /* default for out-of-place plans is: PRESERVE_INPUT*/
 #define PFFT_BUFFERED_INPLACE     (1U<<10) /* use second array of same size, similar to out-of-place but results end up in input array */
-#define PFFT_PAD_R2C              (1U<<11) /* Pad real values of r2c and c2r trafos in order to match the array size of the complex values */
+#define PFFT_PADDED_R2C           (1U<<11) /* Pad real values of r2c and c2r trafos in order to match the array size of the complex values */
 
-#define PFFT_PAD_C2R              (PFFT_PAD_R2C) /* synonym for PFFT_PAD_R2C */
+#define PFFT_PADDED_C2R           (PFFT_PADDED_R2C) /* synonym for PFFT_PADDED_R2C */
 
 #define PFFT_DEFAULT_BLOCK        FFTW_MPI_DEFAULT_BLOCK
 
@@ -557,10 +557,16 @@ PFFT_DEFINE_API(PFFT_MANGLE_LONG_DOUBLE, FFTW_MANGLE_LONG_DOUBLE, long double, p
 #define PFFT_DOUBLE               (4U)
 #define PFFT_UNSIGNED             (5U)
 
-#define PFFT_GC_NONTRANSPOSED     (0U)
+#define PFFT_GC_TRANSPOSED_NONE   (0U)
 #define PFFT_GC_TRANSPOSED        (1U<< 0)
 #define PFFT_GC_SENDRECV          (1U<< 1)
 #define PFFT_GC_RMA               (1U<< 2)
+#define PFFT_GC_R2C               (1U<< 3)
+#define PFFT_GC_PADDED            (1U<< 4)
+
+#define PFFT_GC_C2R               (PFFT_GC_R2C) /* synonym for PFFT_GC_R2C */
+#define PFFT_GC_PADDED_R2C        (PFFT_GC_R2C | PFFT_GC_PADDED)
+#define PFFT_GC_PADDED_C2R        (PFFT_GC_C2R | PFFT_GC_PADDED)
 
 END_C_DECLS
 

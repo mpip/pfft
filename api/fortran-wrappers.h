@@ -831,7 +831,7 @@ PFFT_VOIDFUNC FORT(plan_rgc_3d, PLAN_RGC_3D)(
 
 PFFT_VOIDFUNC FORT(local_size_gc_3d, LOCAL_SIZE_GC_3D)(
     INT *alloc_local_gc,
-    const INT *local_n, const INT *local_n_start, INT *alloc_local,
+    const INT *local_n, const INT *local_n_start,
     const INT *gc_below, const INT *gc_above,
     INT *local_ngc, INT *local_gc_start
     )
@@ -843,7 +843,7 @@ PFFT_VOIDFUNC FORT(local_size_gc_3d, LOCAL_SIZE_GC_3D)(
   INT *local_ngc_rev = PX(malloc_INT)(3);
   INT *local_gc_start_rev = PX(malloc_INT)(3);
 
-  *alloc_local_gc = PX(local_size_gc_3d)(local_n_rev, local_n_start_rev, *alloc_local,
+  *alloc_local_gc = PX(local_size_gc_3d)(local_n_rev, local_n_start_rev,
       gc_below_rev, gc_above_rev,
       local_ngc_rev, local_gc_start_rev);
 
@@ -874,7 +874,7 @@ PFFT_VOIDFUNC FORT(plan_cgc_3d, PLAN_CGC_3D)(
 
 PFFT_VOIDFUNC FORT(local_size_gc, LOCAL_SIZE_GC)(
     INT *alloc_local_gc,
-    int *rnk_n, const INT *local_n, const INT *local_n_start, INT *alloc_local,
+    int *rnk_n, const INT *local_n, const INT *local_n_start,
     const INT *gc_below, const INT *gc_above,
     INT *local_ngc, INT *local_gc_start
     )
@@ -886,7 +886,7 @@ PFFT_VOIDFUNC FORT(local_size_gc, LOCAL_SIZE_GC)(
   INT *local_ngc_rev = PX(malloc_INT)(*rnk_n);
   INT *local_gc_start_rev = PX(malloc_INT)(*rnk_n);
 
-  *alloc_local_gc = PX(local_size_gc)(*rnk_n, local_n_rev, local_n_start_rev, *alloc_local,
+  *alloc_local_gc = PX(local_size_gc)(*rnk_n, local_n_rev, local_n_start_rev,
       gc_below_rev, gc_above_rev,
       local_ngc_rev, local_gc_start_rev);
 
@@ -955,7 +955,7 @@ PFFT_VOIDFUNC FORT(destroy_gcplan, DESTROY_GCPLAN)(
 
 PFFT_VOIDFUNC FORT(local_size_many_gc, LOCAL_SIZE_MANY_GC)(
     INT *alloc_local_gc,
-    int *rnk_n, const INT *local_n, const INT *local_n_start, INT *alloc_local,
+    int *rnk_n, const INT *local_n, const INT *local_n_start,
     INT *howmany, const INT *gc_below, const INT *gc_above,
     INT *local_ngc, INT *local_gc_start
     )
@@ -967,7 +967,7 @@ PFFT_VOIDFUNC FORT(local_size_many_gc, LOCAL_SIZE_MANY_GC)(
   INT *local_ngc_rev = PX(malloc_INT)(*rnk_n);
   INT *local_gc_start_rev = PX(malloc_INT)(*rnk_n);
 
-  *alloc_local_gc = PX(local_size_many_gc)(*rnk_n, local_n_rev, local_n_start_rev, *alloc_local,
+  *alloc_local_gc = PX(local_size_many_gc)(*rnk_n, local_n_rev, local_n_start_rev,
       *howmany, gc_below_rev, gc_above_rev,
       local_ngc_rev, local_gc_start_rev);
 

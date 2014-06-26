@@ -427,3 +427,10 @@ To use these interfaces, you must
 
 \section{Measuring parallel run times}
 Use \code{MPI_Barrier} in front of every call to \code{pfft_} function to avoid unbalanced run times.
+
+\section{Ghost Cell Communication}
+\todo[inline]{explain ghost cell communication for test file}
+\begin{lstlisting}
+  double *rdata = pfft_alloc_real(alloc_local_gc > 2*alloc_local ? alloc_local_gc : 2*alloc_local);
+  pfft_complex *cdata = pfft_alloc_complex(alloc_local_gc > alloc_local ? alloc_local_gc : alloc_local);
+\end{lstlisting}

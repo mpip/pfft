@@ -49,7 +49,7 @@ INT PX(local_size_many_dft_r2c)(
     INT *local_no, INT *local_o_start
     )
 {
-  unsigned trafo_flag = (pfft_flags & PFFT_PAD_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
+  unsigned trafo_flag = (pfft_flags & PFFT_PADDED_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
 
   return PX(local_size_partrafo)(
       rnk_n, n, ni, no, howmany, iblock, oblock,
@@ -65,7 +65,7 @@ INT PX(local_size_many_dft_c2r)(
     INT *local_no, INT *local_o_start
     )
 {
-  unsigned trafo_flag = (pfft_flags & PFFT_PAD_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
+  unsigned trafo_flag = (pfft_flags & PFFT_PADDED_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
 
   return PX(local_size_partrafo)(
       rnk_n, n, ni, no, howmany, iblock, oblock,
@@ -111,7 +111,7 @@ PX(plan) PX(plan_many_dft_r2c)(
     int sign, unsigned pfft_flags
     )
 {
-  unsigned trafo_flag = (pfft_flags & PFFT_PAD_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
+  unsigned trafo_flag = (pfft_flags & PFFT_PADDED_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
   X(r2r_kind) *kinds=NULL;
   int *skip_trafos=NULL;
 
@@ -128,7 +128,7 @@ PX(plan) PX(plan_many_dft_c2r)(
     int sign, unsigned pfft_flags
     )
 {
-  unsigned trafo_flag = (pfft_flags & PFFT_PAD_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
+  unsigned trafo_flag = (pfft_flags & PFFT_PADDED_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
   X(r2r_kind) *kinds=NULL;
   int *skip_trafos=NULL;
 
@@ -176,7 +176,7 @@ PX(plan) PX(plan_many_dft_r2c_skipped)(
     int sign, unsigned pfft_flags
     )
 {
-  unsigned trafo_flag = (pfft_flags & PFFT_PAD_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
+  unsigned trafo_flag = (pfft_flags & PFFT_PADDED_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
   X(r2r_kind) *kinds=NULL;
 
   return PX(plan_partrafo)(
@@ -192,7 +192,7 @@ PX(plan) PX(plan_many_dft_c2r_skipped)(
     int sign, unsigned pfft_flags
     )
 {
-  unsigned trafo_flag = (pfft_flags & PFFT_PAD_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
+  unsigned trafo_flag = (pfft_flags & PFFT_PADDED_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
   X(r2r_kind) *kinds=NULL;
 
   return PX(plan_partrafo)(
@@ -218,18 +218,14 @@ PX(plan) PX(plan_many_r2r_skipped)(
 
 
 INT PX(local_size_many_gc)(
-    int rnk_n, const INT *local_n, const INT *local_start, INT alloc_local,
+    int rnk_n, const INT *local_n, const INT *local_start,
     INT howmany, const INT *gc_below, const INT *gc_above,
     INT *local_ngc, INT *local_gc_start
     )
 {
-  INT alloc_local_gc;
-
-  alloc_local_gc = PX(local_size_gc_internal)(
+  return PX(local_size_gc_internal)(
       rnk_n, local_n, local_start, howmany, gc_below, gc_above,
       local_ngc, local_gc_start);
-
-  return MAX(alloc_local, alloc_local_gc);
 }
 
 
@@ -247,6 +243,14 @@ PX(gcplan) PX(plan_many_rgc)(
   PX(gcplan) ths;
   MPI_Comm comm_cart = PX(assure_cart_comm)(comm);
 
+  INT *pn = PX(malloc_INT)(rnk_n);
+  for(int t=0; t<rnk_n; t++) 
+    pn[t] = n[t];
+
+  /* compute physical array size for padded real valued arrays */
+  if(gc_flags & PFFT_GC_PADDED)
+    pn[rnk_n-1] = 2*(n[rnk_n-1]/2+1);
+
   MPI_Cartdim_get(comm_cart, &rnk_pm);
   /* split comm cart into 1d comms */
   comms_pm = (MPI_Comm*) malloc(sizeof(MPI_Comm) * (size_t) rnk_pm);
@@ -255,14 +259,14 @@ PX(gcplan) PX(plan_many_rgc)(
   if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) ){
     /* 3d to 2d remap results in complicated blocks.
      * We ignore users input and use default block size. */
-    calculate_3dto2d_blocks(n, comm_cart,
+    calculate_3dto2d_blocks(pn, comm_cart,
         blk_3dto2d);
     ths = PX(plan_rgc_internal)(
-        rnk_n, n, howmany, blk_3dto2d, gc_below, gc_above,
+        rnk_n, pn, howmany, blk_3dto2d, gc_below, gc_above,
         data, rnk_pm, comms_pm, comm_cart, gc_flags);
   } else
     ths = PX(plan_rgc_internal)(
-        rnk_n, n, howmany, block, gc_below, gc_above,
+        rnk_n, pn, howmany, block, gc_below, gc_above,
         data, rnk_pm, comms_pm, comm_cart, gc_flags);
   
   /* free one-dimensional comms */
@@ -270,6 +274,7 @@ PX(gcplan) PX(plan_many_rgc)(
     MPI_Comm_free(comms_pm + t);
   free(comms_pm);  
   MPI_Comm_free(&comm_cart);
+  free(pn);
 
   return ths;
 }
@@ -295,9 +300,27 @@ PX(gcplan) PX(plan_many_cgc)(
     unsigned gc_flags
     )
 {
-  return PX(plan_many_rgc)(
-      rnk_n, n, 2*howmany, block, gc_below, gc_above,
+  PX(gcplan) plan;
+  INT *pn = PX(malloc_INT)(rnk_n);
+
+  /* ignore padding for complex valued arrays */
+  gc_flags &= ~PFFT_GC_PADDED;
+
+  for(int t=0; t<rnk_n; t++)
+    pn[t] = n[t];
+
+  if(gc_flags & PFFT_GC_R2C){
+    /* r2c: use c2c ghost cells with physical array size */
+    pn[rnk_n-1] = n[rnk_n-1]/2+1;
+    gc_flags &= ~PFFT_GC_R2C;
+  }
+
+  plan = PX(plan_many_rgc)(
+      rnk_n, pn, 2*howmany, block, gc_below, gc_above,
       (R*) data, comm_cart, gc_flags);
+
+  free(pn);
+  return plan;
 }
 
 
@@ -323,7 +346,7 @@ void PX(local_block_many_dft_r2c)(
     INT *local_no, INT *local_o_start
     )
 {
-  unsigned trafo_flag = (pfft_flags & PFFT_PAD_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
+  unsigned trafo_flag = (pfft_flags & PFFT_PADDED_R2C) ? PFFTI_TRAFO_R2C_PADDED : PFFTI_TRAFO_R2C;
 
   PX(local_block_partrafo)(
       rnk_n, ni, no, iblock, oblock,
@@ -339,7 +362,7 @@ void PX(local_block_many_dft_c2r)(
     INT *local_no, INT *local_o_start
     )
 {
-  unsigned trafo_flag = (pfft_flags & PFFT_PAD_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
+  unsigned trafo_flag = (pfft_flags & PFFT_PADDED_C2R) ? PFFTI_TRAFO_C2R_PADDED : PFFTI_TRAFO_C2R;
 
   PX(local_block_partrafo)(
       rnk_n, ni, no, iblock, oblock,

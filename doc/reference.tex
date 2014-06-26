@@ -416,38 +416,44 @@ must be in the same order as above.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Ghost Cell Communication}
+\section{Ghost Cell Communication}\label{sec:gc}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 In the following we describe the PFFT ghost cell communication module.
 At the moment, PFFT ghost cell communication is restricted to three-dimensional arrays.
-Let us know if would like to have ghost cell communication also for higher dimensions.
+\todo[inline]{Does anybody need non-3d ghost cell communication?}
 
 Assume a three-dimensional array \code{data} of size \code{n[3]} that is distributed in blocks such that each process has a local copy of
 \code{data[k[0],k[1],k[2]]} with 
 \begin{lstlisting}
-local_start[t] <= k[t] < local_start[t] + local_n[t] /* t=0,1,2 */
+local_start[t] <= k[t] < local_start[t] + local_n[t]
 \end{lstlisting}
+Here and in the following, we assume \code{t=0,1,2}.
 The ``classical'' ghost cell exchange communicates all the necessary data between neighboring processes,
 such that each process gets a local copy of \code{data[k[0],k[1],k[2]]} with
 \begin{lstlisting}
-local_gc_start[t] <= k[t] < local_gc_start[t] + local_ngc[t] /* t=0,1,2 */
+local_gc_start[t] <= k[t] < local_gc_start[t] + local_ngc[t]
 \end{lstlisting}
 where
 \begin{lstlisting}
-local_gc_start[t] = local_start[t] - gc_below[t]; /* t=0,1,2 */
-local_ngc[t] = local_n[t] + gc_below[t] + gc_above[t]; /* t=0,1,2 */
+local_gc_start[t] = local_start[t] - gc_below[t];
+local_ngc[t] = local_n[t] + gc_below[t] + gc_above[t];
 \end{lstlisting}
 I.e., the local array block is increased in every dimension by \code{gc_below} elements below and \code{gc_above} elements above.
 Hereby, the \code{data} is wrapped periodically whenever \code{k[t]} exceeds the array dimensions.
 The number of ghost cells in every dimension can be chosen independently and can be arbitrary large, i.e.,
 PFFT ghost cell communication also handles the case where the requested data exceeds next neighbor communication.
-The number of ghost cells can even be bigger than the array size, which results in multiple local copies of the same data elements at every process. 
+The number of ghost cells can even be bigger than the array size, which results in multiple local copies of the same data elements at every process.
+However, the arrays \code{gc_below} and \code{gc_above} must be equal among all MPI processes.
+
+PFFT ghost cell communication can work on both, the input and output array distributions.
+Substitute \code{local_n} and \code{local_start} by \code{local_ni} and \code{local_i_start} if you are interested in ghost cell communication of the input array. 
+For ghost cell communication of the output array, substitute \code{local_n} and \code{local_start} by \code{local_no} and \code{local_o_start}.
 
 \subsection{Using Ghost Cell Plans}
 We introduce a new datatype \code{pfft_gcplan} that stores all the necessary information for ghost cell communication.
 Using a ghost cell plan follows the typical workflow: At first, determine the parallel data distribution; cf. Section~\ref{sec:gc:local-size}.
 Next, create a ghost cell plan; cf. Section~\ref{sec:gc:plan-cdata} and Section~\ref{sec:gc:plan-rdata}. 
-Execute the ghost cell communication with one of the following two functions
+Execute the ghost cell communication with one of the following two collective functions
 \begin{lstlisting}
 void pfft_exchange(
     pfft_gcplan ths);
@@ -457,57 +463,104 @@ void pfft_reduce(
 Hereby, a ghost cell exchange creates duplicates of local data elements on next neighboring processes,  
 while a ghost cell reduce is the adjoint counter part of the exchange, i.e.,
 it adds the sum of all the duplicates of a local data element to the original data element.
-
-If the plan is not needed anymore, free the allocated memory with
+Finally, free the allocated memory with
 \begin{lstlisting}
 void pfft_destroy_gcplan(
     pfft_gcplan ths);
 \end{lstlisting}
-It is invalid to pass a freed plan to \code{pfft_exchange} or \code{pfft_reduce}.
+if the plan is not needed anymore.
+Passing a freed plan to \code{pfft_exchange} or \code{pfft_reduce} results in undefined behavior.
 
 \subsection{Data Distribution}\label{sec:gc:local-size}
-For a given three-dimensional local array of size \code{local_n} with offset \code{local_n_start} the following function
+Corresponding to the three interface layers for FFT planning, there are the following three layers
+for computing the ghost cell data distribution:
 \begin{lstlisting}
 ptrdiff_t pfft_local_size_gc_3d(
     const ptrdiff_t *local_n, const ptrdiff_t *local_start,
-    ptrdiff_t alloc_local, const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
     ptrdiff_t *local_ngc, ptrdiff_t *local_gc_start);
-\end{lstlisting}
-computes the local array plus ghost cell size \code{local_ngc} and the corresponding offset \code{local_gc_start}.
-The three-dimensional arrays \code{gc_below} and \code{gc_above} give the number of ghost cells below and above the local array.
-Return value is the necessary memory to store the array plus ghost cells.
-Hereby, \code{alloc_local}, \code{local_n}, \code{local_start} should be the return values of an appropriate
-\code{pfft_local_size} invocation; cf. Section~\ref{sec:local-size}.
-A generalization of the three-dimensional interface to \code{rnk_n}-dimensionsinal arrays is given by
-\begin{lstlisting}
 ptrdiff_t pfft_local_size_gc(
     int rnk_n, 
     const ptrdiff_t *local_n, const ptrdiff_t *local_start,
-    ptrdiff_t alloc_local,
     const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
     ptrdiff_t *local_ngc, ptrdiff_t *local_gc_start);
-\end{lstlisting}
-Hereby, all \code{ptrdiff_t} arrays are of length \code{rnk_n}.
-However, only the case \code{rnk_n==3} is completely implemented at the moment. 
-
-You can substitute each data element in a ghost cell communication by tuples of size \code{howmany} with
-\begin{lstlisting}
 ptrdiff_t pfft_local_size_many_gc(
     int rnk_n,
     const ptrdiff_t *local_n, const ptrdiff_t *local_start,
-    ptrdiff_t alloc_local, ptrdiff_t howmany,
+    ptrdiff_t howmany,
     const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
     ptrdiff_t *local_ngc, ptrdiff_t *local_gc_start);
 \end{lstlisting}
+Hereby, \code{rnk_n} and \code{howmany} must be the exactly same variables that were used for the PFFT plan creation.
+However, only the case \code{rnk_n==3} is completely implemented at the moment. 
+The local array size \code{local_n} must be equal to \code{local_ni} or \code{local_no} (computed by an appropriate
+call of \code{pfft_local_size}; cf. Section~\ref{sec:local-size}) depending on whether the ghost cell plan works on the FFT input or output array.
+Analogously, \code{local_start} becomes \code{local_i_start} or \code{local_o_start}.
+The number of ghost cells is given by the two arrays \code{gc_below} and \code{gc_above} that must be equal among all MPI processes.
+All the ghost cell data distribution functions return the local array plus ghost cell size \code{local_ngc}
+and the corresponding offset \code{local_gc_start} as two arrays of length \code{rnk_n}. In addition,
+the \code{ptrdiff_t} return value gives the number of data elements that are necessary in order to store the array plus ghost cells.
 
+Note, that the array distribution functions do not distinguish between real and complex valued data.
+That is because \code{local_n} and \code{local_start} count array elements in units of complex or real depending on the transform.
+In addition, it does not matter if the local array is transposed or not,
+i.e., it is not necessary to pass the flags \code{PFFT_TRANSPOSED_IN} and \code{PFFT_TRANSPOSED_OUT} to the ghost cell distribution function.
+In constrast, the ghost cell plan creation depends on the transform type as well as the transposition flags.
 
-Works for complex and real arrays. R2c FFTs use the complex array decomposition for padded real values and the real array decomposition for non-padded real values.
+\subsection{Memory Allocation}
+In most applications we must ensure that the data array is large enough to suit the memory requirements of
+a parallel FFT and the ghost cell communication.
+The following two code snippets illustrate the correct allocation of memory in for complex valued and real valued arrays.
+\begin{lstlisting}
+/* Get parameters of data distribution */
+/* alloc_local, local_no, local_o_start are given in complex units */
+/* local_ni, local_i_start are given in real units */
+alloc_local = pfft_local_size_dft_r2c_3d(n, comm_cart_2d, PFFT_TRANSPOSED_NONE,
+    local_ni, local_i_start, local_no, local_o_start);
 
+/* alloc_local_gc, local_ngc, local_gc_start are given in complex units */
+alloc_local_gc = pfft_local_size_gc_3d(
+    local_no, local_o_start, gc_below, gc_above,
+    local_ngc, local_gc_start);
 
+/* Allocate enough memory for FFT and ghost cells */
+pfft_complex *cdata = pfft_alloc_complex(alloc_local_gc > alloc_local ? alloc_local_gc : alloc_local);
+\end{lstlisting}
+Here, \code{alloc_local} gives the number of data elements that are necessary to hold all steps of the parallel FFT, while
+\code{alloc_local_gc} gives the number of data elements that are necessary to hold all steps of the ghost cell communication.
+Note that we took the maximum of these both numbers as argument for \code{pfft_alloc_complex}.
+The code snippet for real valued arrays looks very similar.
+\begin{lstlisting}
+/* Get parameters of data distribution */
+/* alloc_local, local_no, local_o_start are given in complex units */
+/* local_ni, local_i_start are given in real units */
+alloc_local = pfft_local_size_dft_r2c_3d(n, comm_cart_2d, PFFT_TRANSPOSED_NONE,
+    local_ni, local_i_start, local_no, local_o_start);
+
+/* alloc_local_gc, local_ngc, local_gc_start are given in real units */
+alloc_local_gc = pfft_local_size_gc_3d(
+    local_ni, local_i_start, gc_below, gc_above,
+    local_ngc, local_gc_start);
+
+/* Allocate enough memory for FFT and ghost cells */
+double *rdata = pfft_alloc_real(alloc_local_gc > 2*alloc_local ? alloc_local_gc : 2*alloc_local);
+\end{lstlisting}
+Note that the number of real valued data elements is given by two times \code{alloc_local} for r2c transforms, whereas the last line would change into
+\begin{lstlisting}
+double *rdata = pfft_alloc_real(alloc_local_gc > alloc_local ? alloc_local_gc : alloc_local);
+\end{lstlisting}
+for r2r transforms.
 
 \subsection{Plan Creation for Complex Data}\label{sec:gc:plan-cdata}
-Data distribution functions are the same for complex and real data, see Section~\ref{sec:gc:local_size}.
-
+The following functions create ghost cell plans that operate on complex valued arrays, i.e.,
+\begin{compactitem}
+  \item c2c inputs,
+  \item c2c outputs,
+  \item r2c outputs (use flag \code{PFFT_GC_C2R}), and
+  \item c2r inputs (use flag \code{PFFT_GC_R2C}).
+\end{compactitem}
+Corresponding to the three interface layers for FFT planning, there are the following three layers
+for creating a complex valued ghost cell plan:
 \begin{lstlisting}
 pfft_gcplan pfft_plan_cgc_3d(
     const ptrdiff_t *n,
@@ -523,26 +576,96 @@ pfft_gcplan pfft_plan_many_cgc(
     const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
     pfft_complex *data, MPI_Comm comm_cart, unsigned gc_flags);
 \end{lstlisting}
+Hereby, \code{rnk_n}, \code{n}, \code{howmany} and \code{comm_cart} must be the variables that were used for the PFFT plan creation.
+However, only the case \code{rnk_n==3} is completely implemented at the moment. 
+Remember that \code{n} is the logical FFT size just as it is the case for FFT planning.
+The block size \code{block} must be equal to \code{iblock} or \code{oblock}
+depending on whether the ghost cell plan works on the FFT input or output array.
+Analogously, \code{data} becomes \code{in} or \code{out}.
+Set the number of ghost cells by \code{gc_below} and \code{gc_above} as described in Section~\ref{sec:gc}.
+The flags \code{gc_flags} must be set appropriately to the flags that were passed to the FFT planner. 
+Table~\ref{tab:map-rgcflags} shows the ghost cell planner flags that must be set in dependence on the listed FFT planner flags.
+\begin{table}[h]
+  \centering
+  \begin{tabular}{|l|l|}
+    \hline
+    FFT flag & ghost cell flag \\
+    \hline
+    \hline
+    \code{PFFT_TRANSPOSED_NONE} & \code{PFFT_GC_TRANSPOSED_NONE} \\
+    \code{PFFT_TRANSPOSED_IN} & \code{PFFT_GC_TRANSPOSED} \\
+    \code{PFFT_TRANSPOSED_OUT} & \code{PFFT_GC_TRANSPOSED} \\
+    \hline
+  \end{tabular}
+  \caption{Mapping of FFT and complex valued ghost cell planner flags.}
+  \label{tab:map-rgcflags}
+\end{table}
+In addition, we introduce the flag \code{PFFT_GC_R2C} (and its equivalent \code{PFFT_GC_C2R})
+to handle the complex array storage format of r2c and c2r transforms.
+In fact, these two flags imply an ordinary complex valued ghost cell communication on an array of size
+\code{n[0] x ... x n[rnk_n-2] x (n[rnk_n-1]/2+1)}. Please note that we wrongly assume periodic boundary
+conditions in this case. Therefore, you should ignore the data elements with the last index behind \code{n[rnk_n-1]/2}.
 
+\todo[inline]{Does anybody need r2c ghost cell communication with correct boundary conditions?}
 
 \subsection{Plan Creation for Real Data}\label{sec:gc:plan-rdata}
-Data distribution functions are the same for complex and real data, see Section~\ref{sec:gc:local_size}.
-
+The following functions create ghost cell plans that operate on real valued arrays, i.e.,
+\begin{compactitem}
+  \item r2r inputs,
+  \item r2r outputs,
+  \item r2c inputs, and
+  \item c2r outputs.
+\end{compactitem}
+Corresponding to the three interface layers for FFT planning, there are the following three layers
+for creating a real valued ghost cell plan:
 \begin{lstlisting}
 pfft_gcplan pfft_plan_rgc_3d(
     const ptrdiff_t *n,
     const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
     double *data, MPI_Comm comm_cart, unsigned gc_flags);
 pfft_gcplan pfft_plan_rgc(
-  int rnk_n, const ptrdiff_t *n,
-  const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
-  double *data, MPI_Comm comm_cart, unsigned gc_flags);
+    int rnk_n, const ptrdiff_t *n,
+    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    double *data, MPI_Comm comm_cart, unsigned gc_flags);
 pfft_gcplan pfft_plan_many_rgc(
-  int rnk_n, const ptrdiff_t *n,
-  ptrdiff_t howmany, const ptrdiff_t *block,
-  const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
-  double *data, MPI_Comm comm_cart, unsigned gc_flags);
+    int rnk_n, const ptrdiff_t *n,
+    ptrdiff_t howmany, const ptrdiff_t *block,
+    const ptrdiff_t *gc_below, const ptrdiff_t *gc_above,
+    double *data, MPI_Comm comm_cart, unsigned gc_flags);
 \end{lstlisting}
+Hereby, \code{rnk_n}, \code{n}, \code{howmany} and \code{comm_cart} must be the variables that were
+used for the PFFT plan creation. Remember that \code{n} is the logical FFT size just as it is the case for FFT planning.
+The block size \code{block} must be equal to \code{iblock} or \code{oblock}
+depending on whether the ghost cell plan works on the FFT input or output array.
+Analogously, \code{data} becomes \code{in} or \code{out}.
+Set the number of ghost cells by \code{gc_below} and \code{gc_above} as described in Section~\ref{sec:gc:local-size}.
+The flags \code{gc_flags} must be set appropriately to the flags that were passed to the FFT planner. 
+Table~\ref{tab:map-rgcflags} shows the ghost cell planner flags that must be set in dependence on the listed FFT planner flags.
+\begin{table}[h]
+  \centering
+  \begin{tabular}{|l|l|}
+    \hline
+    FFT flag & ghost cell flag \\
+    \hline
+    \hline
+    \code{PFFT_TRANSPOSED_NONE} & \code{PFFT_GC_TRANSPOSED_NONE} \\
+    \code{PFFT_TRANSPOSED_IN} & \code{PFFT_GC_TRANSPOSED} \\
+    \code{PFFT_TRANSPOSED_OUT} & \code{PFFT_GC_TRANSPOSED} \\
+    \code{PFFT_PADDED_R2C} & \code{PFFT_GC_PADDED_R2C} \\
+    \code{PFFT_PADDED_C2R} & \code{PFFT_GC_PADDED_C2R} \\
+    \hline
+  \end{tabular}
+  \caption{Mapping of FFT and real valued ghost cell planner flags.}
+  \label{tab:map-rgcflags}
+\end{table}
+Note that the flag \code{PFFT_GC_PADDED_R2C} (or its equivalent \code{PFFT_GC_PADDED_C2R})
+implies an ordinary real valued ghost cell communication on an array of size
+\code{n[0] x ... x n[rnk_n-2] x 2*(n[rnk_n-1]/2+1)}.
+Especially, the padding elements will be handles as normal data points, i.e., you must we aware that
+the numbers of ghost cells \code{gc_below[rnk_n-1]} and \code{gc_above[rnk_n-1]} include the number of padding elements.
+
+\subsection{Inofficial Flags}
+\todo[inline]{explain \code{PFFT_GC_SENDRECV} and \code{PFFT_GC_RMA}}
 
 \subsection{Ghost Cell Execution Timer}
 PFFT ghost cell plans automatically accumulate the local run times of every call to \code{pfft_exchange} and \code{pfft_reduce}.
@@ -639,7 +762,7 @@ pfft_gctimer pfft_convert_vec2gctimer(
 creates a timer and fills it's entries with the data from array \code{times}. Thereby, the entries of \code{times}
 must be in the same order as above. 
 
-\todo[inline]{implement getters and setters for ghost cell timer}
+\todo[inline]{Do we need getters and setters for ghost cell timers?}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

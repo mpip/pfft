@@ -766,7 +766,7 @@ static void init_param_size_and_trafo_flags(
   }
     
   /* R2C: Compute trafo always at forward (transp. out) step.
-   * Therefore it doesn't work with TRANSPOSED_IN. */
+   * Therefore, it doesn't work with TRANSPOSED_IN. */
   if( trafo_flag & PFFTI_TRAFO_R2C ){
     /* Compute trafo on forward step */
     for(t=0; t<rnk_pm+1; t++)
