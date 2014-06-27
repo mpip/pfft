@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Interface Layers of the PFFT Library}\label{chap:api}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-We introduce the interface layers of PFFT in the order of increasing flexibility at the example of c2c-FFT.
+We give a quick overview of the PFFT interface layers in the order of increasing flexibility at the example of c2c-FFTs.
 For r2c-, c2r-, and r2r-FFT similar interface layer specifications apply. A full reference list of all PFFT functions is given in Chapter~\ref{chap:ref}. 
 \section{Basic Interface}
 The \code{_3d} interface is the simplest interface layer. It is suitable for the planning of three-dimensional FFTs.
@@ -40,14 +40,15 @@ pfft_plan pfft_plan_dft(
     pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
     int sign, unsigned pfft_flags);
 \end{lstlisting}
-Therefore, \code{n}, \code{local_ni}, \code{local_i_start}, \code{local_no}, and \code{local_o_start} are
-\code{ptrdiff_t} arrays of length \code{rnk_n}.
+Therefore, \code{n}, \code{local_ni}, \code{local_i_start}, \code{local_no}, and \code{local_o_start} become
+arrays of length \code{rnk_n}.
 
 \section{Advanced Interface}
 The advanced interface introduces the arrays \code{ni} and \code{no} of length \code{rnk_n}
 that give the pruned FFT input and output size.
 Furthermore, the arrays \code{iblock} and \code{oblock} of length \code{rnk_pm} (\code{rnk_pm} being the dimension of the process mesh)
 serve to adjust the block size of the input and output block decomposition.
+The additional parameter \code{howmany} gives the number of transforms that will be computed simultaneously.
 \begin{lstlisting}
 ptrdiff_t pfft_local_size_many_dft(
     int rnk_n, const ptrdiff_t *n,
@@ -72,7 +73,7 @@ pfft_plan pfft_plan_many_dft(
 
 
 \section{Preliminary: Skip Serial Transformations}
-The \code{_skipped} interface is based on the \code{many} interface but adds the possibility to skip selected serial FFTs.
+The \code{_skipped} interface extends the \code{_many} interface by adding the possibility to skip some of the serial FFTs.
 \begin{lstlisting}
 pfft_plan pfft_plan_many_dft_skipped(
     int rnk_n, const ptrdiff_t *n,
@@ -84,4 +85,4 @@ pfft_plan pfft_plan_many_dft_skipped(
 \end{lstlisting}
 Hereby, \code{skip_trafos} is an \code{int} array of length \code{rnk_pm+1} (\code{rnk_pm} being the mesh dimension of the communicator \code{comm_cart}).
 For \code{t=0,...,rnk_pm} set \code{skip_trafos[t]=1} if the \code{t}-th serial transformation should be computed, otherwise set \code{skip_trafos[t]=0}.
-Note that the local transpositions are always performed, since they are necessary for the global communication to work.
+Note that the local transpositions are always performed, since they are a prerequisite for the global communication to work.

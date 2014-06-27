@@ -278,7 +278,7 @@ int pfft_create_procmesh_2d(
     MPI_Comm *comm_cart_2d);
 \end{lstlisting}
 creates a two-dimensional, periodic, Cartesian communicator. The \code{int} return value
-(not used in Listing~\ref{lst:min_c2c}) is the forwarded error code of \code{MPI_Cart_create}.
+(not used in Listing~\ref{lst:man_c2c}) is the forwarded error code of \code{MPI_Cart_create}.
 It is equal to zero if the communicator was created successfully.
 The most common error is that the number of processes within the input
 communicator \code{comm} does not fit \code{np0 x np1}. In this case the Cartesian communicator
@@ -305,21 +305,21 @@ to print the error message.
 This function is similar to the standard C function \code{fprintf} with the exception, that only the process with MPI rank $0$
 within the given communicator \code{comm} will produce some output; see Section~\ref{sec:fprintf} for details.
 
-\section{Inplace Transforms}
+\section{Inplace transforms}
 Similar to FFTW, PFFT is able to compute parallel FFTs completely in place, which means that beside some
-constant buffers, no second data array beside the inputs is necessary. Especially, the global data communication
+constant buffers, no second data array is necessary. Especially, the global data communication
 can be performed in place. As far as we know, there is no other parallel FFT library beside FFTW and PFFT that
-supports this feature. 
+supports this feature.
 This feature is enabled as soon as the pointer to the output array \code{out} is equal to the pointer to the input array \code{in}.
-E.g., in Listing~\ref{lst:min_c2c} we would call
+E.g., in Listing~\ref{lst:man_c2c} we would call
 \begin{lstlisting}[firstnumber=34]
 /* Plan parallel forward FFT */
 plan = pfft_plan_dft_3d(n, in, in, comm_cart_2d,
     PFFT_FORWARD, PFFT_TRANSPOSED_NONE);
 \end{lstlisting}
 
-\section{Higher Dimensional Data Decomposition}
-Our first test program used a two-dimensional data decomposition of a three-dimensional data set.
+\section{Higher dimensional data decomposition}
+The test program given in Listing~\ref{lst:man_c2c} used a two-dimensional data decomposition of a three-dimensional data set.
 Moreover, PFFT support the computation of any $d$-dimensional FFT with $r$-dimensional data decomposition
 as long as $r\le d-1$. For example, one can use a one-dimensional data decomposition for any two- or higher-dimensional data set,
 while the data set must be at least four-dimensional to fit to a three-dimensional data decomposition.
@@ -336,7 +336,15 @@ int pfft_create_procmesh(
 \end{lstlisting}
 Hereby, the array \code{np} of length \code{rnk_np} gives the size of the Cartesian communicator \code{cart_comm}.
 
-\section{Parallel Data Decomposition}\label{sec:par-data-decomp}
+\section{Parallel data decomposition}\label{sec:par-data-decomp}
+In the following, we use the notation $\frac{n}{P}$ to symbolize that an array of length $n$ is broken into disjoint blocks and distributed on $P$ MPI processes.
+Hereby, the data is distributed in compliance to the FFTW-MPI data decompostion~\cite{fftw-mpi-data-distribution},
+i.e., the first \code{P/block} (rounded down) processes get a contiguous chunk of \code{block} elements,
+the next process gets the remaining \code{n - block * (n/block)} data elements, and all remaining processes get nothing.
+Thereby, the block size \code{block} defaults to \code{n/P} (rounded down) but can also be user defined.
+
+\subsection{Non-transposed and transposed data layout}
+In the following, we use the notation $\frac{n}{P}$ to symbolize that an array of length $n$ is distributed on $P$ MPI processes.
 The standard PFFT data decomposition of $h$ interleaved $d$-dimensional arrays of equal size $n_0 \times n_1\times \hdots \times n_{d-1}$
 on a $r$-dimensional process mesh of size $P_0\times \hdots \times P_{r-1}$ is given by the blocks
 \begin{equation*}
@@ -345,7 +353,6 @@ on a $r$-dimensional process mesh of size $P_0\times \hdots \times P_{r-1}$ is g
 A PFFT created with planning flag \code{PFFT_TRANSPOSED_NONE} requires the inputs to be decomposed in this standard way and produces
 outputs that are decomposed in the same way.
 
-\subsection{Transposed data layout}
 PFFT can save half of the global communication amount, if the data reordering to standard decomposition is omitted. 
 The transposed data decomposition is given by
 \begin{equation*}
@@ -358,54 +365,83 @@ Typically, one creates a forward plan with \code{PFFT_TRANSPOSED_OUT} and a back
 Note that the flags \code{PFFT_TRANSPOSED_OUT} and \code{PFFT_TRANSPOSED_IN} must be passed to the array distribution function (see Section~\ref{sec:local-size})
 \emph{as well as} to the planner (see Section~\ref{sec:planner}).
 
-\subsection{Three-Dimensional FFTs with Three-Dimensional Data Decomposition}
+\subsection{Three-dimensional FFTs with three-dimensional data decomposition}
+Many applications work with three-dimensional block decompositions of three-dimensional arrays.
+PFFT supports decompositions of the kind
 \begin{equation*}
   \frac{n_0}{P_0} \times \frac{n_1}{P_1} \times \frac{n_2}{P_2} \times h.
 \end{equation*}
-
+However, PFFT applies a parallel algorithms that needs at least one non-distributed transform dimension (we do not transform along $h$),
+Therefore, we split the number of processes along the last dimension into two factors $P_2=Q_1Q_2$, remap
+the data to the two-dimensional decomposition
+\begin{equation*}
+  \frac{n_0}{P_0Q_0} \times \frac{n_1}{P_1Q_1} \times n_2 \times h,
+\end{equation*}
+and compute the parallel FFT with this two-dimensional decomposition.
+Note that the 3d to 2d remap implies some very special restrictions on the block sizes for $n_0$ and $n_1$, i.e.,
+the blocks must be divisible by $Q_0$ and $Q_1$. More precisely, the default blocks of the 2d-decomposition
+are given by \code{n0/(P0*Q0)} and \code{n1/(P1*Q1)} (both divisions rounded down).
+This implies that the default blocks of the 3d-decomposition must be \code{n0/(P0*Q0) * Q0},
+\code{n1/(P1*Q1) * Q1}, and \code{n2/(Q0*Q1)} (all divisions rounded down).
 
 \section{Planning effort}
+Pass one of the following flags
 \begin{compactitem}
-  \item \code{PFFT_ESTIMATE}
-  \item \code{PFFT_MEASURE}
-  \item \code{PFFT_PATIENT}
+  \item \code{PFFT_ESTIMATE},
+  \item \code{PFFT_MEASURE},
+  \item \code{PFFT_PATIENT}, or
   \item \code{PFFT_EXHAUSIVE}
-  \item \code{PFFT_NO_TUNE}
-  \item \code{PFFT_TUNE}
 \end{compactitem}
+to the PFFT planner in order to plan all internal FFTW plans with \code{FFTW_ESTIMATE}, \code{FFTW_MEASURE}, \code{FFTW_PATIENT}, or \code{FFTW_EXHAUSIVE},
+respectively. The default value is \code{PFFT_MEASURE}.
 
+PFFT uses FFTW plans for parallel array transposition and the serial transforms. In fact, every serial transform is a combination of
+strided lower-dimensional FFTs and a serial array transposition (necessary to prepare the global transposition) which can be done by a single FFTW plan.
+However, it turns out that FFTW sometimes performs better if the serial transposition and the strided FFTs are executed separately.
+Therefore, PFFT introduces the flag \code{PFFT_TUNE} that enables extensive run time tests in order to find the optimal sequence of
+serial strided FFT and serial transposition for every serial transform. These tests are disable on default which corresponds to the flag \code{PFFT_NO_TUNE}.
 
 \section{Preserving input data}
+The following flags
 \begin{compactitem}
-  \item \code{PFFT_PRESERVE_INPUT}
-  \item \code{PFFT_DESTROY_INPUT}
+  \item \code{PFFT_PRESERVE_INPUT},
+  \item \code{PFFT_DESTROY_INPUT}, and
   \item \code{PFFT_BUFFERED_INPLACE}
 \end{compactitem}
+only take effect for out-of-place transforms.
+The first one behaves analogously to the FFTW flag \code{FFTW_PRESERVE_INPUT} and ensures that the input values are not overwritten.
+In fact, this flag implies that only the first serial transform is executed out-of-place and all
+successive steps are performed in-place on the output array.
+In compliance to FFTW, this is the default behaviour for out-of-place plans.
+
+The second flag behaves analogously to the FFTW flag \code{FFTW_DESTROY_INPUT} and tells the planner that
+the input array can be used as scratch array. This may give some speedup for out-of-place plans,
+because all the intermediate transforms and transposition steps can be performed out-of-place.
+
+Finally, the flag \code{PFFT_BUFFERED_INPLACE} can be used for out-of-place plans that store its inputs and outputs in the same array,
+i.e., array \code{out} is used for intermediate out-of-place transforms and transpositions but the PFFT inputs and outputs are stored in array \code{in}.
+
 
 \section{FFTs with shifted index sets}
+\todo[inline]{Describe shifted input and output}
 \begin{compactitem}
   \item \code{PFFT_SHIFTED_IN}
   \item \code{PFFT_SHIFTED_OUT}
 \end{compactitem}
 
-\section{PFFT flags}
-\begin{compactitem}
-  \item \code{PFFT_TRANSPOSED_NONE}
-  \item \code{PFFT_TRANSPOSED_IN}
-  \item \code{PFFT_TRANSPOSED_OUT}
-  \item \code{PFFT_SHIFTED_IN}
-  \item \code{PFFT_SHIFTED_OUT}
-  \item \code{PFFT_ESTIMATE}
-  \item \code{PFFT_MEASURE}
-  \item \code{PFFT_PATIENT}
-  \item \code{PFFT_EXHAUSIVE}
-  \item \code{PFFT_NO_TUNE}
-  \item \code{PFFT_TUNE}
-  \item \code{PFFT_PRESERVE_INPUT}
-  \item \code{PFFT_DESTROY_INPUT}
-  \item \code{PFFT_BUFFERED_INPLACE}
-\end{compactitem}
+\section{Pruned FFT and Shifted Index Sets}
+\subsection{Pruned FFT}
+For pruned r2r- and c2c-FFT are defined as
+\begin{equation*}
+  g_l = \sum_{k=0}^{n_i-1} \hat g_k \eim{kl/n}, \quad l=0,\hdots,n_o-1,
+\end{equation*}
+where $n_i\le n$ and $n_o\le n$.
 
+\subsection{Shifted Index Sets}
+For $N\in 2\N$ we define the FFT with shifted inputs
+
+
+For $K,L,N\in 2\N$, $L<N$, $L<N$ we define
 
 
 
@@ -426,8 +462,5 @@ To use these interfaces, you must
   \item Replace \code{double} with \code{float} or \code{long double} for subroutine parameters.
 \end{compactitem}
 
-\section{Measuring parallel run times}
-Use \code{MPI_Barrier} in front of every call to \code{pfft_} function to avoid unbalanced run times.
-
-\section{Ghost Cell Communication}
+\section{Ghost cell communication}
 \todo[inline]{explain ghost cell communication with a test file}

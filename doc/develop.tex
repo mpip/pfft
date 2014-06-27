@@ -37,20 +37,6 @@ sed -e 's/ *\\$//g' -e 's/PFFT_EXTERN //g' \
   \item Matlab uses the same sign convention, i.e., $-1$ for \code{fft} and $+1$ for \code{ifftn}
 \end{itemize}
 
-\section{Pruned FFT and Shifted Index Sets}
-\subsection{Pruned FFT}
-For pruned r2r- and c2c-FFT are defined as
-\begin{equation*}
-  g_l = \sum_{k=0}^{n_i-1} \hat g_k \eim{kl/n}, \quad l=0,\hdots,n_o-1,
-\end{equation*}
-where $n_i\le n$ and $n_o\le n$.
-
-\subsection{Shifted Index Sets}
-For $N\in 2\N$ we define the FFT with shifted inputs
-
-
-For $K,L,N\in 2\N$, $L<N$, $L<N$ we define
-
-
-\code{PFFT_SHIFTED_IN} 
+\section{Measuring parallel run times}
+Use \code{MPI_Barrier} in front of every call to \code{pfft_} function to avoid unbalanced run times.
 

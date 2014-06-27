@@ -584,7 +584,7 @@ depending on whether the ghost cell plan works on the FFT input or output array.
 Analogously, \code{data} becomes \code{in} or \code{out}.
 Set the number of ghost cells by \code{gc_below} and \code{gc_above} as described in Section~\ref{sec:gc}.
 The flags \code{gc_flags} must be set appropriately to the flags that were passed to the FFT planner. 
-Table~\ref{tab:map-rgcflags} shows the ghost cell planner flags that must be set in dependence on the listed FFT planner flags.
+Table~\ref{tab:map-cgcflags} shows the ghost cell planner flags that must be set in dependence on the listed FFT planner flags.
 \begin{table}[h]
   \centering
   \begin{tabular}{|l|l|}
@@ -598,7 +598,7 @@ Table~\ref{tab:map-rgcflags} shows the ghost cell planner flags that must be set
     \hline
   \end{tabular}
   \caption{Mapping of FFT and complex valued ghost cell planner flags.}
-  \label{tab:map-rgcflags}
+  \label{tab:map-cgcflags}
 \end{table}
 In addition, we introduce the flag \code{PFFT_GC_R2C} (and its equivalent \code{PFFT_GC_C2R})
 to handle the complex array storage format of r2c and c2r transforms.

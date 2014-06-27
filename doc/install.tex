@@ -10,13 +10,13 @@ make install
 \end{lstlisting}
 
 
-\section{Install of the Latest Official FFTW Release}\label{sec:fftw_inst}
+\section{Install of the latest official FFTW release}\label{sec:fftw_inst}
 PFFT depends on Release~\fftwversion{} of the FFTW library~\cite{fftw}.
 For the sake of completeness, we show the command line based install procedure in the following.
 However, note that we provide install scripts on \websoft that simplify the install a lot.
 We highly recommend to use these install scripts, since they additionally apply several
 performance patches and bugfixes that have been submitted to the FFTW developers but
-are not yet included in the official releases.
+are not yet included in the official FFTW releases.
 \begin{lstlisting}[escapechar=§]
 wget http://www.fftw.org/fftw-§\fftwversionsl§.tar.gz
 tar xzvf fftw-§\fftwversion§.tar.gz
@@ -44,13 +44,13 @@ make install
 Hereby, the optional call \code{make check} builds the test programs.
 If the \fftw-\fftwversion{} software library is already installed on your system but not found by the configure script,
 you can provide the FFTW installation directory \code{\$FFTWDIR} to configure by
-\begin{lstlisting}
+\begin{lstlisting}[language=bash]
 ./configure --with-fftw3=$FFTWDIR
 \end{lstlisting}
 This call implies that the FFTW header files are located in \code{\$FFTWDIR/include} and the FFTW library files are located
 in \code{\$FFTWDIR/lib}. Otherwise, one should specify the FFTW include path \code{\$FFTWINC} and the FFTW library path
 \code{\$FFTWLIB} separately by
-\begin{lstlisting}
+\begin{lstlisting}[prebreak = {\textbackslash}]
 ./configure --with-fftw3-includedir=$FFTWINC --with-fftw3-libdir=$FFTWLIB
 \end{lstlisting}
 To install PFFT in a user specified directory \code{\$PFFTINSTDIR} call configure with the option
@@ -72,7 +72,7 @@ For more details on the options of the \code{configure} script call
 \end{lstlisting}
 
 
-\section{Building and linking your program}
+\section{How to include PFFT in your program}
 All programs using PFFT should include its header file
 \begin{lstlisting}
 #include <pfft.h>

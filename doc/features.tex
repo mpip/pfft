@@ -303,8 +303,8 @@ mblk[2] = iblk[2]*q1;
 
 Compute the three-dimensional block in the following way:
 \begin{enumerate}
- \item compute blocks $B_0^\textrm{2d}, B_1^\textrm{2d}$ for 2d decomposition
- \item compute blocks for 3d decomposition via $B_0^\textrm{3d} = B_0^\textrm{2d} Q_0$, $B_1^\textrm{3d} = B_1^\textrm{2d} Q_1$ and the default block size $B_2^\textrm{3d} = \left\lceil\frac{n_2}{Q_0Q_1}\right\rceil$
+ \item compute blocks $B_0^{\textrm{2d}}, B_1^{\textrm{2d}}$ for 2d decomposition
+ \item compute blocks for 3d decomposition via $B_0^{\textrm{3d}} = B_0^{\textrm{2d}} Q_0$, $B_1^{\textrm{3d}} = B_1^{\textrm{2d}} Q_1$ and the default block size $B_2^{\textrm{3d}} = \left\lceil\frac{n_2}{Q_0Q_1}\right\rceil$
 \end{enumerate}
 
 
@@ -312,29 +312,29 @@ $P_0 = 16, P_1 = 16, Q_0=4, Q_1=2$
 
 $\frac{n_0}{P_0Q_0} = \frac{674}{16\cdot 4}$:
 \begin{itemize}
- \item $B_0^\textrm{2d} = \left\lceil \frac{674}{64} \right\rceil = 11$
- \item $B_0^\textrm{3d} = B_0^\textrm{2d}Q_0 = 44$
- \item $R_0^\textrm{3d} = \left\lfloor \frac{674}{44} \right\rfloor = 15$
- \item $674 - R_0^\textrm{3d}*B_0^\textrm{3d} = 15$
+ \item $B_0^{\textrm{2d}} = \left\lceil \frac{674}{64} \right\rceil = 11$
+ \item $B_0^{\textrm{3d}} = B_0^{\textrm{2d}}Q_0 = 44$
+ \item $R_0^{\textrm{3d}} = \left\lfloor \frac{674}{44} \right\rfloor = 15$
+ \item $674 - R_0^{\textrm{3d}}*B_0^{\textrm{3d}} = 15$
 \end{itemize}
 \begin{equation*}
   \frac{n_0}{P_0} = \frac{674}{16} = \left[15\times 44, 1\times 14 \right]
 \end{equation*}
 $\frac{n_1}{P_1Q_1} = \frac{674}{16\cdot 2}$:
 \begin{itemize}
- \item $B_1^\textrm{2d} = \left\lceil \frac{674}{32} \right\rceil = 22$
- \item $B_1^\textrm{3d} = B_1^\textrm{2d}Q_1 = 44$
- \item $R_1^\textrm{3d} = \left\lfloor \frac{674}{44} \right\rfloor = 15$
- \item $674 - R_1^\textrm{3d}*B_1^\textrm{3d} = 15$
+ \item $B_1^{\textrm{2d}} = \left\lceil \frac{674}{32} \right\rceil = 22$
+ \item $B_1^{\textrm{3d}} = B_1^{\textrm{2d}}Q_1 = 44$
+ \item $R_1^{\textrm{3d}} = \left\lfloor \frac{674}{44} \right\rfloor = 15$
+ \item $674 - R_1^{\textrm{3d}}*B_1^{\textrm{3d}} = 15$
 \end{itemize}
 \begin{equation*}
   \frac{n_1}{P_1} = \frac{674}{16} = \left[15\times 44, 1\times 14 \right]
 \end{equation*}
 
 \begin{itemize}
- \item $B_2^\textrm{3d} = \left\lceil \frac{674}{8} \right\rceil = 85$
- \item $R_2^\textrm{3d} = \left\lfloor \frac{674}{85} \right\rfloor = 7$
- \item $674 - R_2^\textrm{3d}*B_2^\textrm{3d} = 79$
+ \item $B_2^{\textrm{3d}} = \left\lceil \frac{674}{8} \right\rceil = 85$
+ \item $R_2^{\textrm{3d}} = \left\lfloor \frac{674}{85} \right\rfloor = 7$
+ \item $674 - R_2^{\textrm{3d}}*B_2^{\textrm{3d}} = 79$
 \end{itemize}
 \begin{equation*}
   \frac{n_2}{Q_0Q_1} = \frac{674}{8} = \left[7\times 85, 1\times 79 \right]
