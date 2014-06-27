@@ -62,7 +62,11 @@ static C init_scalar(
     )
 {
   R m = (R) plain_index(rnk_n, n, i);
-  return 1000.0/(2*m+1) + 1000.0/(2*m+2) * _Complex_I;
+
+  /* avoid division by zero */
+  if(m==0) return 1500.0 + 1250.0 * _Complex_I;
+
+  return 1000.0/(2*m) + 1000.0/(2*m+1) * _Complex_I;
 }
 
 static C init_scalar_periodic(
