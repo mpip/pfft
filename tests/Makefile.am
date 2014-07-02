@@ -1,9 +1,11 @@
 # Subdirectories
 SUBDIRS = 
 
-# Enable Fortran subdirectory only on request.
+# Enable Fortran subdirectory only on request and only for double precision.
 if ENABLE_FORTRAN
+if DOUBLE
 SUBDIRS += fortran f03
+endif
 endif
 
 # Directory of ipfft.h
@@ -20,7 +22,21 @@ EXTRA_DIST = \
 	run_checks.sh
 
 # These programs are built by 'make check' and may be tested afterwards.
-check_PROGRAMS = \
+
+check_PROGRAMS = 
+
+if SINGLE
+check_PROGRAMS += \
+	simple_check_c2c_float
+endif
+
+if LDOUBLE
+check_PROGRAMS += \
+	simple_check_c2c_ldouble
+endif
+
+if DOUBLE
+check_PROGRAMS += \
 	minimal_check_c2c minimal_check_c2c_transposed
 
 check_PROGRAMS += \
@@ -74,4 +90,4 @@ check_PROGRAMS += \
 	time_c2c_3d_on_3d_transposed \
 	time_c2c \
 	time_c2c_transposed
-
+endif
