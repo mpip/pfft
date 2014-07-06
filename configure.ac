@@ -61,7 +61,7 @@ AM_INIT_AUTOMAKE([1.9.6 foreign])
 # multithreaded code
 AC_ARG_ENABLE(threads, [AS_HELP_STRING([--enable-threads],
   [enable multithreaded code])], enable_threads=$enableval, enable_threads=no)
-AM_CONDITIONAL(HAVE_THREADS, test "x$enable_threads" = "xyes" )
+AM_CONDITIONAL([HAVE_THREADS], [test "x$enable_threads" = "xyes"])
 
 # debug mode
 AC_ARG_ENABLE(debug, [AS_HELP_STRING([--enable-debug],
@@ -101,9 +101,9 @@ if test "$ok" = "yes"; then
 fi
 AC_SUBST(PRECISION)
 
-AM_CONDITIONAL(SINGLE,  test "$PRECISION" = "s")
-AM_CONDITIONAL(DOUBLE,  test "$PRECISION" = "d")
-AM_CONDITIONAL(LDOUBLE, test "$PRECISION" = "l")
+AM_CONDITIONAL([SINGLE],  [test "$PRECISION" = "s"])
+AM_CONDITIONAL([DOUBLE],  [test "$PRECISION" = "d"])
+AM_CONDITIONAL([LDOUBLE], [test "$PRECISION" = "l"])
 
 # compute library suffix
 case "$PRECISION" in
@@ -160,7 +160,7 @@ else
   AC_DEFINE([DISABLE_FORTRAN], 1, [Define to disable Fortran wrappers.])
 fi
 
-AM_CONDITIONAL(ENABLE_FORTRAN,[test "x$enable_fortran" = "xyes"])
+AM_CONDITIONAL([ENABLE_FORTRAN],[test "x$enable_fortran" = "xyes"])
 
 if test "x$enable_fortran" = xyes; then
    # Find out how to name a MAIN Fortran entry point in C.
@@ -414,14 +414,14 @@ else
   AC_MSG_NOTICE([disable build of documents])
 fi
 
-AM_CONDITIONAL(ENABLE_DOC,[test "x$enable_doc" != xno])
-AM_CONDITIONAL(HAVE_LATEX,
+AM_CONDITIONAL([ENABLE_DOC],[test "x$enable_doc" != xno])
+AM_CONDITIONAL([HAVE_LATEX],
 	[test "x$PDFLATEX" != xno && 
 	test "x$MAKEINDEX" != xno && 
 	test "x$BIBTEX" != xno])
 
 if test "x$enable_doc" != xno ; then
-  AC_CONFIG_FILES([doc/Makefile doc/latexinc.sh])
+  AC_CONFIG_FILES([doc/latexinc.sh])
   AC_CONFIG_LINKS([doc/latex-manual.sh:doc/latex-manual.sh])
 fi
 
@@ -451,7 +451,7 @@ AC_CONFIG_HEADERS([fconfig.h],
 ]])
 
 # The output files to be generated
-AC_CONFIG_FILES(Makefile \
+AC_CONFIG_FILES([Makefile \
                 pfft.pc \
                 api/pfft.f \
                 api/pfft.f03 \
@@ -462,9 +462,11 @@ AC_CONFIG_FILES(Makefile \
 		gcell/Makefile \
 		tests/Makefile \
 		tests/fortran/Makefile \
-		tests/f03/Makefile)
+		tests/f03/Makefile \
+                doc/Makefile ])
 
 AC_CONFIG_LINKS([tests/build_checks.sh:tests/build_checks.sh
-                 tests/run_checks.sh:tests/run_checks.sh])
+                 tests/run_checks.sh:tests/run_checks.sh
+                 tests/manual_c2c_3d.c:tests/manual_c2c_3d.c])
 
 AC_OUTPUT

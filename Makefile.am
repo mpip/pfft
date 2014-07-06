@@ -13,16 +13,14 @@ ACLOCAL_AMFLAGS = -I m4
 # Traverse these subdirectories, the current one first (for config.h).
 SUBDIRS = kernel gcell util api .
 
+if ENABLE_TESTS
+SUBDIRS += tests
+endif
+
 if ENABLE_DOC
 SUBDIRS += doc
 endif
 
-DIST_SUBDIRS = $(SUBDIRS) tests
-
-# Tests work with double precision only.
-if ENABLE_TESTS
-SUBDIRS += tests
-endif
 
 EXTRA_DIST = bootstrap.sh CONVENTIONS pfft.pc.in
 
@@ -41,7 +39,6 @@ lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_la_LIBADD = \
 	util/libutil.la \
 	api/libapi.la \
 	gcell/libgcell.la
-#	tests/libtests.la
 
 lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_la_LDFLAGS = -no-undefined -version-info @SHARED_VERSION_INFO@
 
