@@ -49,7 +49,7 @@ that can be used as substitutes for \code{fftw_mpi_init} and \code{fftw_mpi_clea
 
 \section{Using PFFT Plans}
 PFFT follows exactly the same workflow as FFTW-MPI. 
-A plan created by one of the functions given in Section~\ref{sec:planning} is executed with
+A plan created by one of the functions given in Section~\ref{sec:create-plan} is executed with
 \begin{lstlisting}
 void pfft_execute(const pfft_plan plan);
 \end{lstlisting}
@@ -149,6 +149,12 @@ void pfft_local_block_many_dft_r2c(
     ptrdiff_t *local_no, ptrdiff_t *local_o_start);
 \end{lstlisting}
 
+\begin{compactitem}
+  \item \code{local_size} functions give back number of complex numbers that must be allocated
+  \item default - real array does not use padding
+  \item \code{PFFT_PADDED_R2C}, \code{PFFT_PADDED_C2R} - real array uses padding similar to FFTW-MPI
+\end{compactitem}
+
 \subsection{Complex-to-Real FFT}
 \begin{lstlisting}
 ptrdiff_t pfft_local_size_dft_c2r_3d(
@@ -225,7 +231,7 @@ void pfft_local_block_many_r2r(
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Plan Creation}
+\section{Plan Creation}\label{sec:create-plan}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Complex-to-Complex FFT}
@@ -248,6 +254,9 @@ pfft_plan pfft_plan_many_dft_skipped(
     int sign, unsigned pfft_flags);
 \end{lstlisting}
 
+Plan a parallel, complex input/output discrete Fourier transform (DFT) in two or more dimensions, returning an \code{pfft_plan}.
+The planner returns NULL if the plan cannot be created.
+
 \subsection{Real-to-Complex FFT}
 \begin{lstlisting}
 pfft_plan pfft_plan_dft_r2c_3d(
@@ -268,7 +277,45 @@ pfft_plan pfft_plan_many_dft_r2c_skipped(
     int sign, unsigned pfft_flags);
 \end{lstlisting}
 
-\subsection{Complex-to-Real FFT}
+Plan a parallel, real-input/complex-output discrete Fourier transform (DFT) in two or more dimensions, returning an \code{pfft_plan}.
+The planner returns NULL if the plan cannot be created.
+
+Arguments:
+\begin{compactitem}
+  \item \code{rnk_n} is the rank of the transform (typically the size of the arrays \code{n}, \code{ni}, \code{no}) that can be any integer $\ge 2$.
+        The \code{_3d} planner corresponds to a \code{rnk_n} of 3.
+  \item The array \code{n} of size \code{rnk_n} specifies the transform dimensions. They can be any positive integer.
+  \item The array \code{ni} of size \code{rnk_n} specifies the input array dimensions.
+        They can be any positive integer with \code{ni[t] <= n[t]} for all dimensions \code{t=0,...,rnk_n-1}.
+        For \code{ni[t]<n[t]} the inputs will be padded with zeros up to size \code{n[t]} along the \code{t}-th dimension before the transform, see Section~\ref{sec:pruned-fft}.
+  \item The array \code{no} of size \code{rnk_n} specifies the output array dimensions.
+        They can be any positive integer with \code{no[t] <= n[t]} for all dimensions \code{t=0,...,rnk_n-1}.
+        For \code{no[t]<n[t]} the outputs will be pruned to size \code{no[t]} along the \code{t}-th dimension after the transform, see Section~\ref{sec:pruned-fft}.
+  \item \code{howmany} is the number of transforms to compute. The resulting plan computes howmany transforms, 
+        where the input of the k-th transform is at location in+k (in C pointer arithmetic) with stride \code{howmany},
+        and its output is at location out+k with stride \code{howmany}.
+        The basic \code{pfft_plan_dft_r2c} interface corresponds to howmany=1.
+  \item \code{comm_cart} is a Cartesian communicator of dimension \code{rnk_pm} that specifies the parallel data decomposition, see Section~\ref{sec:data-decomp}.
+        Most of the time, PFFT requires \code{rnk_pm < rnk_n}. The only exception is the case \code{rnk_pm == rnk_n == 3}, see Section~\ref{sec:3don3d}.
+        If an ordinary (i.e. non-Cartesian) communicator is passed, PFFT internally converts it into a one-dimensional Cartesian communicator while retaining the MPI ranks
+        (this results in the FFTW-MPI data decomposition).
+  \item The arrays \code{iblock} and \code{oblock} of size \code{rnk_pm+1} specify the block sizes for the first \code{rnk_pm+1} dimensions 
+        of the input and output data, respectively. These must be the same block sizes as were passed to the corresponding \code{local_size} function.
+        You can pass \code{PFFT_DEFAULT_BLOCKS} to use PFFT's default block sizes. Furthermore, you can use \code{PFFT_DEFAULT_BLOCK} to set
+        the default block size in separate dimensions, e.g., \code{iblock[t]=PFFT_DEFAULT_BLOCK}.
+  \item The array \code{skip_trafos} of size \code{rnk_pm+1} specifies the serial transforms that will be omitted.
+        For \code{t=0,...,rnk_pm} set \code{skip_trafos[t]=1} if the \code{t}-th serial transformation should be computed,
+        otherwise set \code{skip_trafos[t]=0}, see Section~\ref{sec:skip-trafo} for more details.
+  \item \code{in} and \code{out} point to the input and output arrays of the transform, which may be the same (yielding an in-place transform).
+        These arrays are overwritten during planning, unless \code{PFFT_ESTIMATE | PFFT_NO_TUNE} is used in the flags.
+        (The arrays need not be initialized, but they must be allocated.)
+  \item \code{sign} is the sign of the exponent in the formula that defines the Fourier transform. It can be -1 (= \code{PFFT_FORWARD}) or +1 (= \code{PFFT_BACKWARD}).
+        In contrast to FFTW-MPI this parameter is also available for r2c/c2r transforms (this is implemented by an additional conjugation of the complex-valued arrays
+        for backward r2c and forward c2r).
+  \item \code{pfft_flags} is a bitwise OR (´\code{|}´) of zero or more planner flags, as defined in Section~\ref{sec:flags}.
+\end{compactitem}
+
+The inverse transforms, taking complex input (storing the non-redundant half of a logically Hermitian array) to real output, are given by
 \begin{lstlisting}
 pfft_plan pfft_plan_dft_c2r_3d(
     const ptrdiff_t *n, pfft_complex *in, double *out, MPI_Comm comm_cart,
@@ -287,6 +334,12 @@ pfft_plan pfft_plan_many_dft_c2r_skipped(
     const int *skip_trafos, pfft_complex *in, double *out, MPI_Comm comm_cart,
     int sign, unsigned pfft_flags);
 \end{lstlisting}
+
+PFFT computes an unnormalized transform: computing a forward followed by a backward transform (or vice versa) will result
+in the original data multiplied by the size of the transform (the product of the dimensions \code{n[t]}).
+
+\todo[inline]{default - real array does not use padding}
+\todo[inline]{\code{PFFT_PADDED_R2C}, \code{PFFT_PADDED_C2R} - real array uses padding similar to FFTW-MPI}
 
 \subsection{Real-to-Real FFT}
 \begin{lstlisting}

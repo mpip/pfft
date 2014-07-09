@@ -363,9 +363,10 @@ Analogously, a PFFT plan created with planning flag \code{PFFT_TRANSPOSED_IN} re
 Typically, one creates a forward plan with \code{PFFT_TRANSPOSED_OUT} and a backward plan with planning flag \code{PFFT_TRANSPOSED_IN}.
 
 Note that the flags \code{PFFT_TRANSPOSED_OUT} and \code{PFFT_TRANSPOSED_IN} must be passed to the array distribution function (see Section~\ref{sec:local-size})
-\emph{as well as} to the planner (see Section~\ref{sec:planner}).
+\emph{as well as} to the planner (see Section~\ref{sec:create-plan}).
 
-\subsection{Three-dimensional FFTs with three-dimensional data decomposition}
+
+\subsection{Three-dimensional FFTs with three-dimensional data decomposition}\label{sec:3don3d}
 Many applications work with three-dimensional block decompositions of three-dimensional arrays.
 PFFT supports decompositions of the kind
 \begin{equation*}
@@ -384,12 +385,13 @@ are given by \code{n0/(P0*Q0)} and \code{n1/(P1*Q1)} (both divisions rounded dow
 This implies that the default blocks of the 3d-decomposition must be \code{n0/(P0*Q0) * Q0},
 \code{n1/(P1*Q1) * Q1}, and \code{n2/(Q0*Q1)} (all divisions rounded down).
 
+
 \section{Planning effort}
 Pass one of the following flags
 \begin{compactitem}
   \item \code{PFFT_ESTIMATE},
   \item \code{PFFT_MEASURE},
-  \item \code{PFFT_PATIENT}, or
+  \item \code{PFFT_PATIENT}, or,
   \item \code{PFFT_EXHAUSIVE}
 \end{compactitem}
 to the PFFT planner in order to plan all internal FFTW plans with \code{FFTW_ESTIMATE}, \code{FFTW_MEASURE}, \code{FFTW_PATIENT}, or \code{FFTW_EXHAUSIVE},
@@ -405,7 +407,7 @@ serial strided FFT and serial transposition for every serial transform. These te
 The following flags
 \begin{compactitem}
   \item \code{PFFT_PRESERVE_INPUT},
-  \item \code{PFFT_DESTROY_INPUT}, and
+  \item \code{PFFT_DESTROY_INPUT}, and,
   \item \code{PFFT_BUFFERED_INPLACE}
 \end{compactitem}
 only take effect for out-of-place transforms.
@@ -430,6 +432,7 @@ i.e., array \code{out} is used for intermediate out-of-place transforms and tran
 \end{compactitem}
 
 \section{Pruned FFT and Shifted Index Sets}
+\todo[inline]{Describe pruned FFT with shifted input and output}
 \subsection{Pruned FFT}
 For pruned r2r- and c2c-FFT are defined as
 \begin{equation*}
