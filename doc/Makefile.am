@@ -12,6 +12,7 @@ manual_FILES = \
 	latex-manual.sh
 # 	code/manual_min_c2c.c
 
+
 EXTRA_DIST = $(manual_FILES)
 CLEANFILES =
 MOSTLYCLEANFILES =
@@ -21,6 +22,20 @@ doc: manual
 manual: manual.pdf
 
 if HAVE_LATEX
+%.tex: ../tests/%.ctex
+	cat $< \
+	    | sed '/^\\del§[^§]*§$$/d;         				    # erase whole line if \del spans from start to end' \
+	    | sed '/\\del§/{s,\\del§[^§]*§,,g} 				    # apply single-line \del' \
+	    | sed '/^\\del§$$/,/^§$$/d         				    # apply multi-line \del' \
+	    | sed ':a s,\\red§\([^§]*[^\\]\)_\([^§]*\)§,\\red§\1\\_\2§,; ta # replace _ by \_ in single-line \red' \
+	    | sed '/^\\red§$$/,/^§$$/{s/_/\\_/g}			    # replace _ by \_ in multi-line \red' \
+	    | sed 's/\\red§/(\*@\\color{red}/g; s/§/@\*)/g		    # convert \red tags into LaTeX (single- and multi-line)' \
+	    > $(srcdir)/$@
+
+# Following files are not part of EXTRA_DIST, since they are built from .ctex files
+manual_FILES += \
+	man_fftw_3don1d.tex
+
 manual.pdf: $(manual_FILES) latex-manual.sh latexinc.sh
 	sh latex-manual.sh
 

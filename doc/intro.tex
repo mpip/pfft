@@ -50,7 +50,7 @@ Furthermore, we added some special features to support repeated tasks that often
   \item PFFT includes a very flexible ghost cell exchange module. A detailed description of this module is given in Section~\ref{sec:gc}.
   \item PFFT accepts three-dimensional data decomposition even for three-dimen\-sional FFTs.
         However, the underlying parallel FFT framework is still based on two-dimensional decomposition. A more detailed description can be found
-        in Section~\ref{sec:remap3dto2d}.
+        in Section~\ref{sec:3don2d}.
   \item PFFT explicitly supports the parallel calculation of pruned FFTs. Details are given in Section~\ref{sec:pruned}.
 \end{compactitem}
 
@@ -61,9 +61,9 @@ Finally, we complete this overview with a list of features that are (not yet) im
         Therefore, one can also call FFTW directly in this case.
   \item There is no equivalent of FFTW \emph{wisdom} in PFFT, i.e., you can not save a PFFT plan to disk and restore it for later use.
   \item PFFT does not have full OpenMP support. All serial FFT computations and global communications are implemented with FFTW,
-        which offers OpenMP support. See Section~\ref{sec:openmp}. However, most of the PFFT-only features, such as pruned FFT, ghost cell send and 3d decompostion of 3d FFTs are not yet parallelized with OpenMP.
+        which offers OpenMP support, see Section~\ref{sec:openmp}. However, most of the PFFT-only features, such as pruned FFT, ghost cell send and 3d decompostion of 3d FFTs are not yet parallelized with OpenMP.
   \item PFFT does not have full SIMD support. All serial FFT computations and global communications are implemented with FFTW,
-        which offers SIMD support. See Section~\ref{sec:simd}. However, most of the PFFT-only features, such as pruned FFT, ghost cell send and 3d decompostion of 3d FFTs are not yet parallelized with SIMD.
+        which offers SIMD support, see Section~\ref{sec:simd}. However, most of the PFFT-only features, such as pruned FFT, ghost cell send and 3d decompostion of 3d FFTs are not yet parallelized with SIMD.
   \item PFFT does not overlap communication and computation. The code of PFFT is build in a very modularized structure. Most of these modules consist
         of FFTWs routines. Therefore, the global transposition does not support non blocking communication.
   \item Similar to FFTW, we do not provide any parallel IO routines. The user is responsible of load and store of parallel data.

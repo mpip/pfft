@@ -18,16 +18,19 @@ AM_CPPFLAGS += -I$(top_srcdir)/api
 LDADD = $(top_builddir)/lib@PFFT_PREFIX@pfft@PREC_SUFFIX@.la $(fftw3_mpi_LIBS) $(fftw3_LIBS)
 
 
-.ctex.c:
-	sed -e 's/(\*@//g' -e 's/@\*)//g' -e 's/\\.*{.*}//g' $< > $@
-	sed -e 's/\\del§\([^§]*\)§//g' -e 's/\\red§\(.*\)§/(\*@\\color{red}\1@\*)/g' -e '/\\red§/,/§/{s/_/\\_/g}' versuch.ctex
-
-manual_FILES = man_fftw_3don1d.ctex
-
-
 EXTRA_DIST = \
 	build_checks.sh \
 	run_checks.sh
+
+%.c: %.ctex
+	cat $< \
+	    | sed 's/\\red§\([^§]*\)§/\1/g; s/\\del§\([^§]*\)§/\1/g # erase single line \red and \del commands' \
+	    | sed '/^\\red§$$/d; /^\\del§$$/d; /^§$$/d              # erase multi-line \red and \del commands' \
+	    > $@
+
+manual_FILES = man_fftw_3don1d.ctex
+
+EXTRA_DIST += $(manual_FILES)
 
 
 
@@ -46,9 +49,13 @@ endif
 
 if DOUBLE
 check_PROGRAMS += \
+	man_fftw_3don1d
+
+# nodist_man_fftw_3don1d_SOURCES = man_fftw_3don1d.c
+
+check_PROGRAMS += \
 	manual_c2c_3d \
 	minimal_check_c2c minimal_check_c2c_transposed
-	man_fftw_3don1d
 
 check_PROGRAMS += \
 	simple_check_c2c simple_check_c2c_transposed \
@@ -103,3 +110,4 @@ check_PROGRAMS += \
 	time_c2c \
 	time_c2c_transposed
 endif
+
