@@ -13,7 +13,8 @@
   integer(C_INT), parameter :: PFFT_PTRDIFF_T = 2
   integer(C_INT), parameter :: PFFT_FLOAT = 3
   integer(C_INT), parameter :: PFFT_DOUBLE = 4
-  integer(C_INT), parameter :: PFFT_UNSIGNED = 5
+  integer(C_INT), parameter :: PFFT_LDOUBLE = 5
+  integer(C_INT), parameter :: PFFT_UNSIGNED = 6
   integer(C_INT), parameter :: PFFT_GC_TRANSPOSED_NONE = 0
 
 ! shifted unsigned

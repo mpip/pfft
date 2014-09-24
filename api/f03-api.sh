@@ -18,6 +18,11 @@
 # set these paths such that the preprocessor can find the required headers
 FFTW_INC=$HOME/local/fftw-3.3.3/include
 
+if [ ! -e $FFTW_INC/fftw3-mpi.h ]; then
+  echo "Error: Correct include path to fftw3-mpi.h needed."
+  exit 1
+fi
+
 echo "! Generated automatically.  DO NOT EDIT!"
 
 # C_FFTW_R2R_KIND is determined by configure and inserted by the Makefile
