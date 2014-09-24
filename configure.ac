@@ -85,7 +85,6 @@ AC_ARG_WITH(gfortran-wrappers, [AS_HELP_STRING([--with-gfortran-wrappers],
 AC_ARG_ENABLE(single, [AS_HELP_STRING([--enable-single],[compile pfft in single precision])], ok=$enableval, ok=no)
 AC_ARG_ENABLE(float,  [AS_HELP_STRING([--enable-float], [synonym for --enable-single])], ok=$enableval)
 if test "$ok" = "yes"; then
-  AC_DEFINE(PFFT_SINGLE,1,[Define to compile in single precision.])
   PRECISION=s
 else
   PRECISION=d
@@ -96,10 +95,15 @@ if test "$ok" = "yes"; then
   if test "$PRECISION" = "s"; then
     AC_MSG_ERROR([--enable-single/--enable-long-double conflict])
   fi
-  AC_DEFINE(PFFT_LDOUBLE,1,[Define to compile in long-double precision.])
   PRECISION=l
 fi
 AC_SUBST(PRECISION)
+
+case "$PRECISION" in
+     s) AC_DEFINE(PFFT_PREC_SINGLE,  [1], [Define to compile in single precision.]);;
+     d) AC_DEFINE(PFFT_PREC_DOUBLE,  [1], [Define to compile in double precision.]);;
+     l) AC_DEFINE(PFFT_PREC_LDOUBLE, [1], [Define to compile in long-double precision.]);;
+esac
 
 AM_CONDITIONAL([SINGLE],  [test "$PRECISION" = "s"])
 AM_CONDITIONAL([DOUBLE],  [test "$PRECISION" = "d"])

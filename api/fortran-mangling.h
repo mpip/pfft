@@ -24,10 +24,10 @@
 #define FORTRAN_MANGLING_H 1
 
 /* Fortran-like (e.g. as in BLAS) type prefixes for Fortran interface */
-#if defined(PFFT_SINGLE)
+#if defined(PFFT_PREC_SINGLE)
 #  define pxf(name) CONCAT(spfft_, name)
 #  define PXF(NAME) CONCAT(SPFFT_, NAME)
-#elif defined(PFFT_LDOUBLE)
+#elif defined(PFFT_PREC_LDOUBLE)
 /* FIXME: what is best?  BLAS uses D..._X, apparently.  Ugh. */
 #  define pxf(name) CONCAT(lpfft_, name)
 #  define PXF(NAME) CONCAT(LPFFT_, NAME)

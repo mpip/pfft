@@ -82,14 +82,14 @@ typedef ptrdiff_t INT;
 
 /* all pfft identifiers start with pfft (or pfftf etc.) */
 #define CONCAT(prefix, name) prefix ## name
-#if defined(PFFT_SINGLE)
+#if defined(PFFT_PREC_SINGLE)
   typedef float R;
   typedef FFTW_MANGLE_PREFIX(fftwf_complex) C;
 #  define PFFT_MPI_REAL_TYPE MPI_FLOAT
 #  define PX(name) CONCAT(pfftf_, name)
 #  define X(name)  FFTW_MANGLE_FLOAT(name)
 #  define PFFT_MATH(name) CONCAT(name, f)
-#elif defined(PFFT_LDOUBLE)
+#elif defined(PFFT_PREC_LDOUBLE)
   typedef long double R;
   typedef FFTW_MANGLE_PREFIX(fftwl_complex) C;
 #  define PFFT_MPI_REAL_TYPE MPI_LONG_DOUBLE

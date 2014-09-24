@@ -19,7 +19,7 @@
  */
 
 
-#include <stdlib.h>     /* atoi */
+#include <stdlib.h>     /* strtol, strtof, ... */
 #include <stddef.h>     /* ptrdiff_t */
 #include <string.h>
 
@@ -70,15 +70,17 @@ static int read_one_arg(
   
   switch(type){
     case PFFT_INT:
-      ((int*)parameter)[argNum] = atoi(argv[0]); break;
+      ((int*)parameter)[argNum] = (int) strtol(argv[0], NULL, 0); break;
     case PFFT_PTRDIFF_T:
-      ((ptrdiff_t*)parameter)[argNum] = atoi(argv[0]); break;
+      ((ptrdiff_t*)parameter)[argNum] = (ptrdiff_t) strtol(argv[0], NULL, 0); break;
     case PFFT_FLOAT:
-      ((float*)parameter)[argNum] = (float) atof(argv[0]); break;
+      ((float*)parameter)[argNum] = strtof(argv[0], NULL); break;
     case PFFT_DOUBLE:
-      ((double*)parameter)[argNum] = atof(argv[0]); break;
+      ((double*)parameter)[argNum] = strtod(argv[0], NULL); break;
+    case PFFT_LDOUBLE:
+      ((long double*)parameter)[argNum] = strtold(argv[0], NULL); break;
     case PFFT_UNSIGNED:
-      ((unsigned*)parameter)[argNum] = atoi(argv[0]); break;
+      ((unsigned*)parameter)[argNum] = (unsigned) strtoul(argv[0], NULL, 0); break;
     default:
       rtn = 1;
   }
