@@ -106,7 +106,7 @@ check_PROGRAMS += \
 	simple_check_ghost_r2c_output
 
 check_PROGRAMS += \
-	time_c2c_3d_on_3d_transposed \
+	bench_c2c \
 	time_c2c \
 	time_c2c_transposed
 endif

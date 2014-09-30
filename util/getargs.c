@@ -47,6 +47,11 @@ void PX(get_args)(
   
   for(int iter=0; iter<argc; iter++){
     if ( strings_match( argv[iter], name ) ){
+      if(type == PFFT_NO_ARG){
+        *(int*)parameter = 1;
+        return;
+      }
+
       if ( !enough_args_given(argv+iter, neededArgs) )
         PX(printf)(MPI_COMM_WORLD, "!!! Warning: Not enough command line arguments for %s !!!\n", name);
       else{
@@ -69,6 +74,8 @@ static int read_one_arg(
   int rtn = 0;
   
   switch(type){
+    case PFFT_NO_ARG:
+      ((int*)parameter)[argNum] = (int) strtol(argv[0], NULL, 0); break;
     case PFFT_INT:
       ((int*)parameter)[argNum] = (int) strtol(argv[0], NULL, 0); break;
     case PFFT_PTRDIFF_T:
