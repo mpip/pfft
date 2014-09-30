@@ -387,12 +387,12 @@ static void init_parameters(
   pfft_get_args(argc, argv, "-pfft_n", 3, PFFT_PTRDIFF_T, n);
   pfft_get_args(argc, argv, "-pfft_np", 3, PFFT_INT, np);
   pfft_get_args(argc, argv, "-pfft_loops", 1, PFFT_INT, loops);
-  pfft_get_args(argc, argv, "-pfft_transposed", 0, PFFT_NO_ARG, transposed);
-  pfft_get_args(argc, argv, "-pfft_verbose", 0, PFFT_NO_ARG, verbose);
-  pfft_get_args(argc, argv, "-pfft_inplace", 0, PFFT_NO_ARG, inplace);
-  pfft_get_args(argc, argv, "-pfft_cmp_fftw", 0, PFFT_NO_ARG, cmp_fftw);
-  pfft_get_args(argc, argv, "-pfft_cmp_decomp", 0, PFFT_NO_ARG, cmp_decomp);
-  pfft_get_args(argc, argv, "-pfft_cmp_flags", 0, PFFT_NO_ARG, cmp_flags);
+  pfft_get_args(argc, argv, "-pfft_transposed", 0, PFFT_SWITCH, transposed);
+  pfft_get_args(argc, argv, "-pfft_verbose", 0, PFFT_SWITCH, verbose);
+  pfft_get_args(argc, argv, "-pfft_inplace", 0, PFFT_SWITCH, inplace);
+  pfft_get_args(argc, argv, "-pfft_cmp_fftw", 0, PFFT_SWITCH, cmp_fftw);
+  pfft_get_args(argc, argv, "-pfft_cmp_decomp", 0, PFFT_SWITCH, cmp_decomp);
+  pfft_get_args(argc, argv, "-pfft_cmp_flags", 0, PFFT_SWITCH, cmp_flags);
   
   unsigned patience=0;
   pfft_get_args(argc, argv, "-pfft_patience", 1, PFFT_UNSIGNED, &patience);
@@ -405,11 +405,11 @@ static void init_parameters(
   }
   
   int tune=0;
-  pfft_get_args(argc, argv, "-pfft_tune", 0, PFFT_NO_ARG, &tune);
+  pfft_get_args(argc, argv, "-pfft_tune", 0, PFFT_SWITCH, &tune);
   if(tune) *pfft_flags |= PFFT_TUNE;
 
   int destroy=0;
-  pfft_get_args(argc, argv, "-pfft_destroy_input", 0, PFFT_NO_ARG, &destroy);
+  pfft_get_args(argc, argv, "-pfft_destroy_input", 0, PFFT_SWITCH, &destroy);
   if(destroy) *pfft_flags |= PFFT_DESTROY_INPUT;
 
   pfft_printf(MPI_COMM_WORLD, "******************************************************************************************************\n");

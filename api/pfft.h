@@ -557,7 +557,7 @@ PFFT_DEFINE_API(PFFT_MANGLE_LONG_DOUBLE, FFTW_MANGLE_LONG_DOUBLE, long double, p
 #define PFFT_DOUBLE               (4U)
 #define PFFT_LDOUBLE              (5U)
 #define PFFT_UNSIGNED             (6U)
-#define PFFT_NO_ARG               (7U)
+#define PFFT_SWITCH               (7U)
 
 #define PFFT_GC_TRANSPOSED_NONE   (0U)
 #define PFFT_GC_TRANSPOSED        (1U<< 0)

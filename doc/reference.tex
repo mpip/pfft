@@ -1122,24 +1122,29 @@ Hereby, \code{argc} and \code{argv} are the standard argument of the \code{main}
 Furthermore, \code{name}, \code{neededAgrs}, and \code{type} give the name, number of entries and the type of the command line argument.
 Supported types are \code{PFFT_INT}, \code{PFFT_PTRDIFF_T}, \code{PFFT_FLOAT}, \code{PFFT_DOUBLE}, and \code{PFFT_UNSIGNED},
 which denote the standard C type that is used for typecasting.
+In addition, you can use the special type \code{PFFT_SWITCH} that is an integer type equal to one if the corresponding command line argument is given.
 The array \code{parameter} must be of sufficient size to hold \code{neededArgs} elements of the given data type.
+Special attention is given 
 
-For example, a program \code{test.c} containing the following code snippet
-\begin{lstlisting}
-double x;
+For example, a program containing the following code snippet
+\begin{lstlisting}[keywords={double, int, ptrdiff_t}]
+double x=0.1;
 pfft_get_args(argc, argv, "-pfft_x", 1, PFFT_DOUBLE, &x);
-int np[2];
+int np[2]={2,1};
 pfft_get_args(argc, argv, "-pfft_np", 2, PFFT_INT, np);
-ptrdiff_t n[3];
+ptrdiff_t n[3]={32,32,32};
 pfft_get_args(argc, argv, "-pfft_n", 3, PFFT_PTRDIFF_T, n);
+int switch=0;
+pfft_get_args(argc, argv, "-pfft_on", 0, PFFT_SWITCH, switch);
 \end{lstlisting}
-and run with
+that is executed via
 \begin{lstlisting}
-./test -pfft_x 3.1 -pfft_np 2 3 -pfft_n 8 16 32
+./test -pfft_x 3.1 -pfft_np 2 3 -pfft_n 8 16 32 -pfft_on
 \end{lstlisting}
-will read \code{x=3.1}, \code{np[2] = \{2,3\}}, and \code{n[3]=\{8,16,32\}}.
-The argument order of appearance in the command line is irrelevant.
+will read \code{x=3.1}, \code{np[2] = \{2,3\}}, \code{n[3]=\{8,16,32\}}, and turn on the \code{switch=1}.
 Note the address operator \code{&} in front of \code{x} in the second line!
+Furthermore, note that the initialization of all variables with default values before the call of \code{pfft_get_args}
+avoids trouble if the user does not provide all the command line arguments.
 
 \subsection{Parallel Substitutes for \code{vprintf}, \code{fprintf}, and \code{printf}}\label{sec:fprintf}
 The following functions are similar to the standard C function \code{vfprintf}, \code{fprintf} and \code{printf} with the exception,

@@ -15,7 +15,7 @@
   integer(C_INT), parameter :: PFFT_DOUBLE = 4
   integer(C_INT), parameter :: PFFT_LDOUBLE = 5
   integer(C_INT), parameter :: PFFT_UNSIGNED = 6
-  integer(C_INT), parameter :: PFFT_NO_ARG = 7
+  integer(C_INT), parameter :: PFFT_SWITCH = 7
   integer(C_INT), parameter :: PFFT_GC_TRANSPOSED_NONE = 0
 
 ! shifted unsigned
