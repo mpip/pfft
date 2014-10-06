@@ -140,13 +140,13 @@ static void write_run_specific_infos(
   MPI_Comm_size(comm, &size);
   
   if(ths->pfft_flags & PFFT_ESTIMATE)
-    PX(fprintf)(comm, file, "\n%% pfft_flags == PFFT_ESTIMATE");
+    PX(fprintf)(comm, file, "%% pfft_flags == PFFT_ESTIMATE");
   else if(ths->pfft_flags & PFFT_PATIENT)
-    PX(fprintf)(comm, file, "\n%% pfft_flags == PFFT_PATIENT");
+    PX(fprintf)(comm, file, "%% pfft_flags == PFFT_PATIENT");
   else if(ths->pfft_flags & PFFT_EXHAUSTIVE)
-    PX(fprintf)(comm, file, "\n%% pfft_flags == PFFT_EXHAUSTIVE");
+    PX(fprintf)(comm, file, "%% pfft_flags == PFFT_EXHAUSTIVE");
   else
-    PX(fprintf)(comm, file, "\n%% pfft_flags == PFFT_MEASURE");
+    PX(fprintf)(comm, file, "%% pfft_flags == PFFT_MEASURE");
   if(ths->pfft_flags & PFFT_TRANSPOSED_IN)
     PX(fprintf)(comm, file, " | PFFT_TRANSPOSED_IN");
   if(ths->pfft_flags & PFFT_TRANSPOSED_OUT)
@@ -168,13 +168,13 @@ static void write_run_specific_infos(
   PX(fprintf)(comm, file, "\n");
 
   if(ths->fftw_flags & FFTW_ESTIMATE)
-    PX(fprintf)(comm, file, "\n%% fftw_flags == FFTW_ESTIMATE\n");
+    PX(fprintf)(comm, file, "%% fftw_flags == FFTW_ESTIMATE\n");
   else if(ths->fftw_flags & FFTW_PATIENT)
-    PX(fprintf)(comm, file, "\n%% fftw_flags == FFTW_PATIENT\n");
+    PX(fprintf)(comm, file, "%% fftw_flags == FFTW_PATIENT\n");
   else if(ths->fftw_flags & FFTW_EXHAUSTIVE)
-    PX(fprintf)(comm, file, "\n%% fftw_flags == FFTW_EXHAUSTIVE\n");
+    PX(fprintf)(comm, file, "%% fftw_flags == FFTW_EXHAUSTIVE\n");
   else
-    PX(fprintf)(comm, file, "\n%% fftw_flags == FFTW_MEASURE\n");
+    PX(fprintf)(comm, file, "%% fftw_flags == FFTW_MEASURE\n");
   
   PX(fprintf)(comm, file, "index(%d) = %d;  ", idx, idx);
   PX(fprintf)(comm, file, "procs(%d) = %d;  ", idx, size);
