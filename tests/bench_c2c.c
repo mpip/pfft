@@ -3,13 +3,15 @@
 
 static void measure_pfft(
     const ptrdiff_t *n, MPI_Comm comm_cart_3d, int loops,
-    unsigned pfft_opt_flags, int transposed, int inplace, int verbose);
+    unsigned pfft_opt_flags, int transposed, int inplace, int verbose,
+    int print_timer);
 static void measure_fftw(
     const ptrdiff_t *n, int parallel, int loops,
     unsigned fftw_opt_flags, int transposed, int inplace, int verbose);
 static void loop_pfft_tests(
     ptrdiff_t *n, MPI_Comm comm, int loops,
-    unsigned pfft_flags, int transposed, int inplace, int verbose, int cmp_flags);
+    unsigned pfft_flags, int transposed, int inplace, int verbose, int cmp_flags,
+    int print_timer);
 static void loop_fftw_tests(
     ptrdiff_t *n, int parallel, int loops, int transposed, int inplace, int verbose);
 static void init_parameters(
@@ -17,7 +19,8 @@ static void init_parameters(
     ptrdiff_t *n, int *np,
     unsigned *pfft_flags,
     int *loops, int *transposed, int *verbose, int *inplace,
-    int *cmp_fftw, int *cmp_decomp, int *cmp_flags);
+    int *cmp_fftw, int *cmp_decomp, int *cmp_flags,
+    int *print_timer);
 
 int main(int argc, char **argv)
 {
@@ -25,23 +28,24 @@ int main(int argc, char **argv)
   MPI_Comm comm_cart_1d, comm_cart_2d, comm_cart_3d;
   
   /* Set size of FFT and process mesh */
-  ptrdiff_t n[3]       = {32,32,32};
-  int       np[3]      = {1,1,1};
-  int       loops      = 1;
-  int       verbose    = 0;
-  int       inplace    = 0;
-  int       cmp_fftw   = 0;
-  int       cmp_decomp = 0;
-  int       cmp_flags  = 0;
-  int       transposed = 0;
-  unsigned  pfft_flags = 0;
+  ptrdiff_t n[3]        = {32,32,32};
+  int       np[3]       = {1,1,1};
+  int       loops       = 1;
+  int       verbose     = 0;
+  int       inplace     = 0;
+  int       cmp_fftw    = 0;
+  int       cmp_decomp  = 0;
+  int       cmp_flags   = 0;
+  int       transposed  = 0;
+  int       print_timer = 0;
+  unsigned  pfft_flags  = 0;
 
   /* Initialize MPI and PFFT */
   MPI_Init(&argc, &argv);
   pfft_init();
  
   /* set parameters by command line */
-  init_parameters(argc, argv, n, np, &pfft_flags, &loops, &transposed, &verbose, &inplace, &cmp_fftw, &cmp_decomp, &cmp_flags);
+  init_parameters(argc, argv, n, np, &pfft_flags, &loops, &transposed, &verbose, &inplace, &cmp_fftw, &cmp_decomp, &cmp_flags, &print_timer);
 
   /* Create three-dimensional process grid of size np[0] x np[1] x np[2], if possible */
   if( pfft_create_procmesh(3, MPI_COMM_WORLD, np, &comm_cart_3d) ){
@@ -54,8 +58,9 @@ int main(int argc, char **argv)
   int num_serial_dims = (np[0]==1) + (np[1]==1) + (np[2]==1); 
 
   if( cmp_decomp || num_serial_dims==0){
-    pfft_printf(MPI_COMM_WORLD, "PFFT runtimes (3d data decomposition):\n");
-    loop_pfft_tests(n, comm_cart_3d, loops, pfft_flags, transposed, inplace, verbose, cmp_flags);
+    pfft_printf(MPI_COMM_WORLD, "* PFFT runtimes (3d data decomposition):\n");
+    loop_pfft_tests(n, comm_cart_3d, loops, pfft_flags, transposed, inplace, verbose, cmp_flags, print_timer);
+    pfft_printf(MPI_COMM_WORLD, "\n");
     MPI_Comm_free(&comm_cart_3d);
   }
 
@@ -69,8 +74,9 @@ int main(int argc, char **argv)
   
       if( pfft_create_procmesh(2, MPI_COMM_WORLD, np, &comm_cart_2d) )
         pfft_printf(MPI_COMM_WORLD, "Error in creation of 2d procmesh of size %d x %d\n", np[0], np[1]);
-      pfft_printf(MPI_COMM_WORLD, "\nPFFT runtimes (2d data decomposition):\n");
-      loop_pfft_tests(n, comm_cart_2d, loops, pfft_flags, transposed, inplace, verbose, cmp_flags);
+      pfft_printf(MPI_COMM_WORLD, "* PFFT runtimes (2d data decomposition):\n");
+      loop_pfft_tests(n, comm_cart_2d, loops, pfft_flags, transposed, inplace, verbose, cmp_flags, print_timer);
+      pfft_printf(MPI_COMM_WORLD, "\n");
       MPI_Comm_free(&comm_cart_2d);
     }
   }
@@ -83,12 +89,13 @@ int main(int argc, char **argv)
 
     if( pfft_create_procmesh(1, MPI_COMM_WORLD, np, &comm_cart_1d) )
       pfft_printf(MPI_COMM_WORLD, "Error in creation of 2d procmesh of size %d\n", np[0]);
-    pfft_printf(MPI_COMM_WORLD, "\nPFFT runtimes (1d data decomposition):\n");
-    loop_pfft_tests(n, comm_cart_1d, loops, pfft_flags, transposed, inplace, verbose, cmp_flags);
+    pfft_printf(MPI_COMM_WORLD, "* PFFT runtimes (1d data decomposition):\n");
+    loop_pfft_tests(n, comm_cart_1d, loops, pfft_flags, transposed, inplace, verbose, cmp_flags, print_timer);
+    pfft_printf(MPI_COMM_WORLD, "\n");
     MPI_Comm_free(&comm_cart_1d);
 
     if(cmp_fftw){
-      pfft_printf(MPI_COMM_WORLD, "\nFFTW_MPI runtimes (1d data decomposition):\n");
+      pfft_printf(MPI_COMM_WORLD, "* FFTW_MPI runtimes (1d data decomposition):\n");
       loop_fftw_tests(n, parallel=1, loops, transposed, inplace, verbose);
     }
   }
@@ -96,8 +103,9 @@ int main(int argc, char **argv)
   /* run serial if possible */
   if( np[0]*np[1]*np[2] == 1 ){
     if(cmp_fftw){
-      pfft_printf(MPI_COMM_WORLD, "\nserial FFTW runtimes (no data decomposition at all):\n");
+      pfft_printf(MPI_COMM_WORLD, "* serial FFTW runtimes (no data decomposition at all):\n");
       loop_fftw_tests(n, parallel=0, loops, transposed, inplace, verbose);
+      pfft_printf(MPI_COMM_WORLD, "\n");
     }
   }
 
@@ -108,14 +116,15 @@ int main(int argc, char **argv)
 
 static void loop_pfft_tests(
     ptrdiff_t *n, MPI_Comm comm, int loops,
-    unsigned pfft_flags, int transposed, int inplace, int verbose, int cmp_flags
+    unsigned pfft_flags, int transposed, int inplace, int verbose, int cmp_flags,
+    int print_timer
     )
 {
   
   unsigned tune, measure, destroy;
 
   if(!cmp_flags){
-    measure_pfft(n, comm, loops, pfft_flags, transposed, inplace, verbose);
+    measure_pfft(n, comm, loops, pfft_flags, transposed, inplace, verbose, print_timer);
     return;
   }
 
@@ -125,7 +134,7 @@ static void loop_pfft_tests(
     for(int l=0; l<2; l++){
       tune = PFFT_NO_TUNE;
       for(int m=0; m<2; m++){
-        measure_pfft(n, comm, loops, tune | measure | destroy, transposed, inplace, verbose);
+        measure_pfft(n, comm, loops, tune | measure | destroy, transposed, inplace, verbose, print_timer);
         tune = PFFT_TUNE;
       }
       measure = PFFT_MEASURE;
@@ -155,7 +164,8 @@ static void loop_fftw_tests(
 
 static void measure_pfft(
     const ptrdiff_t *n, MPI_Comm comm_cart, int loops,
-    unsigned pfft_opt_flags, int transposed, int inplace, int verbose
+    unsigned pfft_opt_flags, int transposed, int inplace, int verbose,
+    int print_timer
     )
 {
   ptrdiff_t alloc_local;
@@ -234,12 +244,18 @@ static void measure_pfft(
   else                                      pfft_printf(comm_cart, "PFFT_MEASURE");
   pfft_printf(comm_cart, ", ");
 
-  if(pfft_opt_flags & PFFT_DESTROY_INPUT) pfft_printf(comm_cart, "PFFT_DESTROY_INPUT");
-  else                                    pfft_printf(comm_cart, "PFFT_PRESERVE_INPUT");
+  if(pfft_opt_flags & PFFT_DESTROY_INPUT)  pfft_printf(comm_cart, "PFFT_DESTROY_INPUT, ");
+  if(pfft_opt_flags & PFFT_PRESERVE_INPUT) pfft_printf(comm_cart, "PFFT_PRESERVE_INPUT, ");
   pfft_printf(comm_cart, "\n");
 
   pfft_printf(comm_cart, "tune_forw = %6.2e; tune_back = %6.2e, exec_forw/loops = %6.2e, exec_back/loops = %6.2e\n", timer[0], timer[1], timer[2]/loops, timer[3]/loops);
   if(loops==1) pfft_printf(MPI_COMM_WORLD, "error = %6.2e\n", err);
+
+  if(print_timer){
+    pfft_printf(MPI_COMM_WORLD, "Output of internal PFFT timers:\n");
+    pfft_print_average_timer_adv(plan_forw, comm_cart);
+    pfft_print_average_timer_adv(plan_back, comm_cart);
+  }
 
   /* free mem and finalize */
   pfft_destroy_plan(plan_forw);
@@ -381,7 +397,8 @@ static void init_parameters(
     ptrdiff_t *n, int *np,
     unsigned *pfft_flags,
     int *loops, int *transposed, int *verbose, int *inplace,
-    int *cmp_fftw, int *cmp_decomp, int *cmp_flags
+    int *cmp_fftw, int *cmp_decomp, int *cmp_flags,
+    int *print_timer
     )
 {
   pfft_get_args(argc, argv, "-pfft_n", 3, PFFT_PTRDIFF_T, n);
@@ -393,6 +410,7 @@ static void init_parameters(
   pfft_get_args(argc, argv, "-pfft_cmp_fftw", 0, PFFT_SWITCH, cmp_fftw);
   pfft_get_args(argc, argv, "-pfft_cmp_decomp", 0, PFFT_SWITCH, cmp_decomp);
   pfft_get_args(argc, argv, "-pfft_cmp_flags", 0, PFFT_SWITCH, cmp_flags);
+  pfft_get_args(argc, argv, "-pfft_timer", 0, PFFT_SWITCH, print_timer);
   
   unsigned patience=0;
   pfft_get_args(argc, argv, "-pfft_patience", 1, PFFT_UNSIGNED, &patience);
@@ -448,6 +466,11 @@ static void init_parameters(
   if(*cmp_flags) pfft_printf(MPI_COMM_WORLD, "enabled comparison of all planner flags");
   else           pfft_printf(MPI_COMM_WORLD, "disabled comparison of all planner flags");
   pfft_printf(MPI_COMM_WORLD, " (change with -pfft_cmp_flags)\n");
+
+  pfft_printf(MPI_COMM_WORLD, "*      - ");
+  if(*cmp_flags) pfft_printf(MPI_COMM_WORLD, "enabled output of internal PFFT timer");
+  else           pfft_printf(MPI_COMM_WORLD, "disabled output of internal PFFT timer");
+  pfft_printf(MPI_COMM_WORLD, " (change with -pfft_timer)\n");
 
   if(!*cmp_flags) {
     pfft_printf(MPI_COMM_WORLD, "*      - ");
