@@ -120,6 +120,31 @@ static void init_array(
   free(kvec_loc); free(kvec_glob); free(kvec_glob_mirrored);
 }
 
+static void clear_array(
+    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
+    unsigned arraytype,
+    void *data
+    )
+{
+  INT ln_tot;
+ 
+  ln_tot = PX(prod_INT)(rnk_n, local_n);
+  for(INT k=0; k<ln_tot; k++){
+    switch (arraytype){
+      case PFFTI_ARRAYTYPE_REAL: 
+        /* set padding element to zero */
+        ((R*)data)[k] = 0;
+        break;
+      case PFFTI_ARRAYTYPE_COMPLEX:
+        ((C*)data)[k] = 0;
+        break;
+      case PFFTI_ARRAYTYPE_HERMITIAN_COMPLEX:
+        ((C*)data)[k] = 0;
+        break;
+    }
+  }
+}
+
 static R check_array(
     int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
     unsigned arraytype,
@@ -299,6 +324,69 @@ void PX(init_input_real)(
     )
 { 
   init_array(rnk_n, n, local_n, local_start, PFFTI_ARRAYTYPE_REAL,
+      data);
+}
+
+/* clear input array; setting it to zero */
+void PX(clear_input_complex_3d)(
+    const INT *n, const INT *local_n, const INT *local_start,
+    C *data
+    )
+{
+  int rnk_n=3;
+
+  PX(clear_input_complex)(rnk_n, n, local_n, local_start,
+      data);
+}
+
+void PX(clear_input_complex)(
+    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
+    C *data
+    )
+{ 
+  clear_array(rnk_n, n, local_n, local_start, PFFTI_ARRAYTYPE_COMPLEX,
+      data);
+}
+
+void PX(clear_input_complex_hermitian_3d)(
+    const INT *n, const INT *local_n, const INT *local_start,
+    C *data
+    )
+{ 
+  int rnk_n=3;
+
+  PX(clear_input_complex_hermitian)(rnk_n, n, local_n, local_start,
+      data);
+}
+
+void PX(clear_input_complex_hermitian)(
+    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
+    C *data
+    )
+{ 
+  clear_array(rnk_n, n, local_n, local_start, PFFTI_ARRAYTYPE_HERMITIAN_COMPLEX,
+      data);
+}
+
+
+void PX(clear_input_real_3d)(
+    const INT *n, const INT *local_n, const INT *local_start,
+    R *data
+    )
+{
+  int rnk_n=3;
+
+  PX(clear_input_real)(rnk_n, n, local_n, local_start,
+      data);
+}
+
+
+void PX(clear_input_real)(
+    int rnk_n, const INT *n, const INT *local_n, const INT *local_start,
+    R *data
+    )
+{ 
+  clear_array(rnk_n, n, local_n, local_start, PFFTI_ARRAYTYPE_REAL,
       data);
 }
 
