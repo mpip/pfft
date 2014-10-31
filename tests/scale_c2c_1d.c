@@ -116,6 +116,10 @@ int main(int argc, char **argv)
   for(int t=0; t<iter; t++){
     /* execute parallel forward FFT */
     pfft_execute(plan_forw);
+
+  /* clear the old input */
+  pfft_clear_input_complex_3d(n, local_ni, local_i_start,
+      in);
   
     /* execute parallel backward FFT */
     pfft_execute(plan_back);

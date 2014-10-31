@@ -77,6 +77,9 @@ int main(int argc, char **argv)
 
   /* execute parallel forward FFT */
   pfft_execute(plan_forw_c);
+
+  /* clear the old input */
+
   pfft_execute(plan_forw_r);
 
   /* execute parallel backward FFT */

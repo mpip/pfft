@@ -59,6 +59,10 @@ int main(int argc, char **argv)
   /* execute parallel forward FFT */
   pfft_execute_dft(plan_forw, executed_in, executed_out);
 
+  /* clear the old input */
+  pfft_clear_input_complex_3d(n, local_ni, local_i_start,
+      executed_in);
+
   /* execute parallel backward FFT */
   pfft_execute_dft(plan_back, executed_out, executed_in);
   

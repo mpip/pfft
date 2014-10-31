@@ -55,6 +55,10 @@ int main(int argc, char **argv)
 
   /* execute parallel forward FFT */
   pfft_execute(plan_forw);
+
+  /* clear the old input */
+  pfft_clear_input_complex_3d(n, local_ni, local_i_start,
+      in);
   
   /* Print transformed data */
   pfft_apr_complex_permuted_3d(
