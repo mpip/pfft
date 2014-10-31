@@ -1035,7 +1035,7 @@ static void PX(execute_full)(
 
   r = ths->rnk_pm;
 
-  if (ths->trafo_flag & PFFTI_TRAFO_C2R){
+  if (ths->trafo_flag & PFFTI_TRAFO_C2R && ths->conjugate_in && ths->conjugate_out){
     R* conj_in  = (ths->conjugate_in  == ths->in)  ? in : out;
     R* conj_out = (ths->conjugate_out == ths->out) ? out : in;
     complex_conjugate(conj_in, conj_out, ths->rnk_n, ths->local_ni);
@@ -1069,7 +1069,7 @@ static void PX(execute_full)(
     twiddle_output(ths, ths->in, ths->out, in, out);
   ths->timer->otwiddle += MPI_Wtime();
 
-  if (ths->trafo_flag & PFFTI_TRAFO_R2C){
+  if (ths->trafo_flag & PFFTI_TRAFO_R2C && ths->conjugate_in && ths->conjugate_out){
     R* conj_in  = (ths->conjugate_in  == ths->in)  ? in : out;
     R* conj_out = (ths->conjugate_out == ths->out) ? out : in;
     complex_conjugate(conj_in, conj_out, ths->rnk_n, ths->local_no);
