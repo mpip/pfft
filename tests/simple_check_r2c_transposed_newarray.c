@@ -1,5 +1,6 @@
 #include <complex.h>
 #include <pfft.h>
+#include <string.h>
 
 int main(int argc, char **argv)
 {
@@ -58,6 +59,8 @@ int main(int argc, char **argv)
   
   /* execute parallel forward FFT */
   pfft_execute_dft_r2c(plan_forw, executed_in, executed_out);
+
+  memset(executed_in, 0, sizeof(double) * 2 * alloc_local);
 
   /* execute parallel backward FFT */
   pfft_execute_dft_c2r(plan_back, executed_out, executed_in);
