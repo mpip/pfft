@@ -90,11 +90,11 @@ static void measure_pfft(
     MPI_Barrier(MPI_COMM_WORLD);
     timer[2] -= MPI_Wtime();
     pfft_execute(plan_forw);
+    timer[2] += MPI_Wtime();
 
     /* clear the old input */
     pfft_clear_input_complex_3d(n, local_ni, local_i_start,
         in);
-    timer[2] += MPI_Wtime();
     
     /* execute parallel backward FFT */
     MPI_Barrier(MPI_COMM_WORLD);
