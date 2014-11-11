@@ -1098,9 +1098,15 @@ static void twiddle_input(
     for(int t=ths->rnk_n-1; t>=0; t--){
       INT kt = l%local_ni[t];
       /* check for r2c/c2r padding elements and skipped trafos */
-      if(kt  + local_ni_start[t] < ni[t]/2)
-        if(!skip_trafos[t])
-          factor *= (kt + local_ni_start[t] + n[t]/2) % 2 ? -1.0 : 1.0;
+      if(kt  + local_ni_start[t] < ni[t]/2){
+        if(!skip_trafos[t]){
+          factor *= (kt + local_ni_start[t]) % 2 ? -1.0 : 1.0;
+
+          /* take care of the extra twiddle (-1)^(n/2) if both (input AND output) are shifted */
+          if(ths->pfft_flags & PFFT_SHIFTED_IN)
+            factor *= (n[t]/2) % 2 ? -1.0 : 1.0;
+        }
+      }
       l /= local_ni[t];
     }
 
