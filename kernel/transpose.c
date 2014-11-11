@@ -49,7 +49,7 @@ static void print_parameters(
 
 /* MPI Transpose for real data. Use hm==2 for complex data.  */
 /* Input:
- *   (N0 x h0) x (N1/P x h1) x hm  (default)
+ *   (N0 x h0) x (N1/P x h1) x hm (default)
  *   (N1/P x h1) x (N0 x h0) x hm (TRANSPOSED_IN)
  * Output:
  *   (N1 x h1) x (N0/P x h0) x hm (default)
@@ -101,10 +101,11 @@ static void get_global_transp_param(
     *h0 *= local_no[rnk_pm - t];
   for(int t=0; t<rnk_pm-1-step; t++)
     *h0 *= local_ni[t];
-  *h1 = tuple_size;
+  *h1 = 1;
   
   /* double hm for complex data */
-  *hm = (~trafo_flag & PFFTI_TRAFO_R2R) ? 2 : 1;
+  *hm = tuple_size;
+  *hm *= (~trafo_flag & PFFTI_TRAFO_R2R) ? 2 : 1;
 
   *blk0 = oblock[rnk_pm - 1 - step];
   *blk1 = iblock[rnk_pm - 1 - step];
