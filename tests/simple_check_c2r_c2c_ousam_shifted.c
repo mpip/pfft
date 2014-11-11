@@ -89,6 +89,9 @@ int main(int argc, char **argv)
 
   /* execute parallel forward FFT */
   pfft_execute(plan_forw_c);
+
+  /* clear the old input */
+
   pfft_execute(plan_forw_r);
 
 //   pfft_apr_complex_3d(out_c, local_no_c, local_o_start_c, "c2c output:\n", comm_cart_2d);

@@ -128,6 +128,25 @@ BEGIN_C_DECLS
       int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
       R *data);                                                                         \
                                                                                         \
+  PFFT_EXTERN void PX(clear_input_complex_3d)(                                          \
+      const INT *n, const INT *local_n, const INT *local_n_start,                       \
+      C *data);                                                                         \
+  PFFT_EXTERN void PX(clear_input_complex)(                                             \
+      int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
+      C *data);                                                                         \
+  PFFT_EXTERN void PX(clear_input_complex_hermitian_3d)(                                \
+      const INT *n, const INT *local_n, const INT *local_n_start,                       \
+      C *data);                                                                         \
+  PFFT_EXTERN void PX(clear_input_complex_hermitian)(                                   \
+      int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
+      C *data);                                                                         \
+  PFFT_EXTERN void PX(clear_input_real_3d)(                                             \
+      const INT *n, const INT *local_n, const INT *local_n_start,                       \
+      R *data);                                                                         \
+  PFFT_EXTERN void PX(clear_input_real)(                                                \
+      int rnk_n, const INT *n, const INT *local_n, const INT *local_start,              \
+      R *data);                                                                         \
+                                                                                        \
   PFFT_EXTERN R PX(check_output_complex_3d)(                                            \
       const INT *n, const INT *local_n, const INT *local_n_start,                       \
       const C *data, MPI_Comm comm);                                                    \
