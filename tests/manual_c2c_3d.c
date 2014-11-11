@@ -42,10 +42,6 @@ int main(int argc, char **argv){
   /* Execute parallel forward FFT */
   pfft_execute(plan);
 
-  /* clear the old input */
-  pfft_clear_input_complex_3d(n, local_ni, local_i_start,
-      in);
-  
   /* free mem and finalize MPI */
   pfft_destroy_plan(plan);
   MPI_Comm_free(&comm_cart_2d);
