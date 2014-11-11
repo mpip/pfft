@@ -211,6 +211,12 @@ static void measure_pfft(
     pfft_execute(plan_forw);
   timer[2] += MPI_Wtime();
 
+  /* clear the old input */
+  if(!inplace){
+    pfft_clear_input_complex_3d(n, local_ni, local_i_start,
+        in);
+  }
+
   if(verbose)
     pfft_apr_complex_3d(out, local_no, local_o_start, "PFFT Output", comm_cart);
   

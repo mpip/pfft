@@ -74,6 +74,10 @@ int main(int argc, char **argv)
 
   /* execute parallel forward FFT */
   pfft_execute(plan_forw);
+
+  /* clear the old input */
+  pfft_clear_input_real(3, n, local_ni, local_i_start,
+      in);
   
 //  ptrdiff_t *los, *lno;
 //  los = local_o_start; lno = local_no;

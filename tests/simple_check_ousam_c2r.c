@@ -74,6 +74,9 @@ int main(int argc, char **argv)
 
   /* execute parallel forward FFT */
   pfft_execute(plan_forw);
+
+  /* clear the old input */
+  pfft_clear_input_complex_hermitian_3d(ni, local_ni, local_i_start, in);
   
 //   pfft_apr_real_3d(out, local_n, local_start, "out: ", comm_cart_2d);
 
