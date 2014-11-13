@@ -257,7 +257,14 @@ AC_SUBST(SHARED_VERSION_INFO)
 AC_CHECK_LIB([m], [sincos])
 
 # Check for OpenMP.
-AX_OPENMP
+AC_ARG_ENABLE(openmp, [AS_HELP_STRING([--enable-openmp],[use OpenMP directives for parallelism])],
+  [enable_openmp=$enableval], [enable_openmp=no])
+if test "$enable_openmp" = "yes"; then
+  AX_OPENMP([],[AC_MSG_ERROR([Do not know how to enable OpenMP])])
+fi
+AM_CONDITIONAL(ENABLE_OPENMP, test "x$ax_cv_[]_AC_LANG_ABBREV[]_openmp" != "xunknown" )
+AC_SUBST(OPENMP_CFLAGS)
+# CFLAGS="$CFLAGS $OPENMP_CFLAGS" 
 
 # Check for fftw3, MPI FFTW and threaded FFTW.
 if test "x$PRECISION" = "xs" ; then

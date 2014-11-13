@@ -191,6 +191,16 @@ AC_DEFUN([_AX_LIB_FFTW3_CHECK],[
         ;;
     esac
     
+    ax_lib_fftw3_openmp=yes
+    case $ac_configure_args in
+      *--enable-openmp*)
+        fftw3_openmp_LIBS="-l${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_omp"
+        ;;
+      *)
+        ax_lib_fftw3_openmp=no
+        ;;
+    esac
+    
     ax_lib_fftw3_mpi=yes
     case $ac_configure_args in
       *--enable-mpi*)
@@ -214,6 +224,10 @@ AC_DEFUN([_AX_LIB_FFTW3_CHECK],[
         AC_CHECK_LIB([${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_threads], [${ax_with_fftw3_prefix}fftw${ax_type_suffix}_init_threads], [], [ax_lib_fftw3_threads=no])
         test "x${ax_lib_fftw3_threads}" != xno && fftw3_threads_LIBS="-l${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_threads"
       fi
+      if test "x$ax_lib_fftw3_openmp" = xyes ; then
+        AC_CHECK_LIB([${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_omp], [${ax_with_fftw3_prefix}fftw${ax_type_suffix}_init_threads], [], [ax_lib_fftw3_openmp=no])
+        test "x${ax_lib_fftw3_openmp}" != xno && fftw3_openmp_LIBS="-l${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_omp"
+      fi
       if test "x$ax_lib_fftw3_mpi" = xyes ; then
         AC_CHECK_LIB([${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_mpi], [${ax_with_fftw3_prefix}fftw${ax_type_suffix}_mpi_init], [], [ax_lib_fftw3_mpi=no])
         test "x${ax_lib_fftw3_mpi}" != xno && fftw3_mpi_LIBS="-l${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_mpi"
@@ -235,6 +249,7 @@ AC_DEFUN([_AX_LIB_FFTW3_CHECK],[
   AC_SUBST(fftw3_PREFIX)
   AC_SUBST(fftw3_LIBS)
   AC_SUBST(fftw3_threads_LIBS)
+  AC_SUBST(fftw3_openmp_LIBS)
   AC_SUBST(fftw3_mpi_LIBS)
 
   if test "x$ax_lib_fftw3" = xyes ; then

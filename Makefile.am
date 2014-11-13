@@ -24,13 +24,19 @@ endif
 
 EXTRA_DIST = bootstrap.sh CONVENTIONS pfft.pc.in
 
+LIBPFFT_OMP_LA =
+if ENABLE_OPENMP
+LIBPFFT_OMP_LA += lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_omp.la
+endif
+
 # Libraries that are built and installed.
 # set library name according to precision
 if ENABLE_LIBRARY_INSTALL
-lib_LTLIBRARIES = lib@PFFT_PREFIX@pfft@PREC_SUFFIX@.la
+lib_LTLIBRARIES = lib@PFFT_PREFIX@pfft@PREC_SUFFIX@.la $(LIBPFFT_OMP_LA)
 else
-noinst_LTLIBRARIES = lib@PFFT_PREFIX@pfft@PREC_SUFFIX@.la
+noinst_LTLIBRARIES = lib@PFFT_PREFIX@pfft@PREC_SUFFIX@.la $(LIBPFFT_OMP_LA)
 endif
+
 
 # Libtool convenience libraries.
 lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_la_SOURCES =
@@ -41,6 +47,21 @@ lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_la_LIBADD = \
 	gcell/libgcell.la
 
 lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_la_LDFLAGS = -no-undefined -version-info @SHARED_VERSION_INFO@
+
+
+if ENABLE_OPENMP
+# Libtool convenience libraries.
+lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_omp_la_SOURCES =
+lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_omp_la_LIBADD = \
+	kernel/libkernel.la \
+	util/libutil.la \
+	api/libapi_omp.la \
+	gcell/libgcell.la
+
+lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_omp_la_LDFLAGS = -no-undefined -version-info @SHARED_VERSION_INFO@
+lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_omp_la_CFLAGS = $(OPENMP_CFLAGS)
+endif
+
 
 # Get Fortran compile rules that include preprocessing.
 include $(top_srcdir)/build-aux/fortran-rules.am

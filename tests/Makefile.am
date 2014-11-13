@@ -8,6 +8,12 @@ SUBDIRS += fortran f03
 endif
 endif
 
+if ENABLE_OPENMP
+if DOUBLE
+SUBDIRS += openmp
+endif
+endif
+
 # Directory of ipfft.h
 AM_CPPFLAGS = -I$(top_srcdir)/kernel
 
