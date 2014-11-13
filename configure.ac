@@ -262,9 +262,8 @@ AC_ARG_ENABLE(openmp, [AS_HELP_STRING([--enable-openmp],[use OpenMP directives f
 if test "$enable_openmp" = "yes"; then
   AX_OPENMP([],[AC_MSG_ERROR([Do not know how to enable OpenMP])])
 fi
-AM_CONDITIONAL(ENABLE_OPENMP, test "x$ax_cv_[]_AC_LANG_ABBREV[]_openmp" != "xunknown" )
+AM_CONDITIONAL(ENABLE_OPENMP, test "x$enable_openmp" = "xyes")
 AC_SUBST(OPENMP_CFLAGS)
-# CFLAGS="$CFLAGS $OPENMP_CFLAGS" 
 
 # Check for fftw3, MPI FFTW and threaded FFTW.
 if test "x$PRECISION" = "xs" ; then
