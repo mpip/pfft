@@ -1276,5 +1276,12 @@ static void execute_transposed(
   timer_trafo[t] += MPI_Wtime();
 }
 
-
+#if _OPENMP
+void PX(plan_with_nthreads)(
+    int nthreads
+    )
+{
+  X(plan_with_nthreads)(nthreads);
+}
+#endif
 

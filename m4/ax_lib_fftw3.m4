@@ -212,7 +212,7 @@ AC_DEFUN([_AX_LIB_FFTW3_CHECK],[
     esac
   else
     # Check if header is present and usable.
-    AC_CHECK_HEADER([fftw3.h], [ax_lib_fftw3=yes; ax_lib_fftw3_threads=yes])
+    AC_CHECK_HEADER([fftw3.h], [ax_lib_fftw3=yes; ax_lib_fftw3_threads=yes; ax_lib_fftw3_openmp=yes])
     AC_CHECK_HEADER([fftw3-mpi.h], [ax_lib_fftw3_mpi=yes])
 
     if test "x$ax_lib_fftw3" = xyes ; then

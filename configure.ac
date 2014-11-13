@@ -468,6 +468,7 @@ AC_CONFIG_FILES([Makefile \
 		tests/Makefile \
 		tests/fortran/Makefile \
 		tests/f03/Makefile \
+		tests/openmp/Makefile \
                 doc/Makefile])
 
 AC_CONFIG_LINKS([tests/build_checks.sh:tests/build_checks.sh

@@ -400,6 +400,8 @@ BEGIN_C_DECLS
       int neededArgs, unsigned type,                                                    \
       void *parameter);                                                                 \
                                                                                         \
+  PFFT_EXTERN void PX(plan_with_nthreads)(int nthreads);                                \
+                                                                                        \
                                                                                         \
   PFFT_EXTERN void PX(reset_timer)(                                                     \
       PX(plan) ths);                                                                    \

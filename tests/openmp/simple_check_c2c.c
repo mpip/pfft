@@ -1,5 +1,6 @@
 #include <complex.h>
 #include <pfft.h>
+#include <omp.h>
 
 int main(int argc, char **argv)
 {
@@ -12,10 +13,13 @@ int main(int argc, char **argv)
   pfft_complex *in, *out;
   pfft_plan plan_forw=NULL, plan_back=NULL;
   MPI_Comm comm_cart_2d;
-  
+
+  /* Init OpenMP */
+  pfft_plan_with_nthreads(1);
+
   /* Set size of FFT and process mesh */
   n[0] = 29; n[1] = 27; n[2] = 31;
-  np[0] = 2; np[1] = 2;
+  np[0] = 1; np[1] = 1;
   
   /* Initialize MPI and PFFT */
   MPI_Init(&argc, &argv);
@@ -51,6 +55,8 @@ int main(int argc, char **argv)
   /* execute parallel forward FFT */
   pfft_execute(plan_forw);
 
+  pfft_print_average_timer(plan_forw, MPI_COMM_WORLD);
+
   /* clear the old input */
   pfft_clear_input_complex_3d(n, local_ni, local_i_start,
       in);
@@ -58,6 +64,8 @@ int main(int argc, char **argv)
   /* execute parallel backward FFT */
   pfft_execute(plan_back);
   
+  pfft_print_average_timer(plan_back, MPI_COMM_WORLD);
+
   /* Scale data */
   ptrdiff_t l;
   for(l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
