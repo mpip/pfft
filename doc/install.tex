@@ -53,18 +53,24 @@ in \code{\$FFTWDIR/lib}. Otherwise, one should specify the FFTW include path \co
 \begin{lstlisting}[prebreak = {\textbackslash}]
 ./configure --with-fftw3-includedir=$FFTWINC --with-fftw3-libdir=$FFTWLIB
 \end{lstlisting}
+At the end, this is equivalent to
+\begin{lstlisting}[prebreak = {\textbackslash}]
+./configure CPPFLAGS=-I$FFTWINC LDFLAGS=-L$FFTWLIB
+\end{lstlisting}
+which is more common to experienced users of the Autotools.
 To install PFFT in a user specified directory \code{\$PFFTINSTDIR} call configure with the option
 \begin{lstlisting}
 ./configure --prefix=$PFFTINSTDIR
 \end{lstlisting}
-This mandatory whenever you do not have root permissions on your machine, since the default install paths of 
-\code{configure} are not accessible by normal users.
-The PFFT library must be build with a MPI compiler. In Section~\ref{sec:fftw_inst} we describe how to hand the right compilers to the \code{configure} script.
+However, this option is mandatory whenever you do not have root permissions on your machine, since the default install paths of 
+\code{configure} are not accessible by standard users.
+The PFFT library must be built with a MPI compiler. In Section~\ref{sec:fftw_inst} we already described how to hand the right compilers to the \code{configure} script.
 Some more options are
 \begin{compactitem}
   \item \code[keywords=]{--enable-float}: Produces a single-precision version of PFFT (float) instead of the default double-precision (double); see \ref{sec:prec}.
   \item \code[keywords=]{--enable-long-double}: Produces a long-double precision version of PFFT (long double) instead of the default double-precision (double); see \ref{sec:prec}.
   \item \code{--disable-fortran}: Disables inclusion of Fortran wrapper routines in the standard PFFT libraries.
+  \item \code{--disable-tests}: Disables build of test programs.
 \end{compactitem}
 For more details on the options of the \code{configure} script call
 \begin{lstlisting}
