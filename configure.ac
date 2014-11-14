@@ -265,7 +265,7 @@ fi
 AM_CONDITIONAL(ENABLE_OPENMP, test "x$enable_openmp" = "xyes")
 AC_SUBST(OPENMP_CFLAGS)
 
-# Check for fftw3, MPI FFTW and threaded FFTW.
+# Check for FFTW3, MPI FFTW and threaded FFTW.
 if test "x$PRECISION" = "xs" ; then
   AX_LIB_FFTW3F
 elif test "x$PRECISION" = "xl" ; then
@@ -393,16 +393,6 @@ AC_SUBST(C_MPI_FINT)
 
 # We need the math library.
 AC_SEARCH_LIBS([log], [m])
-
-# pass location of FFTW to make distcheck
-# TODO: this is not a good way to pass the FFTW locations, since it sets
-# CFLAGS and LDFLAGS. Try to use --with-fftw3-includedir=... and
-# --with-fftw3-libdir=... instead!
-DISTCHECK_CONFIGURE_FLAGS="CPPFLAGS=\"$CPPFLAGS\" LDFLAGS=\"$LDFLAGS\""
-
-AC_SUBST(DISTCHECK_CONFIGURE_FLAGS)
-
-
 
 ################################################################################
 # DOCUMENTATION

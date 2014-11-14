@@ -10,6 +10,11 @@ libtool: $(LIBTOOL_DEPS)
 # Let aclocal find the add-on macros.
 ACLOCAL_AMFLAGS = -I m4
 
+# pass location of FFTW to make distcheck
+AM_DISTCHECK_CONFIGURE_FLAGS = \
+  "CPPFLAGS=@CPPFLAGS@" \
+  "LDFLAGS=@LDFLAGS@"
+
 # Traverse these subdirectories, the current one first (for config.h).
 SUBDIRS = kernel gcell util api .
 
@@ -20,7 +25,6 @@ endif
 if ENABLE_DOC
 SUBDIRS += doc
 endif
-
 
 EXTRA_DIST = bootstrap.sh CONVENTIONS pfft.pc.in
 
