@@ -1,5 +1,7 @@
 #include <complex.h>
 #include <pfft.h>
+#include <omp.h>
+
 
 int main(int argc, char **argv)
 {
@@ -12,7 +14,12 @@ int main(int argc, char **argv)
   pfft_complex *in, *out;
   pfft_plan plan_forw=NULL, plan_back=NULL;
   MPI_Comm comm_cart_2d;
-  
+ 
+
+  /* initialize openMP */
+
+  pfft_plan_with_nthreads(1);
+   
   /* Set size of FFT and process mesh */
   n[0] = 29; n[1] = 27; n[2] = 31;
   np[0] = 2; np[1] = 2;
