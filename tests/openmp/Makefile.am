@@ -13,4 +13,4 @@ AM_CFLAGS = $(OPENMP_CFLAGS)
 check_PROGRAMS = \
 	simple_check_c2c simple_check_c2c_transposed\
 	simple_check_c2c_omp omp_bench_c2c
-	
+
