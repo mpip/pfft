@@ -25,13 +25,8 @@ int main(int argc, char **argv)
   pfft_init();
 
   /* read parameters */
-  if(argc>1) nthreads=atoi(argv[1]);
-  else
-  {
-     printf("Usage: the first parameter is the number of threads.");
-    return 0;
-  }
-  printf("# %4d threads will be used for openmp",nthreads);
+  pfft_get_args(argc,argv,"-pfft_omp_threads",1,PFFT_INT,&nthreads);
+  pfft_printf(MPI_COMM_WORLD, "# %4d threads will be used for openmp (default is 1)", nthreads );
    /* Init OpenMP */
   pfft_plan_with_nthreads(nthreads);
 
