@@ -11,5 +11,6 @@ AM_CFLAGS = $(OPENMP_CFLAGS)
 
 # These programs are built by 'make check' and may be tested afterwards.
 check_PROGRAMS = \
-	simple_check_c2c simple_check_c2c_transposed
-
+	simple_check_c2c simple_check_c2c_transposed\
+	simple_check_c2c_omp omp_bench_c2c
+	
