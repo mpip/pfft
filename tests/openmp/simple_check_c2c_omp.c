@@ -51,11 +51,11 @@ int main(int argc, char **argv)
 
   /* Plan parallel forward FFT */
   plan_forw = pfft_plan_dft_3d(
-      n, in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+      n, in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_OUT| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_TUNE);
   
   /* Plan parallel backward FFT */
   plan_back = pfft_plan_dft_3d(
-      n, out, in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+      n, out, in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_IN| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_TUNE);
 
   /* Initialize input with random numbers */
   pfft_init_input_complex_3d(n, local_ni, local_i_start,
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
   /* execute parallel forward FFT */
   pfft_execute(plan_forw);
 
-  pfft_print_average_timer(plan_forw, MPI_COMM_WORLD);
+  pfft_print_average_timer_adv(plan_forw, MPI_COMM_WORLD);
 
   /* clear the old input */
   pfft_clear_input_complex_3d(n, local_ni, local_i_start,
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
   /* execute parallel backward FFT */
   pfft_execute(plan_back);
   
-  pfft_print_average_timer(plan_back, MPI_COMM_WORLD);
+  pfft_print_average_timer_adv(plan_back, MPI_COMM_WORLD);
 
   /* Scale data */
   ptrdiff_t l;
