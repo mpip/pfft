@@ -68,6 +68,8 @@ test_files="$test_files simple_check_ousam_c2c_4d_transposed_newarray"
 test_files="$test_files simple_check_ousam_r2c_4d_newarray"
 test_files="$test_files simple_check_ousam_r2c_4d_transposed_newarray"
 
+test_files="$test_files simple_check_c2c_inplace"
+test_files="$test_files simple_check_c2c_transposed_inplace"
 
 
 tol="1e-12"
