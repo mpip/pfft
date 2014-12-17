@@ -1,15 +1,22 @@
-PFFT - Parallel FFT based on FFTW
+PFFT - Massively Parallel FFT based on FFTW3
 
 Overview
 --------
-PFFT is a software library written in C for computing parallel fast Fourier  
-transformations. 
+PFFT is a software library for computing massively parallel, fast Fourier transformations
+on distributed memory architectures. PFFT can be understood as a generalization of FFTW-MPI
+to multidimensional data decomposition.
+The library is written in C and MPI. A Fortran interface is also available.
+Support for hybrid parallization based on OpenMP and MPI is under development.
 
-For an introduction, please read the paper 
-  ''PFFT - An Extension of FFTW to Massively Parallel Architectures''
-available at http://www.tu-chemnitz.de/mpip/publikationen.php.en
-This is the most current general paper, and the one that we recommend if you wish 
-to cite PFFT.
+Install
+-------
+
+At first, you need an install of FFTW-3.3 with enabled MPI support. 
+We highly recommend to install the latest release of FFTW since the MPI code got several
+bugfixes in the last releases. Since some fixes are still pending until release FFTW-3.3.5.
+we offer some helpful scripts for installing FFTW-3.3.4 together with two patches
+(one bugfix and one performance improvement) at our sofware page
+  https://www-user.tu-chemnitz.de/~mpip/software.php#scripts
 
 The install of PFFT follows the typical steps
   ./bootstrap.sh
@@ -28,6 +35,9 @@ and
   LDFLAGS=$PATHTOFFTW/lib64 or LDFLAGS=$PATHTOFFTW/lib
 depending on your system architecture.
 
+Documentation
+-------------
+
 PFFT tarballs include a detailed user guide at 
   doc/manual.pdf
 If you have cloned the PFFT repository, the user manual is automatically built during 'make'.
@@ -44,6 +54,19 @@ Next, you can have a look at the test programs in directory 'tests' to learn the
 
 For installation instructions, you can also refer to the file INSTALL
 in this directory.
+
+For an theoretical introduction, please read the paper 
+  ''PFFT - An Extension of FFTW to Massively Parallel Architectures''
+available at http://www.tu-chemnitz.de/mpip/publikationen.php.en
+This is the most current general paper, and the one that we recommend if you wish 
+to cite PFFT.
+
+Python interface
+----------------
+
+A python interface is available at a distinct repository
+  https://github.com/rainwoodman/pfft-python
+Many thanks to Yu Feng for his great work.
 
 
 Directory structure
