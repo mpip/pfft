@@ -1,6 +1,6 @@
 /* This file is a test for the transpose algorithms for fftw with OpenMP */
 
-/* however, most of the code is just crap right now */
+/* TODO/ FIXME: fix segmentation fault somewhere */
 
 
 /*#include <complex.h>*/
@@ -9,7 +9,8 @@
 /*#include <pfft.h> */
 #include <omp.h>
 
-
+#define MSIZE 4
+#define NSIZE 4
 
 
 int initialize_matrix(fftw_complex*out,int m,int n)
@@ -42,10 +43,22 @@ int printmatrix(fftw_complex*matrix,int m,int n)
 
 int main(int argc, char **argv)
 {
-  int rows=4,columns=4;
+  int rows=MSIZE,columns=NSIZE;
   fftw_complex*m1 = (fftw_complex *) fftw_malloc(sizeof(fftw_complex)*rows*columns);
-  initialize_matrix(m1,rows,columns);
+  fftw_iodim howmany_dims[2];
+  howmany_dims[0].n=rows;
+  howmany_dims[0].is=columns;
+  howmany_dims[0].os=1;
+  howmany_dims[1].n=columns;
+  howmany_dims[1].is=1;
+  howmany_dims[1].is=rows;
+  
+  fftw_plan plan_transpose = fftw_plan_guru_dft(/*rank*/ 0,NULL,2, howmany_dims,m1,m1,FFTW_FORWARD,FFTW_ESTIMATE);
 
+
+  initialize_matrix(m1,rows,columns);
+  printmatrix(m1,rows,columns);
+  fftw_execute(plan_transpose);
   /*
   TODO: TASK1: use the fftw transpose algorithms
   */
