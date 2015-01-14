@@ -33,10 +33,11 @@ int printmatrix(fftw_complex*matrix,int m,int n)
   {  
     for(j=0;j<n;j++)
     {
-      printf(" %7.3f",matrix[i*m+j][0]);
+        printf(" %7.3f",matrix[i*m+j][0]);
     }
     printf("\n");
   }  
+  printf("\nend of print\n");
   return 0;
 }
 
@@ -52,13 +53,16 @@ int main(int argc, char **argv)
   howmany_dims[1].n=columns;
   howmany_dims[1].is=1;
   howmany_dims[1].is=rows;
-  
-  fftw_plan plan_transpose = fftw_plan_guru_dft(/*rank*/ 0,NULL,2, howmany_dims,m1,m1,FFTW_FORWARD,FFTW_ESTIMATE);
+  const int howmany_rank = sizeof(howmany_dims)/sizeof(howmany_dims[0]);
+
+  fftw_plan plan_transpose = fftw_plan_guru_dft(/*rank*/ 0,NULL,howmany_rank, howmany_dims,m1,m1,FFTW_FORWARD,FFTW_ESTIMATE); /* this causes the error most likely */
 
 
   initialize_matrix(m1,rows,columns);
   printmatrix(m1,rows,columns);
-  fftw_execute(plan_transpose);
+  printf("... segfault after this line:\n");
+  
+  fftw_execute(plan_transpose);  /* FIXME: this line leads to a segfault. possibly wrong call of fftw_plan_guru_dft */
   /*
   TODO: TASK1: use the fftw transpose algorithms
   */
