@@ -52,7 +52,7 @@ int main(int argc, char **argv)
   howmany_dims[0].os=1;
   howmany_dims[1].n=columns;
   howmany_dims[1].is=1;
-  howmany_dims[1].is=rows;
+  howmany_dims[1].os=rows;
   const int howmany_rank = sizeof(howmany_dims)/sizeof(howmany_dims[0]);
 
   fftw_plan plan_transpose = fftw_plan_guru_dft(/*rank*/ 0,NULL,howmany_rank, howmany_dims,m1,m1,FFTW_FORWARD,FFTW_ESTIMATE); /* this causes the error most likely */
