@@ -199,8 +199,12 @@ typedef ptrdiff_t INT;
 
 typedef struct PX(plan_s) *PX(plan);
 typedef struct PX(gcplan_s) *PX(gcplan);
+typedef struct PX(timer_s) *PX(timer);
+typedef struct PX(gctimer_s) *PX(gctimer);
 
-typedef struct {
+#endif /* !PFFT_H */
+
+typedef struct PX(timer_s) {
   int rnk_pm;
   int rnk_trafo;
   int rnk_remap;
@@ -212,17 +216,13 @@ typedef struct {
   double itwiddle;
   double otwiddle;
 } PX(timer_s);
-typedef PX(timer_s) *PX(timer);
 
-typedef struct {
+typedef struct PX(gctimer_s) {
   int iter;
   double whole;
   double pad_zeros;
   double exchange;
 } PX(gctimer_s);
-typedef PX(gctimer_s) *PX(gctimer);
-
-#endif /* !PFFT_H */
 
 /* plan for debug infos of serial trafo (c2c, r2c, c2r, r2r) */
 #if PFFT_DEBUG_SERTRAFO
@@ -351,7 +351,7 @@ typedef struct{
 typedef remap_3dto2d_plan_s *remap_3dto2d_plan;
 
 /* plan for parallel trafo */
-struct PX(plan_s){
+typedef struct PX(plan_s){
   int rnk_n;
   INT *n;
   INT *ni;
@@ -398,10 +398,9 @@ struct PX(plan_s){
   R* otwiddle_out;
 
   PX(timer) timer;
-};
-typedef struct PX(plan_s) plan_s;
+} plan_s;
 
-struct PX(gcplan_s){
+typedef struct PX(gcplan_s){
   int rnk_n;
   int *np;
   INT *n;
@@ -423,8 +422,7 @@ struct PX(gcplan_s){
   unsigned alg_flag;
   PX(gctimer) timer_exg;
   PX(gctimer) timer_red;
-};
-typedef struct PX(gcplan_s) gcplan_s;
+} gcplan_s;
 
 
 /* block.c */
