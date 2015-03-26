@@ -383,18 +383,18 @@ void PX(exchange_gc)(
   if(ths == NULL)
     return;
   
-  ths->timer_exg->pad_zeros -= MPI_Wtime();
+  PFFT_START_TIMING(ths->comm_cart, ths->timer_exg->pad_zeros);
   pad_array_with_zeros_outside_3d(
       ths->loc_n, ths->gc_below, ths->gc_above, ths->tuple,
       ths->data);
-  ths->timer_exg->pad_zeros += MPI_Wtime();
+  PFFT_FINISH_TIMING(ths->timer_exg->pad_zeros);
   
-  ths->timer_exg->exchange -= MPI_Wtime();
+  PFFT_START_TIMING(ths->comm_cart, ths->timer_exg->exchange);
   if(ths->alg_flag & PFFT_GC_RMA)
     PX(exchange_gc_RMA)(ths);
   else
     PX(exchange_gc_sendrecv)(ths);
-  ths->timer_exg->exchange += MPI_Wtime();
+  PFFT_FINISH_TIMING(ths->timer_exg->exchange);
 }
 
 
@@ -405,18 +405,18 @@ void PX(reduce_gc)(
   if(ths == NULL)
     return;
 
-  ths->timer_red->exchange -= MPI_Wtime();
+  PFFT_START_TIMING(ths->comm_cart, ths->timer_red->exchange);
   if(ths->alg_flag & PFFT_GC_RMA)
     PX(reduce_gc_RMA)(ths);
   else
     PX(reduce_gc_sendrecv)(ths);
-  ths->timer_red->exchange += MPI_Wtime();
+  PFFT_FINISH_TIMING(ths->timer_red->exchange);
 
-  ths->timer_red->pad_zeros -= MPI_Wtime();
+  PFFT_START_TIMING(ths->comm_cart, ths->timer_red->pad_zeros);
   truncate_array_outside_3d(
       ths->ngc, ths->gc_below, ths->gc_above, ths->tuple,
       ths->data);
-  ths->timer_red->pad_zeros += MPI_Wtime();
+  PFFT_FINISH_TIMING(ths->timer_red->pad_zeros);
 }
 
 

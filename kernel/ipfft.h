@@ -181,6 +181,19 @@ typedef ptrdiff_t INT;
 #define PFFTI_ARRAYTYPE_HERMITIAN_COMPLEX  (3)
 
 
+#ifdef PFFT_ENABLE_SYNCED_TIMING
+#  define PFFT_START_TIMING(comm, timer) \
+     MPI_Barrier(comm); \
+     timer -= MPI_Wtime();
+#else
+#  define PFFT_START_TIMING(comm, timer) \
+     timer -= MPI_Wtime();
+#endif
+#define PFFT_FINISH_TIMING(timer) \
+   timer += MPI_Wtime();
+
+
+
 
 #ifndef PFFT_H
 

@@ -59,27 +59,36 @@ AM_INIT_AUTOMAKE([1.9.6 foreign])
 ################################################################################
 
 # multithreaded code
-AC_ARG_ENABLE(threads, [AS_HELP_STRING([--enable-threads],
-  [enable multithreaded code])], enable_threads=$enableval, enable_threads=no)
+AC_ARG_ENABLE(threads, 
+  [AS_HELP_STRING([--enable-threads], [enable multithreaded code])],
+  enable_threads=$enableval, enable_threads=no)
 AM_CONDITIONAL([HAVE_THREADS], [test "x$enable_threads" = "xyes"])
 
 # debug mode
-AC_ARG_ENABLE(debug, [AS_HELP_STRING([--enable-debug],
-  [compile with extra runtime checks for debugging])], enable_debug=$enableval,
-  enable_debug=no)
+AC_ARG_ENABLE(debug, 
+  [AS_HELP_STRING([--enable-debug], [compile with extra runtime checks for debugging])],
+  enable_debug=$enableval, enable_debug=no)
 if test "x$enable_debug" = "xyes"; then
   AC_DEFINE(PFFT_DEBUG,1,[Define to enable extra debugging code.])
 fi
 
 # disable fortran wrappers
-AC_ARG_ENABLE(fortran, [AS_HELP_STRING([--disable-fortran],
-  [do not include Fortran-callable wrappers])], enable_fortran=$enableval,
-  enable_fortran=yes)
+AC_ARG_ENABLE(fortran,
+  [AS_HELP_STRING([--disable-fortran], [do not include Fortran-callable wrappers])],
+  enable_fortran=$enableval, enable_fortran=yes)
 
 # include gfortran wrappers (although we use an other compiler)
-AC_ARG_WITH(gfortran-wrappers, [AS_HELP_STRING([--with-gfortran-wrappers],
-  [force inclusion of gfortran-compatible wrappers in addition to any other Fortran compiler that is detected])],
+AC_ARG_WITH(gfortran-wrappers,
+  [AS_HELP_STRING([--with-gfortran-wrappers], [force inclusion of gfortran-compatible wrappers in addition to any other Fortran compiler that is detected])],
   with_gfortran_wrappers=$withval)
+
+# synchronized timings mode
+AC_ARG_ENABLE(synced-timing, 
+  [AS_HELP_STRING([--enable-synced-timing], [synchronize all time measurements with MPI Barriers])],
+  enable_synced_timing=$enableval, enable_synced_timing=no)
+if test "x$enable_synced_timing" = "xyes"; then
+  AC_DEFINE(PFFT_ENABLE_SYNCED_TIMING,1,[synchronize all time measurements with MPI Barriers.])
+fi
 
 # set precision
 AC_ARG_ENABLE(single, [AS_HELP_STRING([--enable-single],[compile pfft in single precision])], ok=$enableval, ok=no)

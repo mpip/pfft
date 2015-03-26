@@ -44,7 +44,7 @@ static void twiddle_output(
 static void execute_transposed(
     int rnk_pm, outrafo_plan *trafos, gtransp_plan *remaps,
     double *timer_trafo, double *timer_remap, R * plannedin, R * plannedout, 
-    R * in, R * out);
+    R * in, R * out, MPI_Comm comm_cart);
 
 
 static INT plain_index(
@@ -533,10 +533,10 @@ void PX(exchange)(
   if(ths==NULL)
     return;
 
-  ths->timer_exg->iter++;
-  ths->timer_exg->whole -= MPI_Wtime();
+  PFFT_START_TIMING(ths->comm_cart, ths->timer_exg->whole);
   PX(exchange_gc)(ths);
-  ths->timer_exg->whole += MPI_Wtime();
+  PFFT_FINISH_TIMING(ths->timer_exg->whole);
+  ths->timer_exg->iter++;
 }
 
 
@@ -548,9 +548,9 @@ void PX(reduce)(
     return;
 
   ths->timer_red->iter++;
-  ths->timer_red->whole -= MPI_Wtime();
+  PFFT_START_TIMING(ths->comm_cart, ths->timer_red->whole);
   PX(reduce_gc)(ths);
-  ths->timer_red->whole += MPI_Wtime();
+  PFFT_FINISH_TIMING(ths->timer_red->whole);
 }
 
 
@@ -1041,33 +1041,33 @@ static void PX(execute_full)(
     complex_conjugate(conj_in, conj_out, ths->rnk_n, ths->local_ni);
   }
 
-  ths->timer->whole -= MPI_Wtime();
+  PFFT_START_TIMING(ths->comm_cart, ths->timer->whole);
 
   /* twiddle inputs in order to get outputs shifted by n/2 */
-  ths->timer->itwiddle -= MPI_Wtime(); 
+  PFFT_START_TIMING(ths->comm_cart, ths->timer->itwiddle);
   if(ths->pfft_flags & PFFT_SHIFTED_OUT)
     twiddle_input(ths, ths->in, ths->out, in, out);
-  ths->timer->itwiddle += MPI_Wtime(); 
+  PFFT_FINISH_TIMING(ths->timer->itwiddle);
 
-  ths->timer->remap_3dto2d[0] -= MPI_Wtime(); 
+  PFFT_START_TIMING(ths->comm_cart, ths->timer->remap_3dto2d[0]);
   PX(execute_remap_3dto2d)(ths->remap_3dto2d[0], ths->in, ths->out, in, out);
-  ths->timer->remap_3dto2d[0] += MPI_Wtime(); 
+  PFFT_FINISH_TIMING(ths->timer->remap_3dto2d[0]);
 
   execute_transposed(r, ths->serial_trafo, ths->global_remap,
-      ths->timer->trafo, ths->timer->remap, ths->in, ths->out, in, out);
+      ths->timer->trafo, ths->timer->remap, ths->in, ths->out, in, out, ths->comm_cart);
 
   execute_transposed(r, &ths->serial_trafo[r+1], &ths->global_remap[r],
-      &ths->timer->trafo[r+1], &ths->timer->remap[r], ths->in, ths->out, in, out);
+      &ths->timer->trafo[r+1], &ths->timer->remap[r], ths->in, ths->out, in, out, ths->comm_cart);
   
-  ths->timer->remap_3dto2d[1] -= MPI_Wtime(); 
+  PFFT_START_TIMING(ths->comm_cart, ths->timer->remap_3dto2d[1]);
   PX(execute_remap_3dto2d)(ths->remap_3dto2d[1], ths->in, ths->out, in, out);
-  ths->timer->remap_3dto2d[1] += MPI_Wtime(); 
+  PFFT_FINISH_TIMING(ths->timer->remap_3dto2d[1]);
 
   /* twiddle outputs in order to get inputs shifted by n/2 */
-  ths->timer->otwiddle -= MPI_Wtime(); 
+  PFFT_START_TIMING(ths->comm_cart, ths->timer->otwiddle);
   if(ths->pfft_flags & PFFT_SHIFTED_IN)
     twiddle_output(ths, ths->in, ths->out, in, out);
-  ths->timer->otwiddle += MPI_Wtime();
+  PFFT_FINISH_TIMING(ths->timer->otwiddle);
 
   if (ths->trafo_flag & PFFTI_TRAFO_R2C && ths->conjugate_in && ths->conjugate_out){
     R* conj_in  = (ths->conjugate_in  == ths->in)  ? in : out;
@@ -1075,8 +1075,8 @@ static void PX(execute_full)(
     complex_conjugate(conj_in, conj_out, ths->rnk_n, ths->local_no);
   }
 
+  PFFT_FINISH_TIMING(ths->timer->whole);
   ths->timer->iter++;
-  ths->timer->whole += MPI_Wtime();
 }
 
 void PX(execute)(
@@ -1256,24 +1256,25 @@ static void execute_transposed(
     int rnk_pm, outrafo_plan *trafos, gtransp_plan *remaps,
     double *timer_trafo, double *timer_remap,
     R * plannedin, R * plannedout,
-    R * in, R * out
+    R * in, R * out,
+    MPI_Comm comm_cart
     )
 {
   int t;
   
   for(t=0; t<rnk_pm; t++){
-    timer_trafo[t] -= MPI_Wtime();
+    PFFT_START_TIMING(comm_cart, timer_trafo[t]);
     PX(execute_outrafo)(trafos[t], plannedin, plannedout, in, out);
-    timer_trafo[t] += MPI_Wtime();
+    PFFT_FINISH_TIMING(timer_trafo[t]);
 
-    timer_remap[t] -= MPI_Wtime();
+    PFFT_START_TIMING(comm_cart, timer_remap[t]);
     PX(execute_gtransp)(remaps[t], plannedin, plannedout, in, out);
-    timer_remap[t] += MPI_Wtime();
+    PFFT_FINISH_TIMING(timer_remap[t]);
   }
   
-  timer_trafo[t] -= MPI_Wtime();
+  PFFT_START_TIMING(comm_cart, timer_trafo[t]);
   PX(execute_outrafo)(trafos[t], plannedin, plannedout, in, out);
-  timer_trafo[t] += MPI_Wtime();
+  PFFT_FINISH_TIMING(timer_trafo[t]);
 }
 
 
