@@ -28,6 +28,9 @@ static void extract_comm_1d(
 static void factorize(
     int q, 
     int *ptr_q0, int *ptr_q1);
+static void factorize_equal(
+    int p0, int p1, int q, 
+    int *ptr_q0, int *ptr_q1);
 
 
 int PX(create_procmesh)(
@@ -344,7 +347,8 @@ void PX(get_procmesh_dims_2d)(
 
   PX(get_mpi_cart_dims)(comm_cart_3d, ndims, dims);
   *p0 = dims[0]; *p1 = dims[1];
-  factorize(dims[2], q0, q1);
+//   factorize(dims[2], q0, q1);
+  factorize_equal(dims[0], dims[1], dims[2], q0, q1);
 }
 
 /* factorize an integer q into q0*q1 with
@@ -361,4 +365,31 @@ static void factorize(
   *ptr_q0 = q / (*ptr_q1);
 }
 
+/* factorize an integer q into q0*q1 with
+ * abs(p0*q0 - p1*q1) -> min */
+static void factorize_equal(
+    int p0, int p1, int q, 
+    int *ptr_q0, int *ptr_q1
+    )
+{
+  int q0, q1;
+  int opt_q0  = 1;
+  int opt_q1  = q;
+  R   min_err = pfft_fabs(p0 * q - p1 * 1.0);
+
+  for(q1 = 1; q1 <= sqrt(q); q1++){
+    q0 = q/q1;
+    if(q0*q1 == q){
+      R err = pfft_fabs(p0*q0 - p1*q1);
+      if(err < min_err){
+        min_err = err;
+        opt_q0 = q0;
+        opt_q1 = q1;
+      }
+    }
+  }
+
+  *ptr_q0 = opt_q0;
+  *ptr_q1 = opt_q1;
+}
 

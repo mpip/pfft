@@ -113,6 +113,7 @@ typedef ptrdiff_t INT;
 #define pfft_cabs(_x_)  PFFT_MATH(cabs)(_x_)
 #define pfft_log2(_x_)  PFFT_MATH(log2)(_x_)
 #define pfft_sqrt(_x_)  PFFT_MATH(sqrt)(_x_)
+#define pfft_fabs(_x_)  PFFT_MATH(fabs)(_x_)
 
 #define XM(name)  X(CONCAT(mpi_, name))
 
