@@ -4,6 +4,9 @@ AM_CPPFLAGS = -I$(top_srcdir)/kernel
 # Directory of util.h
 AM_CPPFLAGS += -I$(top_srcdir)/util
 
+# OpenMP support
+AM_CPPFLAGS += $(OPENMP_CFLAGS)
+
 # Headers that are installed.
 if ENABLE_HEADER_INSTALL
 include_HEADERS = pfft.h

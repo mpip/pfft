@@ -190,14 +190,25 @@ static R check_array(
 
 
 
-
+#ifdef HAVE_OPENMP
+#include <omp.h>
+#endif
 /* wrappers for fftw init and cleanup */
 void PX(init) (void){
+#ifdef HAVE_OPENMP
+  X(init_threads)();
+  X(plan_with_nthreads)(omp_get_max_threads());
+#else
   XM(init)();
+#endif
 }
 
 void PX(cleanup) (void){
+#ifdef HAVE_OPENMP
+  X(cleanup_threads());
+#else
   XM(cleanup)();
+#endif
 }
 
 
