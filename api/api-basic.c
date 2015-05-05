@@ -192,23 +192,38 @@ static R check_array(
 
 #ifdef HAVE_OPENMP
 #include <omp.h>
+static int _nthreads;
 #endif
+
+void PX(plan_with_nthreads) (int nthreads){
+#ifdef HAVE_OPENMP
+  _nthreads = nthreads;
+  X(plan_with_nthreads)(nthreads);
+#endif
+}
+
+int PX(get_nthreads)() {
+#ifdef HAVE_OPENMP
+  return _nthreads;
+#else
+  return 1;
+#endif
+}
+
 /* wrappers for fftw init and cleanup */
 void PX(init) (void){
 #ifdef HAVE_OPENMP
   X(init_threads)();
-  X(plan_with_nthreads)(omp_get_max_threads());
-#else
-  XM(init)();
+  PX(plan_with_nthreads)(omp_get_max_threads());
 #endif
+  XM(init)();
 }
 
 void PX(cleanup) (void){
 #ifdef HAVE_OPENMP
   X(cleanup_threads());
-#else
-  XM(cleanup)();
 #endif
+  XM(cleanup)();
 }
 
 

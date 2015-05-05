@@ -438,6 +438,7 @@ static void init_parameters(
 
   pfft_printf(MPI_COMM_WORLD, "******************************************************************************************************\n");
   pfft_printf(MPI_COMM_WORLD, "* Computation of loops=%d parallel forward and backward FFTs (change with -pfft_loops *)\n", *loops);
+  pfft_printf(MPI_COMM_WORLD, "* of with %d threads per process (change with OMP_NUM_THREADS=* before the command line) \n", pfft_get_nthreads());
   pfft_printf(MPI_COMM_WORLD, "* for n[0] x n[1] x n[2] = %td x %td x %td Fourier coefficients (change with -pfft_n * * *)\n", n[0], n[1], n[2]);
   pfft_printf(MPI_COMM_WORLD, "* on  np[0] x np[1] x np[2] = %td x %td x %td processes (change with -pfft_np * * *)\n", np[0], np[1], np[2]);
   

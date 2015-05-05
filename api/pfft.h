@@ -76,6 +76,8 @@ BEGIN_C_DECLS
                                                                                         \
   PFFT_EXTERN void PX(init)(void);                                                      \
   PFFT_EXTERN void PX(cleanup)(void);                                                   \
+  PFFT_EXTERN void PX(plan_with_nthreads)(int);                                         \
+  PFFT_EXTERN int  PX(get_nthreads)(void);                                              \
                                                                                         \
   PFFT_EXTERN void *PX(malloc)(size_t n);                                               \
   PFFT_EXTERN R *PX(alloc_real)(size_t n);                                              \
