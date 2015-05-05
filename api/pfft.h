@@ -70,28 +70,8 @@ BEGIN_C_DECLS
                                                                                         \
   typedef struct PX(plan_s) *PX(plan);                                                  \
   typedef struct PX(gcplan_s) *PX(gcplan);                                              \
-                                                                                        \
-  typedef struct {                                                                      \
-      int rnk_pm;                                                                       \
-      int rnk_trafo;                                                                    \
-      int rnk_remap;                                                                    \
-      int iter;                                                                         \
-      double whole;                                                                     \
-      double *trafo;                                                                    \
-      double *remap;                                                                    \
-      double remap_3dto2d[2];                                                           \
-      double itwiddle;                                                                  \
-      double otwiddle;                                                                  \
-  } PX(timer_s);                                                                        \
-  typedef PX(timer_s) *PX(timer);                                                       \
-                                                                                        \
-  typedef struct {                                                                      \
-      int iter;                                                                         \
-      double whole;                                                                     \
-      double pad_zeros;                                                                 \
-      double exchange;                                                                  \
-  } PX(gctimer_s);                                                                      \
-  typedef PX(gctimer_s) *PX(gctimer);                                                   \
+  typedef struct PX(timer_s) *PX(timer);                                                \
+  typedef struct PX(gctimer_s) *PX(gctimer);                                            \
                                                                                         \
                                                                                         \
   PFFT_EXTERN void PX(init)(void);                                                      \

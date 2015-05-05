@@ -1,7 +1,7 @@
 #############################################################
 # This File is based on CONVENTIONS from fftw-3.3alpha1
 # TODO: I still have to check some files, if this coding
-#       standard was applicated correct. 
+#       standard was applied correctly. 
 #       Double commented lines mark coding standards that
 #       are introduced by FFTW but are not yet used in all 
 #       the PFFT code. 

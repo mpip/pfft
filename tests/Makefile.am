@@ -64,6 +64,9 @@ check_PROGRAMS += \
 	minimal_check_c2c minimal_check_c2c_transposed
 
 check_PROGRAMS += \
+	simple_check_c2c_inplace simple_check_c2c_transposed_inplace
+
+check_PROGRAMS += \
 	simple_check_c2c simple_check_c2c_transposed \
 	simple_check_c2r_c2c simple_check_c2r_c2c_shifted simple_check_c2r_c2c_ousam_shifted \
 	simple_check_r2c simple_check_r2c_transposed \
