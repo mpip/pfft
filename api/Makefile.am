@@ -4,6 +4,10 @@ AM_CPPFLAGS = -I$(top_srcdir)/kernel
 # Directory of util.h
 AM_CPPFLAGS += -I$(top_srcdir)/util
 
+# OpenMP support
+AM_CFLAGS    = $(OPENMP_CFLAGS)
+AM_CPPFLAGS += $(OPENMP_CFLAGS)
+
 # Headers that are installed.
 if ENABLE_HEADER_INSTALL
 include_HEADERS = pfft.h
@@ -13,12 +17,7 @@ else
 noinst_HEADERS = pfft.h
 endif
 
-LIBAPI_OMP_LA =
-if ENABLE_OPENMP
-LIBAPI_OMP_LA += libapi_omp.la
-endif
-
-noinst_LTLIBRARIES = libapi.la $(LIBAPI_OMP_LA)
+noinst_LTLIBRARIES = libapi.la
 
 EXTRA_DIST = f03-api.sh f03-wrap.sh genf03-api.pl genf03-wrap.pl build-f03-api.sh
 
@@ -35,19 +34,3 @@ libapi_la_SOURCES = \
 	pfftl.f03.in \
 	f03-wrap.c
 
-if ENABLE_OPENMP
-libapi_omp_la_CFLAGS = $(OPENMP_CFLAGS) 
-
-# Group local sources into convenience lib.
-libapi_omp_la_SOURCES = \
-        api-basic.c \
-        api-adv.c \
-	pfft.f.in \
-	fortran-api.c \
-	fortran-mangling.h \
-	fortran-prototypes.h \
-	fortran-wrappers.h \
-	pfft.f03.in \
-	pfftl.f03.in \
-	f03-wrap.c
-endif
