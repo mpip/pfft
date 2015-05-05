@@ -124,6 +124,7 @@ AC_DEFUN([_AX_LIB_FFTW3_CHECK],[
   fftw3_LDFLAGS=
   fftw3_PREFIX=
   fftw3_LIBS=
+  fftw3_openmp_LIBS=
   fftw3_threads_LIBS=
   fftw3_mpi_LIBS=
 
@@ -169,6 +170,7 @@ AC_DEFUN([_AX_LIB_FFTW3_CHECK],[
 
   ax_lib_fftw3=no
   ax_lib_fftw3_threads=no
+  ax_lib_fftw3_openmp=no
   ax_lib_fftw3_mpi=no
 
   fftw3_PREFIX="$ax_with_fftw3_prefix"
@@ -190,11 +192,11 @@ AC_DEFUN([_AX_LIB_FFTW3_CHECK],[
         ax_lib_fftw3_threads=no
         ;;
     esac
-    
+
     ax_lib_fftw3_openmp=yes
     case $ac_configure_args in
       *--enable-openmp*)
-        fftw3_openmp_LIBS="-l${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_omp"
+        fftw3_threads_LIBS="-l${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_omp"
         ;;
       *)
         ax_lib_fftw3_openmp=no
