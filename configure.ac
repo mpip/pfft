@@ -58,12 +58,6 @@ AM_INIT_AUTOMAKE([1.9.6 foreign])
 # options for customizing the build process
 ################################################################################
 
-# multithreaded code
-AC_ARG_ENABLE(threads, 
-  [AS_HELP_STRING([--enable-threads], [enable multithreaded code])],
-  enable_threads=$enableval, enable_threads=no)
-AM_CONDITIONAL([HAVE_THREADS], [test "x$enable_threads" = "xyes"])
-
 # debug mode
 AC_ARG_ENABLE(debug, 
   [AS_HELP_STRING([--enable-debug], [compile with extra runtime checks for debugging])],
@@ -230,6 +224,27 @@ AC_LANG_POP([Fortran])
 
 
 ################################################################################
+# Parallel characteristics
+################################################################################
+
+# disable OpenMP on default as long as it does not work perfectly
+: ${enable_openmp=no}
+AC_OPENMP
+
+if test "$enable_openmp" = "yes"; then
+  OPENMP_SUFFIX="_omp"
+else
+  OPENMP_SUFFIX=
+fi
+AC_SUBST(OPENMP_SUFFIX) # append _omp to library pfft name
+AM_CONDITIONAL(ENABLE_OPENMP, test "x$enable_openmp" = "xyes")
+
+AC_LANG_PUSH([Fortran])
+: ${enable_openmp=no}
+AC_OPENMP
+AC_LANG_POP([Fortran])
+
+################################################################################
 # Libtool initialization
 ################################################################################
 
@@ -265,9 +280,6 @@ AC_SUBST(SHARED_VERSION_INFO)
 # May need sincos from libm.
 AC_CHECK_LIB([m], [sincos])
 
-# Check for OpenMP.
-AX_OPENMP
-
 # Check for FFTW3, MPI FFTW and threaded FFTW.
 if test "x$PRECISION" = "xs" ; then
   AX_LIB_FFTW3F
@@ -278,8 +290,8 @@ else
 fi
 
 if test "x$ax_lib_fftw3" = "xno"; then
-  AC_MSG_ERROR([You do not seem to have the FFTW-3.3 library installed. You can ]
-      [download it from http://www.fftw.org. If you have installed FFTW-3.3, ]
+  AC_MSG_ERROR([You do not seem to have the FFTW-3.3 library installed.]
+      [You can download it from http://www.fftw.org. If you have installed FFTW-3.3, ]
       [make sure that this configure script can find it. See ./configure ]
       [--help for more information.])
 fi
@@ -291,8 +303,11 @@ if test "x$ax_lib_fftw3_mpi" = "xno"; then
       [for more information.])
 fi
 
-if  test "x$enable_threads" = "xyes" -a "x$ax_lib_fftw3_threads" = "xno"; then
-  AC_MSG_ERROR([You do not seem to have the threaded FFTW-3.3 library installed.])
+if  test "x$enable_openmp" = "xyes" -a "x$ax_lib_fftw3_openmp" = "xno"; then
+  AC_MSG_ERROR([You do not seem to have the OpenMP part of the FFTW-3.3 library installed.]
+      [You can download it from http://www.fftw.org. If you have installed FFTW-3.3, ]
+      [make sure that this configure script can find it. See ./configure --help]
+      [for more information.])
 fi
 
 
@@ -460,6 +475,7 @@ AC_CONFIG_FILES([Makefile \
 		tests/Makefile \
 		tests/fortran/Makefile \
 		tests/f03/Makefile \
+		tests/openmp/Makefile \
                 doc/Makefile])
 
 AC_CONFIG_LINKS([tests/build_checks.sh:tests/build_checks.sh

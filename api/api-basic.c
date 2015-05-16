@@ -190,13 +190,39 @@ static R check_array(
 
 
 
+#ifdef _OPENMP
+#include <omp.h>
+static int _nthreads;
+#endif
+
+void PX(plan_with_nthreads) (int nthreads){
+#ifdef _OPENMP
+  _nthreads = nthreads;
+  X(plan_with_nthreads)(nthreads);
+#endif
+}
+
+int PX(get_nthreads)() {
+#ifdef _OPENMP
+  return _nthreads;
+#else
+  return 1;
+#endif
+}
 
 /* wrappers for fftw init and cleanup */
 void PX(init) (void){
+#ifdef _OPENMP
+  X(init_threads)();
+  PX(plan_with_nthreads)(omp_get_max_threads());
+#endif
   XM(init)();
 }
 
 void PX(cleanup) (void){
+#ifdef _OPENMP
+  X(cleanup_threads());
+#endif
   XM(cleanup)();
 }
 
@@ -1276,6 +1302,4 @@ static void execute_transposed(
   PX(execute_outrafo)(trafos[t], plannedin, plannedout, in, out);
   PFFT_FINISH_TIMING(timer_trafo[t]);
 }
-
-
 

@@ -4,6 +4,10 @@ AM_CPPFLAGS = -I$(top_srcdir)/kernel
 # Directory of util.h
 AM_CPPFLAGS += -I$(top_srcdir)/util
 
+# OpenMP support
+AM_CFLAGS    = $(OPENMP_CFLAGS)
+AM_CPPFLAGS += $(OPENMP_CFLAGS)
+
 # Headers that are installed.
 if ENABLE_HEADER_INSTALL
 include_HEADERS = pfft.h
@@ -12,7 +16,7 @@ nodist_include_HEADERS = pfft.f pfft.f03 pfftl.f03
 else
 noinst_HEADERS = pfft.h
 endif
-	
+
 noinst_LTLIBRARIES = libapi.la
 
 EXTRA_DIST = f03-api.sh f03-wrap.sh genf03-api.pl genf03-wrap.pl build-f03-api.sh

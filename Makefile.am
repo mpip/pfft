@@ -31,26 +31,28 @@ EXTRA_DIST = bootstrap.sh CONVENTIONS pfft.pc.in
 # Libraries that are built and installed.
 # set library name according to precision
 if ENABLE_LIBRARY_INSTALL
-lib_LTLIBRARIES = lib@PFFT_PREFIX@pfft@PREC_SUFFIX@.la
+lib_LTLIBRARIES = lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@.la
 else
-noinst_LTLIBRARIES = lib@PFFT_PREFIX@pfft@PREC_SUFFIX@.la
+noinst_LTLIBRARIES = lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@.la
 endif
 
+
 # Libtool convenience libraries.
-lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_la_SOURCES =
-lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_la_LIBADD = \
+lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@_la_SOURCES =
+lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@_la_LIBADD = \
 	kernel/libkernel.la \
 	util/libutil.la \
 	api/libapi.la \
 	gcell/libgcell.la
 
-lib@PFFT_PREFIX@pfft@PREC_SUFFIX@_la_LDFLAGS = -no-undefined -version-info @SHARED_VERSION_INFO@
+lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@_la_LDFLAGS = -no-undefined -version-info @SHARED_VERSION_INFO@
+lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@_la_CFLAGS = $(OPENMP_CFLAGS)
 
 # Get Fortran compile rules that include preprocessing.
 include $(top_srcdir)/build-aux/fortran-rules.am
 
-pfft1@PREC_SUFFIX@.pc: pfft.pc
-	cp -f pfft.pc pfft1@PREC_SUFFIX@.pc
+pfft1@PREC_SUFFIX@@OPENMP_SUFFIX@.pc: pfft.pc
+	cp -f pfft.pc pfft1@PREC_SUFFIX@@OPENMP_SUFFIX@.pc
 
 
 #################################################################
