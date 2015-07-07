@@ -3,6 +3,10 @@ AM_CPPFLAGS = -I$(top_srcdir)/kernel
 
 # Directory of util.h
 AM_CPPFLAGS += -I$(top_srcdir)/util
+#
+# Directory of fftw3
+AM_CPPFLAGS += -I$(top_srcdir)/fftw3/api
+AM_CPPFLAGS += -I$(top_srcdir)/fftw3/mpi
 
 # OpenMP support
 AM_CFLAGS    = $(OPENMP_CFLAGS)
