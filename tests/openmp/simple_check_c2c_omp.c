@@ -16,6 +16,10 @@ int main(int argc, char **argv)
   pfft_plan plan_forw=NULL, plan_back=NULL;
   MPI_Comm comm_cart_2d;
 
+  /* Init OpenMP */
+  pfft_get_args(argc,argv,"-pfft_omp_threads",1,PFFT_INT,&nthreads);
+  pfft_plan_with_nthreads(nthreads);
+
   /* Set size of FFT and process mesh */
   n[0] = 64; n[1] = 64; n[2] = 64;
   np[0] = 1; np[1] = 1;
@@ -24,11 +28,7 @@ int main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   pfft_init();
 
-  /* read parameters */
-  pfft_get_args(argc,argv,"-pfft_omp_threads",1,PFFT_INT,&nthreads);
   pfft_printf(MPI_COMM_WORLD, "# %4d threads will be used for openmp (default is 1)", nthreads );
-   /* Init OpenMP */
-  pfft_plan_with_nthreads(nthreads);
 
  /* Create two-dimensional process grid of size np[0] x np[1], if possible */
   if( pfft_create_procmesh_2d(MPI_COMM_WORLD, np[0], np[1], &comm_cart_2d) ){
