@@ -3,6 +3,8 @@
 #include <pfft.h>
 #include <omp.h>
 
+#define NNN 64
+
 int main(int argc, char **argv)
 {
   int nthreads=1; /*number of threads to initialize openmp with*/
@@ -21,7 +23,7 @@ int main(int argc, char **argv)
   pfft_plan_with_nthreads(nthreads);
 
   /* Set size of FFT and process mesh */
-  n[0] = 64; n[1] = 64; n[2] = 64;
+  n[0] = NNN;n[1] =NNN; n[2] =NNN;
   np[0] = 1; np[1] = 1;
   
   /* Initialize MPI and PFFT */
@@ -51,11 +53,11 @@ int main(int argc, char **argv)
 
   /* Plan parallel forward FFT */
   plan_forw = pfft_plan_dft_3d(
-      n, in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_OUT| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_TUNE);
+      n, in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_OUT| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_TUNE| PFFT_SHIFTED_IN);
   
   /* Plan parallel backward FFT */
   plan_back = pfft_plan_dft_3d(
-      n, out, in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_IN| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_TUNE);
+      n, out, in, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_IN| PFFT_MEASURE| PFFT_DESTROY_INPUT| PFFT_TUNE| PFFT_SHIFTED_OUT);
 
   /* Initialize input with random numbers */
   pfft_init_input_complex_3d(n, local_ni, local_i_start,

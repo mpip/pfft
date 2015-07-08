@@ -1192,7 +1192,7 @@ static void twiddle_input(
     return;
 
   INT howmany = ths->howmany, l;
-  R factor;
+  /*R factor;*/
   INT *n = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->n);
   INT *ni = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->ni);
   INT *local_ni = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_IN, ths->local_ni);
@@ -1205,20 +1205,23 @@ static void twiddle_input(
     howmany *= 2;
   
   INT local_n_total = PX(prod_INT)(ths->rnk_n, local_ni);
-
+  int tempbool=ths->pfft_flags & PFFT_SHIFTED_IN;
+/*#pragma omp parallel for schedule(static,16)*/
+#pragma omp parallel for 
   for(INT k=0; k<local_n_total; k++){
     l = k;
-    factor = 1.0;
+    R factor = 1.0;
     for(int t=ths->rnk_n-1; t>=0; t--){
       INT kt = l%local_ni[t];
       /* check for r2c/c2r padding elements and skipped trafos */
-      if(kt  + local_ni_start[t] < ni[t]/2){
+      INT temp=kt+local_ni_start[t];
+      if(temp < ni[t]/2){
         if(!skip_trafos[t]){
-          factor *= (kt + local_ni_start[t]) % 2 ? -1.0 : 1.0;
+          if(temp%2) factor*=-1.0;          
 
           /* take care of the extra twiddle (-1)^(n/2) if both (input AND output) are shifted */
-          if(ths->pfft_flags & PFFT_SHIFTED_IN)
-            factor *= (n[t]/2) % 2 ? -1.0 : 1.0;
+          if(tempbool && (n[t]/2)%2)
+            factor *= -1.0;
         }
       }
       l /= local_ni[t];
@@ -1244,7 +1247,7 @@ static void twiddle_output(
     return;
 
   INT howmany = ths->howmany, l;
-  R factor;
+  /*  R factor;*/
   INT *no = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->no);
   INT *local_no = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->local_no);
   INT *local_no_start = malloc_and_transpose_INT(ths->rnk_n, ths->rnk_pm, ths->transp_flag & PFFT_TRANSPOSED_OUT, ths->local_no_start);
@@ -1256,16 +1259,18 @@ static void twiddle_output(
     howmany *= 2;
 
   INT local_n_total = PX(prod_INT)(ths->rnk_n, local_no);
-
+#pragma omp parallel for 
+/*#pragma omp parallel for schedule(static,16)*/
   for(INT k=0; k<local_n_total; k++){
     l = k;
-    factor = 1.0;
+    R factor = 1.0;
     for(int t=ths->rnk_n-1; t>=0; t--){
       INT kt = l%local_no[t];
+      INT temp=kt+local_no_start[t];
       /* check for r2c/c2r padding elements and skipped trafos */
-      if(kt + local_no_start[t] < no[t]/2)
-        if(!skip_trafos[t])
-          factor *= (kt + local_no_start[t]) % 2 ? -1.0 : 1.0;
+      if(temp < no[t]/2 && !skip_trafos[t])
+        if(temp%2) 
+          factor *= -1.0;
       l /= local_no[t];
     }
 
