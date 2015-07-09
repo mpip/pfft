@@ -30,6 +30,7 @@ int main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   pfft_init();
 
+  pfft_plan_with_nthreads(nthreads);
   pfft_printf(MPI_COMM_WORLD, "# %4d threads will be used for openmp (default is 1)", nthreads );
 
  /* Create two-dimensional process grid of size np[0] x np[1], if possible */

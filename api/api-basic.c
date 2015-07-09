@@ -198,6 +198,7 @@ static int _nthreads;
 void PX(plan_with_nthreads) (int nthreads){
 #ifdef _OPENMP
   _nthreads = nthreads;
+  omp_set_num_threads(nthreads);
   X(plan_with_nthreads)(nthreads);
 #endif
 }
@@ -1207,7 +1208,8 @@ static void twiddle_input(
   INT local_n_total = PX(prod_INT)(ths->rnk_n, local_ni);
   int tempbool=ths->pfft_flags & PFFT_SHIFTED_IN;
 /*#pragma omp parallel for schedule(static,16)*/
-#pragma omp parallel for 
+  
+#pragma omp parallel for schedule(static,8)
   for(INT k=0; k<local_n_total; k++){
     l = k;
     R factor = 1.0;
@@ -1259,8 +1261,8 @@ static void twiddle_output(
     howmany *= 2;
 
   INT local_n_total = PX(prod_INT)(ths->rnk_n, local_no);
-#pragma omp parallel for 
-/*#pragma omp parallel for schedule(static,16)*/
+/*#pragma omp parallel for */
+#pragma omp parallel for schedule(static,8)
   for(INT k=0; k<local_n_total; k++){
     l = k;
     R factor = 1.0;
