@@ -1,4 +1,3 @@
-
 #include <complex.h>
 #include <pfft.h>
 #include <omp.h>
@@ -6,9 +5,10 @@
 #define NNN 256
 /* The size of the transformation will be NNN^3*/
 
-/* USAGE: -pfft_omp_threads
--pfft_runs 
-both as integer parameters */
+/* USAGE:
+ *   -pfft_omp_threads nthreads
+ *   -pfft_runs runs
+ * both as integer parameters */
 
 
 int main(int argc, char **argv)
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
   pfft_init();
 
   pfft_plan_with_nthreads(nthreads);
-  pfft_printf(MPI_COMM_WORLD, "# %4d threads will be used for openmp (default is 1)", nthreads );
+  pfft_printf(MPI_COMM_WORLD, "# %4d threads will be used for openmp (default is 1)\n", nthreads);
 
  /* Create two-dimensional process grid of size np[0] x np[1], if possible */
   if( pfft_create_procmesh_2d(MPI_COMM_WORLD, np[0], np[1], &comm_cart_2d) ){
@@ -47,10 +47,6 @@ int main(int argc, char **argv)
     MPI_Finalize();
     return 1;
   }
-  
-  /*  */
-
-
 
   /* Get parameters of data distribution */
   alloc_local = pfft_local_size_dft_3d(n, comm_cart_2d, PFFT_TRANSPOSED_NONE,
@@ -71,8 +67,8 @@ int main(int argc, char **argv)
   /* Initialize input with random numbers */
   pfft_init_input_complex_3d(n, local_ni, local_i_start,
       in);
-  int i=0;
-  for(i=0;i<runs;i++)
+
+  for(int i=0; i<runs; i++)
   {
     /* execute parallel forward FFT */
     pfft_execute(plan_forw);
@@ -83,18 +79,19 @@ int main(int argc, char **argv)
     */
     /* execute parallel backward FFT */
     pfft_execute(plan_back);
+
+    /* Scale data */
+    ptrdiff_t l;
+    for(l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
+      in[l] /= (n[0]*n[1]*n[2]);
   }
+
   pfft_print_average_timer_adv(plan_forw, MPI_COMM_WORLD);
   pfft_print_average_timer_adv(plan_back, MPI_COMM_WORLD);
 
-  /* Scale data */
-  ptrdiff_t l;
-  for(l=0; l < local_ni[0] * local_ni[1] * local_ni[2]; l++)
-    in[l] /= (n[0]*n[1]*n[2]);
-
   /* Print error of back transformed data */
   err = pfft_check_output_complex_3d(n, local_ni, local_i_start, in, comm_cart_2d);
-  pfft_printf(comm_cart_2d, "Error after one forward and backward trafo of size n=(%td, %td, %td):\n", n[0], n[1], n[2]); 
+  pfft_printf(comm_cart_2d, "Error after %d forward and backward trafos of size n=(%td, %td, %td):\n", runs, n[0], n[1], n[2]); 
   pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
   
   /* free mem and finalize */
