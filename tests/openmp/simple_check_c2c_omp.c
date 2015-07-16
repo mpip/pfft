@@ -3,11 +3,18 @@
 #include <pfft.h>
 #include <omp.h>
 
-#define NNN 64
+#define NNN 256
+/* The size of the transformation will be NNN^3*/
+
+/* USAGE: -pfft_omp_threads
+-pfft_runs 
+both as integer parameters */
+
 
 int main(int argc, char **argv)
 {
   int nthreads=1; /*number of threads to initialize openmp with*/
+  int runs=1; /*number of runs for testing*/
   int np[2];
   ptrdiff_t n[3];
   ptrdiff_t alloc_local;
@@ -20,6 +27,7 @@ int main(int argc, char **argv)
 
   /* Init OpenMP */
   pfft_get_args(argc,argv,"-pfft_omp_threads",1,PFFT_INT,&nthreads);
+  pfft_get_args(argc,argv,"-pfft_runs",1,PFFT_INT,&runs);
   pfft_plan_with_nthreads(nthreads);
 
   /* Set size of FFT and process mesh */
@@ -63,19 +71,20 @@ int main(int argc, char **argv)
   /* Initialize input with random numbers */
   pfft_init_input_complex_3d(n, local_ni, local_i_start,
       in);
-  
-  /* execute parallel forward FFT */
-  pfft_execute(plan_forw);
+  int i=0;
+  for(i=0;i<runs;i++)
+  {
+    /* execute parallel forward FFT */
+    pfft_execute(plan_forw);
 
+    /* clear the old input */
+    /* pfft_clear_input_complex_3d(n, local_ni, local_i_start,
+        in);
+    */
+    /* execute parallel backward FFT */
+    pfft_execute(plan_back);
+  }
   pfft_print_average_timer_adv(plan_forw, MPI_COMM_WORLD);
-
-  /* clear the old input */
-  pfft_clear_input_complex_3d(n, local_ni, local_i_start,
-      in);
-  
-  /* execute parallel backward FFT */
-  pfft_execute(plan_back);
-  
   pfft_print_average_timer_adv(plan_back, MPI_COMM_WORLD);
 
   /* Scale data */
