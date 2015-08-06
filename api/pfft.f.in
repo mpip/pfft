@@ -33,8 +33,10 @@
       integer, parameter :: PFFT_GC_PADDED          = 16
 
       integer, parameter :: PFFT_GC_C2R             = PFFT_GC_R2C
-      integer, parameter :: PFFT_GC_PADDED_R2C      = PFFT_GC_R2C + PFFT_GC_PADDED
-      integer, parameter :: PFFT_GC_PADDED_C2R      = PFFT_GC_C2R + PFFT_GC_PADDED
+      integer, parameter :: PFFT_GC_PADDED_R2C      = PFFT_GC_R2C &
+          + PFFT_GC_PADDED
+      integer, parameter :: PFFT_GC_PADDED_C2R      = PFFT_GC_C2R &
+          + PFFT_GC_PADDED
       
       integer, parameter :: PFFT_INT               = 1
       integer, parameter :: PFFT_PTRDIFF_T         = 2
