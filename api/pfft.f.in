@@ -31,7 +31,8 @@
       integer, parameter :: PFFT_PTRDIFF_T         = 2
       integer, parameter :: PFFT_FLOAT             = 3
       integer, parameter :: PFFT_DOUBLE            = 4
-      integer, parameter :: PFFT_UNSIGNED          = 5
+      integer, parameter :: PFFT_LDOUBLE           = 5
+      integer, parameter :: PFFT_UNSIGNED          = 6
 
       integer, parameter :: PFFT_FORWARD           = -1
       integer, parameter :: PFFT_BACKWARD          = +1
