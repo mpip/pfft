@@ -270,7 +270,7 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
   N1 = local_nm[2]; h1 = local_ni[0];
   blk0 = mblk[1];
   blk1 = iblk[2];
-  hm = howmany * (trafo_flag & PFFTI_TRAFO_C2C) ? 2 : 1;
+  hm = howmany * (trafo_flag & PFFTI_TRAFO_C2C ? 2 : 1);
 
   PX(split_cart_procmesh_for_3dto2d_remap_q1)(comm_cart_3d, &comm_q1);
   if(transp_flag & PFFT_TRANSPOSED_IN)
@@ -288,7 +288,7 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
   N1 = local_no[2]; h1 = 1;
   blk0 = oblk[0];
   blk1 = mblk[2];
-  hm = howmany * (trafo_flag & PFFTI_TRAFO_C2C) ? 2 : 1;
+  hm = howmany * (trafo_flag & PFFTI_TRAFO_C2C ? 2 : 1);
 
   PX(split_cart_procmesh_for_3dto2d_remap_q0)(comm_cart_3d, &comm_q0);
   if(transp_flag & PFFT_TRANSPOSED_IN)
