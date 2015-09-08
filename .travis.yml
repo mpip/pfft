@@ -1,0 +1,22 @@
+language: c
+compiler: gcc
+os: linux
+
+notifications:
+  email: true
+
+env:
+  - MPI=openmpi
+
+before_install:
+  - sudo apt-get update -qq
+  - sh ./conf/travis-install-mpi.sh $MPI
+
+install:
+  - sh ./conf/travis-install-fftw.sh
+
+script: ./bootstrap.sh && ./configure CPPFLAGS="-I$HOME/local/fftw-3.3.4/include" LDFLAGS="-L$HOME/local/fftw-3.3.4/lib" FC=mpif90 CC=mpicc MPICC=mpicc MPIFC=mpif90 && make && make check
+
+after_failure: "cat config.log"
+
+
