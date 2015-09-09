@@ -29,6 +29,7 @@ matrix:
         - sh ./conf/travis-install-fftw.sh
     - os: osx
       before_install:
+        - brew install openmpi
         - echo "test"
 
 
