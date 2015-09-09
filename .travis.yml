@@ -1,6 +1,8 @@
 language: c
 compiler: gcc
-os: linux
+os: 
+  - linux
+  - osx
 
 notifications:
   email: true
