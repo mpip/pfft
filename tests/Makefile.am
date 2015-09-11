@@ -122,6 +122,7 @@ check_PROGRAMS += \
 
 check_PROGRAMS += \
 	bench_c2c \
+	bench_r2c \
 	time_c2c \
 	time_c2c_transposed
 endif
