@@ -11,6 +11,14 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+  intro
+  tutorial
+  install
+  features
+  interface
+  reference
+  develop
+
 
 
 Indices and tables
