@@ -1177,7 +1177,7 @@ that is executed via
 \begin{lstlisting}
 ./test -pfft_x 3.1 -pfft_np 2 3 -pfft_n 8 16 32 -pfft_on
 \end{lstlisting}
-will read \code{x=3.1}, \code{np[2] = \{2,3\}}, \code{n[3]=\{8,16,32\}}, and turn on the \code{switch=1}.
+will read \code{x=3.1}, \code{np[2] = (2,3)}, \code{n[3]= (8,16,32)}, and turn on the \code{switch=1}.
 Note the address operator \code{&} in front of \code{x} in the second line!
 Furthermore, note that the initialization of all variables with default values before the call of \code{pfft_get_args}
 avoids trouble if the user does not provide all the command line arguments.

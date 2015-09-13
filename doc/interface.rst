@@ -1,3 +1,7 @@
+[2]ifpackageloaded#1#2 [2]ifpackageloaded#1#2 [3]ifpackageloaded#1#2#3
+
+#1
+
 Interface Layers of the PFFT Library
 ====================================
 
@@ -9,8 +13,8 @@ list of all PFFT functions is given in Chapter [chap:ref].
 Basic Interface
 ---------------
 
-The interface is the simplest interface layer. It is suitable for the
-planning of three-dimensional FFTs.
+The ``_3d`` interface is the simplest interface layer. It is suitable
+for the planning of three-dimensional FFTs.
 
 ::
 
@@ -28,10 +32,11 @@ planning of three-dimensional FFTs.
         pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
         int sign, unsigned pfft_flags);
 
-Hereby, , , , , and are arrays of length .
+Hereby, ``n``, ``local_ni``, ``local_i_start``, ``local_no``, and
+``local_o_start`` are ``ptrdiff_t`` arrays of length ``3``.
 
-The basic interface generalizes the interface to FFTs of arbitrary
-dimension .
+The basic interface generalizes the ``_3d`` interface to FFTs of
+arbitrary dimension ``rnk_n``.
 
 ::
 
@@ -50,16 +55,18 @@ dimension .
         pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
         int sign, unsigned pfft_flags);
 
-Therefore, , , , , and become arrays of length .
+Therefore, ``n``, ``local_ni``, ``local_i_start``, ``local_no``, and
+``local_o_start`` become arrays of length ``rnk_n``.
 
 Advanced Interface
 ------------------
 
-The advanced interface introduces the arrays and of length that give the
-pruned FFT input and output size. Furthermore, the arrays and of length
-( being the dimension of the process mesh) serve to adjust the block
-size of the input and output block decomposition. The additional
-parameter gives the number of transforms that will be computed
+The advanced interface introduces the arrays ``ni`` and ``no`` of length
+``rnk_n`` that give the pruned FFT input and output size. Furthermore,
+the arrays ``iblock`` and ``oblock`` of length ``rnk_pm`` (``rnk_pm``
+being the dimension of the process mesh) serve to adjust the block size
+of the input and output block decomposition. The additional parameter
+``howmany`` gives the number of transforms that will be computed
 simultaneously.
 
 ::
@@ -87,8 +94,8 @@ simultaneously.
 Preliminary: Skip Serial Transformations
 ----------------------------------------
 
-The interface extends the interface by adding the possibility to skip
-some of the serial FFTs.
+The ``_skipped`` interface extends the ``_many`` interface by adding the
+possibility to skip some of the serial FFTs.
 
 ::
 
@@ -100,13 +107,15 @@ some of the serial FFTs.
         pfft_complex *in, pfft_complex *out, MPI_Comm comm_cart,
         int sign, unsigned pfft_flags);
 
-Hereby, is an array of length ( being the mesh dimension of the
-communicator ). For set if the -th serial transformation should be
-computed, otherwise set . Note that the local transpositions are always
-performed, since they are a prerequisite for the global communication to
-work. At the moment it is only possible to skip the whole serial
-transform along the last dimensions. However, this behaviour can be
-realized by a call of a -dimensional PFFT with
+Hereby, ``skip_trafos`` is an ``int`` array of length ``rnk_pm``\ 1+
+(``rnk_pm`` being the mesh dimension of the communicator ``comm_cart``).
+For ``t=0,...,rnk_pm`` set ``skip_trafos[t]=1`` if the ``t``-th serial
+transformation should be computed, otherwise set ``skip_trafos[t]=0``.
+Note that the local transpositions are always performed, since they are
+a prerequisite for the global communication to work. At the moment it is
+only possible to skip the whole serial transform along the last
+``rnk_n-rnk_pm-1`` dimensions. However, this behaviour can be realized
+by a call of a ``(rnk_pm``\ 1)+-dimensional PFFT with
 
 ::
 
@@ -114,4 +123,4 @@ realized by a call of a -dimensional PFFT with
       howmany *= n[t];
 
 and manual computation of the desired serial transforms along the last
-dimensions.
+``rnk_n-rnk_pm-1`` dimensions.

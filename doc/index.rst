@@ -11,20 +11,20 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-  intro
-  tutorial
-  install
-  features
-  interface
-  reference
-  develop
+   intro
+   tutorial
+   install
+   features
+   interface
+   reference
+   develop
 
 
 
 Indices and tables
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+* ::ref:`genindex`
+* ::ref:`modindex`
+* ::ref:`search`
 

@@ -1,3 +1,7 @@
+[2]ifpackageloaded#1#2 [2]ifpackageloaded#1#2 [3]ifpackageloaded#1#2#3
+
+#1
+
 Introduction
 ============
 
@@ -24,8 +28,8 @@ and the underlying algorithms of the PFFT library.
 The interface of PFFT is as close as possible to the FFTW-MPI interface.
 In fact, we consider every difference between PFFT and FFTW that is not
 explicitly mentioned within this manual as a bug that should be reported
-to . Therefore, porting code that uses FFTW-MPI to PFFT is almost
-trivial, e.g. see Section [sec:porting].
+to https://github.com/mpip/pfft.git. Therefore, porting code that uses
+FFTW-MPI to PFFT is almost trivial, e.g. see Section [sec:porting].
 
 Most features of PFFT are inherited from FFTW or similarily implemented.
 These include the following:
@@ -131,7 +135,8 @@ transposition routines.
 
 PFFT does not support GPU parallelization.
 
-You are welcome to propose new PFFT features at .
+You are welcome to propose new PFFT features at
+https://github.com/mpip/pfft.git.
 
 Alternative parallel FFT implementations
 ----------------------------------------
@@ -150,4 +155,4 @@ Parallel nonequispaced FFT
 If your are interested in a parallel implementation of nonequispaced
 fast Fourier transforms (NFFT) for distributed memory architectures, you
 should have a look at our PNFFT software library  that is also available
-at .
+at https://github.com/mpip/pnfft.git.

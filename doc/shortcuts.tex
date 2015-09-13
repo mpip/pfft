@@ -183,7 +183,8 @@
   %       belowskip= -2ex}
   % 
 %   \newcommand{\code}[1]{\linebreak[2]{\ttfamily #1}}
-  \newcommand{\code}[2][\empty]{\ifthenelse{\equal{#1}{\empty}}{\lstinline!#2!}{\lstinline[#1]!#2!}}
+   \newcommand{\code}[1]{:code:`#1`}
+%  \newcommand{\code}[2][\empty]{\ifthenelse{\equal{#1}{\empty}}{\lstinline!#2!}{\lstinline[#1]!#2!}}
 }
 
 %% own enviroment for case differentiation

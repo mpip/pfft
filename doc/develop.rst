@@ -1,3 +1,7 @@
+[2]ifpackageloaded#1#2 [2]ifpackageloaded#1#2 [3]ifpackageloaded#1#2#3
+
+#1
+
 Developers Guide
 ================
 
@@ -23,16 +27,18 @@ manual:
 ToDo
 ====
 
--  is defined as
+-  ``PFFT_FORWARD`` is defined as ``FFTW_FORWARD``
 
--  is defined as :math:`-1`
+-  ``FFTW_FORWARD`` is defined as :math:`-1`
 
--  PFFT allows to chose between and , which is not implemented by FFTW.
+-  PFFT allows to chose between ``FFTW_FORWARD`` and ``FFTW_BACKWARD``,
+   which is not implemented by FFTW.
 
--  Matlab uses the same sign convention, i.e., :math:`-1` for and
-   :math:`+1` for
+-  Matlab uses the same sign convention, i.e., :math:`-1` for ``fft``
+   and :math:`+1` for ``ifftn``
 
 Measuring parallel run times
 ----------------------------
 
-Use in front of every call to function to avoid unbalanced run times.
+Use ``MPI_Barrier`` in front of every call to ``pfft_`` function to
+avoid unbalanced run times.
