@@ -528,18 +528,16 @@ Pruned FFT
 
 For pruned r2r- and c2c-FFT are defined as
 
-.. math:: g_l = \sum_{k=0}^{n_i-1} \hat g_k {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}}, \quad l=0,\dots,n_o-1,
+.. math:: g_l = \sum_{k=0}^{n_i-1} \hat g_k {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}}, \quad l=0,\dots,n_o-1,
 
 where :math:`n_i\le n` and :math:`n_o\le n`.
 
 Shifted Index Sets
 ~~~~~~~~~~~~~~~~~~
 
-For :math:`N\in 2{\ensuremath{\mathbb{N}}}` we define the FFT with
-shifted inputs
+For :math:`N\in 2{{\mathbb{N}}}` we define the FFT with shifted inputs
 
-For :math:`K,L,N\in 2{\ensuremath{\mathbb{N}}}`, :math:`L<N`,
-:math:`L<N` we define
+For :math:`K,L,N\in 2{{\mathbb{N}}}`, :math:`L<N`, :math:`L<N` we define
 
 Precisions
 ----------

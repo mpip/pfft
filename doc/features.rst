@@ -8,8 +8,8 @@ Advanced Features
 How to Deal with FFT Index Shifts in Parallel
 ---------------------------------------------
 
-Let :math:`n\in2{\ensuremath{\mathbb{N}}}`. A common problem is that the
-index of the FFT input and/or output array runs between
+Let :math:`n\in2{{\mathbb{N}}}`. A common problem is that the index of
+the FFT input and/or output array runs between
 :math:`-\nicefrac n2,\dots,\nicefrac n2-1`, but the FFT library requires
 them to run between :math:`0,\dots,n-1`. With serial program execution
 one can easily remap the input data :math:`\hat g_k` in a way that is
@@ -44,10 +44,10 @@ shift the input (``PFFT_SHIFTED_IN``) and/or to shift the output
 
 Here, we are interested in the computation of
 
-.. math:: g_l = \sum_{k=-\nicefrac{n_i}{2}}^{\nicefrac{n_i}{2}-1} \hat g_k {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}}, \quad l=-\nicefrac{n_o}{2},\dots,\nicefrac{n_o}{2}-1
+.. math:: g_l = \sum_{k=-\nicefrac{n_i}{2}}^{\nicefrac{n_i}{2}-1} \hat g_k {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}}, \quad l=-\nicefrac{n_o}{2},\dots,\nicefrac{n_o}{2}-1
 
-with :math:`n, n_i, n_o \in 2{\ensuremath{\mathbb{N}}}` and
-:math:`n>n_i`, :math:`n>n_o`.
+with :math:`n, n_i, n_o \in 2{{\mathbb{N}}}` and :math:`n>n_i`,
+:math:`n>n_o`.
 
 With an index shift of :math:`\nicefrac n2` both in :math:`k` and
 :math:`l` this equivalent to the computation of
@@ -57,21 +57,21 @@ With an index shift of :math:`\nicefrac n2` both in :math:`k` and
    \begin{aligned}
      g_{(l-\nicefrac{n}{2})}
      &= \sum_{k=\nicefrac{n}{2}-\nicefrac{n_i}{2}}^{\nicefrac{n}{2}+\nicefrac{n_i}{2}-1}
-        \hat g_{(k-\nicefrac{n}{2})} {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} (k-\nicefrac n2)(l-\nicefrac n2)/n}}} \\
-     &= {{\ensuremath{\mathrm{e}}}}^{+\pi{\ensuremath{\text{\scriptsize{i}}}}l} 
+        \hat g_{(k-\nicefrac{n}{2})} {{\mathrm{e}^{-2\pi{{{\text{i}}}} (k-\nicefrac n2)(l-\nicefrac n2)/n}}} \\
+     &= {{{\mathrm{e}}}}^{+\pi{{\text{i}}}l} 
           \sum_{k=\nicefrac{n}{2}-\nicefrac{n_i}{2}}^{\nicefrac{n}{2}+\nicefrac{n_i}{2}-1}
-          \left(\hat g_{(k-\nicefrac{n}{2})}{{\ensuremath{\mathrm{e}}}}^{+\pi{\ensuremath{\text{\scriptsize{i}}}}(k-\nicefrac n2)}\right) {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}} \\
-     &= {{\ensuremath{\mathrm{e}}}}^{+\pi{\ensuremath{\text{\scriptsize{i}}}}(l-\nicefrac n2)} 
+          \left(\hat g_{(k-\nicefrac{n}{2})}{{{\mathrm{e}}}}^{+\pi{{\text{i}}}(k-\nicefrac n2)}\right) {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}} \\
+     &= {{{\mathrm{e}}}}^{+\pi{{\text{i}}}(l-\nicefrac n2)} 
         \underbrace{
           \sum_{k=\nicefrac{n}{2}-\nicefrac{n_i}{2}}^{\nicefrac{n}{2}+\nicefrac{n_i}{2}-1}
-          \underbrace{\left(\hat g_{(k-\nicefrac{n}{2})}{{\ensuremath{\mathrm{e}}}}^{+\pi{\ensuremath{\text{\scriptsize{i}}}}k}\right)}_{\hat f_k} {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}}
+          \underbrace{\left(\hat g_{(k-\nicefrac{n}{2})}{{{\mathrm{e}}}}^{+\pi{{\text{i}}}k}\right)}_{\hat f_k} {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}}
         }_{f_l}\end{aligned}
 
 for
 :math:` l=\nicefrac n2-\nicefrac{n_o}{2},\dots,\nicefrac n2 +\nicefrac{n_o}{2}-1`.
 Therefore, we get the following algorithm
 
-.. math:: f_l = \sum_{k=0}^n \hat g_k {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}}, \quad l=-\nicefrac{n_o}{2},\dots,\nicefrac{n_o}{2}-1
+.. math:: f_l = \sum_{k=0}^n \hat g_k {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}}, \quad l=-\nicefrac{n_o}{2},\dots,\nicefrac{n_o}{2}-1
 
 The special case :math:`k_s=-\frac{n_i}{2}, l_s=-\frac{n_o}{2}`
 corresponds to the shifts the arrays ()
@@ -80,7 +80,7 @@ corresponds to the shifts the arrays ()
 :math:`k=-\nicefrac{n_i}{2},\dots,\nicefrac{n_i}{2}-1` compute
 :math:`\hat f_{(k+\nicefrac{n}{2})} = (-1)^{(k+\nicefrac{n}{2})} \hat g_{k}`.
 For :math:`l=0,\dots,n-1` compute
-:math:`f_l = \sum_{k=0}^{n} \hat f_k {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}}`
+:math:`f_l = \sum_{k=0}^{n} \hat f_k {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}}`
 using PFFT. For :math:`l=-\nicefrac{n_o}{2},\dots,\nicefrac{n_o}{2}-1`
 compute :math:`g_l = (-1)^l f_{(l+n/2)} `.
 
@@ -94,12 +94,12 @@ Arbitrary shifts
 More general shifts must be done by the user.
 
 In a more general setting, we are interested in the computation of FFTs
-with shifted index sets, i.e., assume
-:math:`k_s,l_s\in{\ensuremath{\mathbb{Z}}}` and compute
+with shifted index sets, i.e., assume :math:`k_s,l_s\in{{\mathbb{Z}}}`
+and compute
 
 .. math::
 
-   g_l = \sum_{k=k_s}^{n_i+k_s-1} \hat g_k {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}},
+   g_l = \sum_{k=k_s}^{n_i+k_s-1} \hat g_k {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}},
      \quad l=l_s,\dots,n_o+l_s-1\,.
 
 Because of the periodicity of the FFT this can be easily performed by
@@ -110,7 +110,7 @@ Alg. [alg:fftshift:sub:`t`\ ranslation].
 [1] =1.1ex For :math:`k=0,\dots,n_i-1` assign
 :math:`\hat f_k = \hat g_{(k+k_s\bmod n_i)}`. For
 :math:`l=0,\dots,n_o-1` compute
-:math:`f_l = \sum_{k=0}^{n_i} \hat f_k {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}}`
+:math:`f_l = \sum_{k=0}^{n_i} \hat f_k {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}}`
 using PFFT. For :math:`l=0,\dots,n_o-1` assign
 :math:`g_l = f_{(l-l_s\bmod n_o)}`.
 
@@ -124,11 +124,11 @@ computation of
    \begin{aligned}
      g_{l+l_s}
      &=
-       \sum_{k=k_s}^{n_i+k_s-1} \hat g_k {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} k(l+l_s)/n}}}
+       \sum_{k=k_s}^{n_i+k_s-1} \hat g_k {{\mathrm{e}^{-2\pi{{{\text{i}}}} k(l+l_s)/n}}}
        =
-       \sum_{k=0}^{n_i-1} \hat g_{k+k_s} {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} (k+k_s)(l+l_s)/n}}} \\
+       \sum_{k=0}^{n_i-1} \hat g_{k+k_s} {{\mathrm{e}^{-2\pi{{{\text{i}}}} (k+k_s)(l+l_s)/n}}} \\
      &=
-       {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} k_sl/n}}} \sum_{k=0}^{n_i-1} \underbrace{\left(\hat g_{k+k_s}{\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} (k+k_s)l_s/n}}}\right)}_{=: \hat f_k} {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}}\end{aligned}
+       {{\mathrm{e}^{-2\pi{{{\text{i}}}} k_sl/n}}} \sum_{k=0}^{n_i-1} \underbrace{\left(\hat g_{k+k_s}{{\mathrm{e}^{-2\pi{{{\text{i}}}} (k+k_s)l_s/n}}}\right)}_{=: \hat f_k} {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}}\end{aligned}
 
 for all :math:`l=0,\dots,n_o-1`. The resulting
 Alg. [alg:fftshift:sub:`m`\ odulation] preserves the sequence of data at
@@ -137,33 +137,33 @@ the price of some extra computation.
 [alg:fftshift:sub:`m`\ odulation]
 
 [1] =1.1ex For :math:`k=0,\dots,n_i-1` compute
-:math:`\hat f_k = \hat g_{(k+k_s)} {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} (k+k_s)l_s/n}}}`.
+:math:`\hat f_k = \hat g_{(k+k_s)} {{\mathrm{e}^{-2\pi{{{\text{i}}}} (k+k_s)l_s/n}}}`.
 For :math:`l=0,\dots,n_o-1` compute
-:math:`f_l = \sum_{k=0}^{n_i} \hat f_k {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}}`
+:math:`f_l = \sum_{k=0}^{n_i} \hat f_k {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}}`
 using PFFT. For :math:`l=0,\dots,n_o-1` compute
-:math:`g_{(l+l_s)} = f_l {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} k_sl/n}}}`.
+:math:`g_{(l+l_s)} = f_l {{\mathrm{e}^{-2\pi{{{\text{i}}}} k_sl/n}}}`.
 
 The special case :math:`k_s=-\frac{n_i}{2}, l_s=-\frac{n_o}{2}`
 corresponds to the shifts the arrays ()
 
 [1] =1.1ex For :math:`k=0,\dots,n_i-1` compute
-:math:`\hat f_k = \hat g_{(k-\nicefrac{n_i}{2})} {{\ensuremath{\mathrm{e}}}}^{+\pi{\ensuremath{\text{\scriptsize{i}}}}(k-\nicefrac{n_i}{2})n_o/n}`.
+:math:`\hat f_k = \hat g_{(k-\nicefrac{n_i}{2})} {{{\mathrm{e}}}}^{+\pi{{\text{i}}}(k-\nicefrac{n_i}{2})n_o/n}`.
 For :math:`l=0,\dots,n_o-1` compute
-:math:`f_l = \sum_{k=0}^{n_i} \hat f_k {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}}`
+:math:`f_l = \sum_{k=0}^{n_i} \hat f_k {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}}`
 using PFFT. For :math:`l=0,\dots,n_o-1` compute
-:math:`g_{(l-\nicefrac{n_o}{2})} = f_l {{\ensuremath{\mathrm{e}}}}^{+\pi{\ensuremath{\text{\scriptsize{i}}}}n_i l/n}`.
+:math:`g_{(l-\nicefrac{n_o}{2})} = f_l {{{\mathrm{e}}}}^{+\pi{{\text{i}}}n_i l/n}`.
 
 Parallel pruned FFT
 -------------------
 
 Within PFFT we define a pruned FFT as
 
-.. math:: g_l = \sum_{k=0}^{n_i-1} \hat g_{k} {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}}, \quad l=0,\dots,n_o-1.
+.. math:: g_l = \sum_{k=0}^{n_i-1} \hat g_{k} {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}}, \quad l=0,\dots,n_o-1.
 
 Formally, this is equivallent to the following regular size :math:`n`
 FFT
 
-.. math:: f_l = \sum_{k=0}^{n-1} \hat f_{k} {\ensuremath{\mathrm{e}^{-2\pi{{\ensuremath{\text{\scriptsize{i}}}}} kl/n}}}, \quad l=0,\dots,n,
+.. math:: f_l = \sum_{k=0}^{n-1} \hat f_{k} {{\mathrm{e}^{-2\pi{{{\text{i}}}} kl/n}}}, \quad l=0,\dots,n,
 
 with
 

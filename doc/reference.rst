@@ -1377,12 +1377,11 @@ decribed in Section [sec:init-data-3d-r2r]. However, generating suitable
 inputs for a c2r transform requires more caution. In order to get real
 valued results of a DFT the complex input coefficients need to satisfy
 an radial Hermitian symmetry, i.e.,
-:math:`X[{\ensuremath{\boldsymbol{k}}}] = {X^*[-{\ensuremath{\boldsymbol{k}}}]}`.
-We use the following trick to generate the complex input values for c2r
-transforms. Assume any :math:`{\ensuremath{\boldsymbol{N}}}`-periodic
-complex valued function :math:`f`. It can be easily shown that the
-values
-:math:`X[{\ensuremath{\boldsymbol{k}}}] := \frac{1}{2}\left(f({\ensuremath{\boldsymbol{k}}})+f^*(-{\ensuremath{\boldsymbol{k}}})\right)`
+:math:`X[{{\boldsymbol{k}}}] = {X^*[-{{\boldsymbol{k}}}]}`. We use the
+following trick to generate the complex input values for c2r transforms.
+Assume any :math:`{{\boldsymbol{N}}}`-periodic complex valued function
+:math:`f`. It can be easily shown that the values
+:math:`X[{{\boldsymbol{k}}}] := \frac{1}{2}\left(f({{\boldsymbol{k}}})+f^*(-{{\boldsymbol{k}}})\right)`
 satisfy the radial Hermitian symmetry.
 
 To fill a complex array ``data`` with reproducible, complex values that
