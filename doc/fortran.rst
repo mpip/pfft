@@ -1,3 +1,4 @@
-\chapter{Fotran Interface}
+Fotran Interface
+================
 
 based on Fortran 90
