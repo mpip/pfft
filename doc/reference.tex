@@ -591,8 +591,8 @@ For ghost cell communication of the output array, substitute \code{local_n} and 
 \subsection{Using Ghost Cell Plans}
 We introduce a new datatype \code{pfft_gcplan} that stores all the necessary information for ghost cell communication.
 Using a ghost cell plan follows the typical workflow: At first, determine the parallel data distribution; cf. Section~\ref{sec:gc:local-size}.
-Next, create a ghost cell plan; cf. Section~\ref{sec:gc:plan-cdata} and Section~\ref{sec:gc:plan-rdata}. 
-Execute the ghost cell communication with one of the following two collective functions
+Next, create a ghost cell plan; cf. Section~\ref{sec:gc:plan-cdata} and Section~\ref{sec:gc:plan-rdata}.
+Then, execute the ghost cell communication with one of the following two collective functions
 \begin{lstlisting}
 void pfft_exchange(
     pfft_gcplan ths);
