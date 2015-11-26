@@ -69,6 +69,15 @@
       import
     end subroutine pfftl_cleanup
     
+    subroutine pfftl_plan_with_nthreads(nthreads) bind(C, name='pfftl_plan_with_nthreads')
+      import
+      integer(C_INT), value :: nthreads
+    end subroutine pfftl_plan_with_nthreads
+    
+    integer(C_INT) function pfftl_get_Nosthreads() bind(C, name='pfftl_get_nthreads')
+      import
+    end function pfftl_get_Nosthreads
+    
     type(C_PTR) function pfftl_malloc(Nos) bind(C, name='pfftl_malloc')
       import
       integer(C_SIZE_T), value :: Nos
@@ -179,6 +188,59 @@
       integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
       real(C_LONG_DOUBLE), dimension(*), intent(out) :: data
     end subroutine pfftl_init_input_real
+    
+    subroutine pfftl_clear_input_complex_3d(Nos,local_n,local_n_start,data) bind(C, name='pfftl_clear_input_complex_3d')
+      import
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: data
+    end subroutine pfftl_clear_input_complex_3d
+    
+    subroutine pfftl_clear_input_complex(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfftl_clear_input_complex')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: data
+    end subroutine pfftl_clear_input_complex
+    
+    subroutine pfftl_clear_input_complex_hermitian_3d(Nos,local_n,local_n_start,data) &
+               bind(C, name='pfftl_clear_input_complex_hermitian_3d')
+      import
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: data
+    end subroutine pfftl_clear_input_complex_hermitian_3d
+    
+    subroutine pfftl_clear_input_complex_hermitian(rnk_n,Nos,local_n,local_start,data) &
+               bind(C, name='pfftl_clear_input_complex_hermitian')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
+      complex(C_LONG_DOUBLE_COMPLEX), dimension(*), intent(out) :: data
+    end subroutine pfftl_clear_input_complex_hermitian
+    
+    subroutine pfftl_clear_input_real_3d(Nos,local_n,local_n_start,data) bind(C, name='pfftl_clear_input_real_3d')
+      import
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n_start
+      real(C_LONG_DOUBLE), dimension(*), intent(out) :: data
+    end subroutine pfftl_clear_input_real_3d
+    
+    subroutine pfftl_clear_input_real(rnk_n,Nos,local_n,local_start,data) bind(C, name='pfftl_clear_input_real')
+      import
+      integer(C_INT), value :: rnk_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: Nos
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_n
+      integer(C_INTPTR_T), dimension(*), intent(in) :: local_start
+      real(C_LONG_DOUBLE), dimension(*), intent(out) :: data
+    end subroutine pfftl_clear_input_real
     
     real(C_LONG_DOUBLE) function pfftl_check_output_complex_3d(Nos,local_n,local_n_start,data,comm) &
                                  bind(C, name='pfftl_check_output_complex_3d_f03')
