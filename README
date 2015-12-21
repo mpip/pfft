@@ -16,7 +16,7 @@ We highly recommend to install the latest release of FFTW since the MPI code got
 bugfixes in the last releases. Since some fixes are still pending until release FFTW-3.3.5.
 we offer some helpful scripts for installing FFTW-3.3.4 together with two patches
 (one bugfix and one performance improvement) at our sofware page
-  https://www-user.tu-chemnitz.de/~mpip/software.php#scripts
+  https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software.php#scripts
 
 The install of PFFT follows the typical steps
   ./bootstrap.sh
@@ -43,7 +43,7 @@ PFFT tarballs include a detailed user guide at
 If you have cloned the PFFT repository, the user manual is automatically built during 'make'.
 Of course this requires a working LaTeX enviroment.
 Alternatively, you can download a recent version of the user manual at
-  http://www.tu-chemnitz.de/~mpip/software.php.en
+  http://www.tu-chemnitz.de/~potts/workgroup/pippig/software.php.en
 
 Note that using PFFT is very similar to FFTW. The interface is as close to the fftw_mpi
 interface as possible. Therefore, it is a good start to read FFTW manual:
