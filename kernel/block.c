@@ -56,7 +56,7 @@ INT PX(local_block_offset)(INT global_array_size, INT global_block_size, int whi
   /* For a given globalBlockSize and arraySize, compute the localBlockSize
    * and the localBlockOffset on the given process. */
   INT blocks = PX(num_blocks)(global_array_size, global_block_size);
-  return (which_block >= blocks) ? 0 : which_block * global_block_size;
+  return (which_block >= blocks) ? global_array_size : which_block * global_block_size;
 }
 
 
