@@ -58,6 +58,9 @@ endif
 
 if DOUBLE
 check_PROGRAMS += \
+	pfft_crash
+
+check_PROGRAMS += \
 	man_fftw_3don1d
 
 # nodist_man_fftw_3don1d_SOURCES = man_fftw_3don1d.c
