@@ -43,7 +43,7 @@ lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@_la_LIBADD = \
 	kernel/libkernel.la \
 	util/libutil.la \
 	api/libapi.la \
-	gcell/libgcell.la \
+	gcell/libgcell.la
 
 lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@_la_LDFLAGS = -no-undefined -version-info @SHARED_VERSION_INFO@
 lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@_la_CFLAGS = $(OPENMP_CFLAGS) -I $(top_srcdir)/mpi -I $(top_srcdir)/api
