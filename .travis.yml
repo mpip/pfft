@@ -2,9 +2,6 @@ language: c
 compiler: gcc
 os: linux
 
-## Turn off sudo to run on container based infrastructure.
-sudo: false
-
 addons:
   apt:
     packages:
