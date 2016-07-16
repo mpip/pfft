@@ -21,6 +21,8 @@ int main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   pfft_init();
 
+  MPI_Comm_size(MPI_COMM_WORLD, np);
+
   /* Create two-dimensional process grid of size np[0] x np[1], if possible */
   if( pfft_create_procmesh(1, MPI_COMM_WORLD, np, &comm_cart_1d) ){
     pfft_fprintf(MPI_COMM_WORLD, stderr, "Error: This test file only works with %d processes.\n", np[0]);
