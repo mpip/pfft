@@ -5,22 +5,18 @@ os: linux
 ## Turn off sudo to run on container based infrastructure.
 sudo: false
 
-env:
-  - MPI=openmpi
-
 addons:
   apt:
     packages:
-    - autoconf
-    - automake
-    - libtool
-    - libfftw3-dev
-    - libcunit1-dev
-    - libopenmpi
-  
-# before_install:
-#   - sudo apt-get update -qq
-#   - sh ./conf/travis-install-mpi.sh $MPI
+    - gfortran
+    - openmpi-bin
+    - openmpi-common
+    - libopenmpi-dev
+
+before_install:
+  # unset $CC compiler variable since it is known to interfere with the MPI compiler
+  # see https://docs.travis-ci.com/user/languages/c#MPI-projects
+  - test -n $CC && unset CC
 
 install:
   - sh ./conf/travis-install-fftw.sh
