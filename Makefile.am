@@ -54,6 +54,9 @@ include $(top_srcdir)/build-aux/fortran-rules.am
 pfft1@PREC_SUFFIX@@OPENMP_SUFFIX@.pc: pfft.pc
 	cp -f pfft.pc pfft1@PREC_SUFFIX@@OPENMP_SUFFIX@.pc
 
+# Install pkg-config file in correct location.
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = pfft.pc
 
 #################################################################
 # Documentation
