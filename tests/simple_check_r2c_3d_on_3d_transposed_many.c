@@ -16,7 +16,7 @@ int main(int argc, char **argv)
   pfft_complex *out;
   pfft_plan plan_forw=NULL, plan_back=NULL;
   MPI_Comm comm_cart_3d;
-  int rank, nproc;
+  int rank;
 
   howmany = 2;
 
