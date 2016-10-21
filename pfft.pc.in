@@ -1,11 +1,13 @@
 prefix=@prefix@
-exec_prefix=${prefix}
-libdir=${exec_prefix}/lib
-includedir=${prefix}/include
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
 
 Name: PFFT
 Description: Parallel fast Fourier transform library
+URL: github.com/mpip/pfft
 Version: @VERSION@
-Requires: fftw3.3alpha1
-Libs: -L${libdir} -lpfft
+Requires.private: fftw3 >= 3.3.3
+Libs: -L${libdir} -l@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@
+Libs.private: -lm
 Cflags: -I${includedir}
