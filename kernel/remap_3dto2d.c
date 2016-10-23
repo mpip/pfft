@@ -116,7 +116,9 @@ static void free_three_comms(MPI_Comm *comms)
 {
   const int num_comms = 3;
   for(int t=0; t<num_comms; ++t){
-    MPI_Comm_free(&comms[t]);
+    if(MPI_COMM_NULL != comms[t]){
+      MPI_Comm_free(&comms[t]);
+    }
   }
 }
 
@@ -152,11 +154,6 @@ int PX(local_size_remap_3dto2d_transposed)(
   init_blks_comms_local_size(pn, comm_cart_3d,
       iblk, mblk, oblk, icomms, mcomms, ocomms,
       local_ni, local_nm, local_no);
-
-  /* free communicators */
-  free_three_comms(icomms);
-  free_three_comms(mcomms);
-  free_three_comms(ocomms);
 
   /* n0/p0 x n1/p1 x n2/(q0*q1) -> n2/(q0*q1) x n0/p0 x n1/p1 */
   nb = local_ni[0] * local_ni[1];
@@ -211,6 +208,7 @@ int PX(local_size_remap_3dto2d_transposed)(
 
   /* free communicators */
   free_three_comms(icomms);
+  free_three_comms(mcomms);
   free_three_comms(ocomms);
 
   return mem;
@@ -332,11 +330,9 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
   }
 
   /* free communicators */
-  for(int t=0; t<3; t++){
-    MPI_Comm_free(&icomms[t]);
-    MPI_Comm_free(&mcomms[t]);
-    MPI_Comm_free(&ocomms[t]);
-  }
+  free_three_comms(icomms);
+  free_three_comms(mcomms);
+  free_three_comms(ocomms);
 
   return ths;
 } 
