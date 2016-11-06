@@ -1,0 +1,12 @@
+
+22.03.2016: built with patched FFTW-3.3.4
+mpirun -n 12 xterm -hold -e valgrind --leak-check=full ./tests/pfft_crash
+
+Run into segfault with less processes and hold valgrind at the time of memory corruption:
+mpirun -np 3 xterm -hold -e valgrind --leak-check=full tests/pfft_crash
+mpirun -np 3 xterm -hold -e valgrind --vgdb=yes --vgdb-error=0 tests/pfft_crash
+
+
+start new terminal
+gdb ./tests/pfft_crash 
+target remote | vgdb --pid=7796
