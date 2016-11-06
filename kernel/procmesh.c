@@ -38,12 +38,7 @@ int PX(create_procmesh)(
     MPI_Comm *comm_cart
     )
 {
-  int *periods, reorder=1, num_procs=1, ret = 0, size; 
-  int *dims;
-
-  dims = (int*) malloc(sizeof(int) * (size_t) rnk);
-  for(int t=0; t<rnk; t++)
-    dims[t] = np[t];
+  int num_procs=1, size; 
 
   MPI_Comm_size(comm, &size);
   for(int t=0; t<rnk; t++)
@@ -52,13 +47,16 @@ int PX(create_procmesh)(
   if(num_procs != size)
     return 1;
 
-  periods = (int *) malloc(sizeof(int) * (size_t) rnk);
-  *comm_cart = MPI_COMM_NULL;
-
+  int *periods = (int *) malloc(sizeof(int) * (size_t) rnk);
   for(int t=0; t<rnk; t++)
     periods[t] = 1;
 
-  ret = MPI_Cart_create(comm, rnk, dims, periods, reorder, comm_cart);
+  int *dims = (int*) malloc(sizeof(int) * (size_t) rnk);
+  for(int t=0; t<rnk; t++)
+    dims[t] = np[t];
+
+  const int reorder=1;
+  int ret = MPI_Cart_create(comm, rnk, dims, periods, reorder, comm_cart);
 
   free(periods); free(dims);
 
@@ -70,11 +68,9 @@ int PX(create_procmesh_1d)(
     MPI_Comm *comm_cart_1d
     )
 {
-  int np[1], rnk=1;
+  const int rnk=1;
 
-  np[0] = np0;
-
-  return PX(create_procmesh)(rnk, comm, np,
+  return PX(create_procmesh)(rnk, comm, &np0,
       comm_cart_1d);
 }
 
@@ -83,7 +79,8 @@ int PX(create_procmesh_2d)(
     MPI_Comm *comm_cart_2d
     )
 {
-  int np[2], rnk=2;
+  const int rnk=2;
+  int np[2];
 
   np[0] = np0; np[1] = np1;
 
