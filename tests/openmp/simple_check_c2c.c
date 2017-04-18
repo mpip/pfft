@@ -14,14 +14,11 @@ int main(int argc, char **argv)
   pfft_plan plan_forw=NULL, plan_back=NULL;
   MPI_Comm comm_cart_2d;
 
-  /* Init OpenMP */
-  pfft_plan_with_nthreads(1);
-
   /* Set size of FFT and process mesh */
-  n[0] = 29; n[1] = 27; n[2] = 31;
+  n[0] = 128; n[1] = 128; n[2] = 128;
   np[0] = 1; np[1] = 1;
   
-  /* Initialize MPI and PFFT */
+  /* Initialize MPI and PFFT (including OpenMP) */
   MPI_Init(&argc, &argv);
   pfft_init();
 

@@ -16,15 +16,11 @@ int main(int argc, char **argv)
   MPI_Comm comm_cart_2d;
  
 
-  /* initialize openMP */
-
-  pfft_plan_with_nthreads(1);
-   
   /* Set size of FFT and process mesh */
   n[0] = 29; n[1] = 27; n[2] = 31;
   np[0] = 2; np[1] = 2;
   
-  /* Initialize MPI and PFFT */
+  /* Initialize MPI and PFFT (including OpenMP) */
   MPI_Init(&argc, &argv);
   pfft_init();
 
