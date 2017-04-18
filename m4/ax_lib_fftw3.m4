@@ -175,6 +175,26 @@ AC_DEFUN([_AX_LIB_FFTW3_CHECK],[
 
   fftw3_PREFIX="$ax_with_fftw3_prefix"
 
+  ax_lib_fftw3_threads=yes
+  case $ac_configure_args in
+    *--enable-threads*)
+      fftw3_threads_LIBS="-l${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_threads"
+      ;;
+    *)
+      ax_lib_fftw3_threads=no
+      ;;
+  esac
+
+  ax_lib_fftw3_openmp=yes
+  case $ac_configure_args in
+    *--enable-openmp*)
+      fftw3_threads_LIBS="-l${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_omp"
+      ;;
+    *)
+      ax_lib_fftw3_openmp=no
+      ;;
+  esac
+
   if test "x$ax_with_fftw3" = xbuilt ; then
 #    AC_MSG_NOTICE([fftw is built!])
     if test -z "$ax_with_fftw3_inc_dir" || test -z "$ax_with_fftw3_lib_dir"; then
@@ -182,26 +202,6 @@ AC_DEFUN([_AX_LIB_FFTW3_CHECK],[
     fi
     ax_lib_fftw3=yes
     fftw3_LIBS="-l${ax_with_fftw3_prefix}fftw3${ax_type_suffix}"
-
-    ax_lib_fftw3_threads=yes
-    case $ac_configure_args in
-      *--enable-threads*)
-        fftw3_threads_LIBS="-l${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_threads"
-        ;;
-      *)
-        ax_lib_fftw3_threads=no
-        ;;
-    esac
-
-    ax_lib_fftw3_openmp=yes
-    case $ac_configure_args in
-      *--enable-openmp*)
-        fftw3_threads_LIBS="-l${ax_with_fftw3_prefix}fftw3${ax_type_suffix}_omp"
-        ;;
-      *)
-        ax_lib_fftw3_openmp=no
-        ;;
-    esac
     
     ax_lib_fftw3_mpi=yes
     case $ac_configure_args in
@@ -214,7 +214,7 @@ AC_DEFUN([_AX_LIB_FFTW3_CHECK],[
     esac
   else
     # Check if header is present and usable.
-    AC_CHECK_HEADER([fftw3.h], [ax_lib_fftw3=yes; ax_lib_fftw3_threads=yes; ax_lib_fftw3_openmp=yes])
+    AC_CHECK_HEADER([fftw3.h], [ax_lib_fftw3=yes])
     AC_CHECK_HEADER([fftw3-mpi.h], [ax_lib_fftw3_mpi=yes])
 
     if test "x$ax_lib_fftw3" = xyes ; then
