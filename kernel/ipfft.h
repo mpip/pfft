@@ -346,8 +346,8 @@ typedef outrafo_plan_s *outrafo_plan;
 typedef struct{
   gtransp_plan global_remap[2];
   sertrafo_plan local_transp[2];
-  int q0;
-  int q1;
+  int q[2];
+  int rnk_n;
 } remap_3dto2d_plan_s;
 typedef remap_3dto2d_plan_s *remap_3dto2d_plan;
 
