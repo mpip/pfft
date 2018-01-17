@@ -23,8 +23,18 @@
 #include "ipfft.h"
 #include "util.h"
 
+/*
+ * useful table of i, o, and m.
+ *
+ * i : n0 / p0 x n1 / p1 x n2 / p2
+ * o : n0 / (p0 * q0) x n1 / (p1 * q1) x n2 / 1
+ * m : n0 / p0 x n1 / (p1 * q1) x n2 / q0
+ *
+ * */
+
 /* Global infos about procmesh are only enabled in debug mode
  * Otherwise we do not use any global variables. */
+
 #if PFFT_DEBUG_GVARS
   extern MPI_Comm *gdbg_comm_cart;
   extern int gdbg_rnk_pm;
@@ -274,6 +284,15 @@ remap_nd_plan PX(plan_remap_3dto2d_transposed)(
   }
 
   /* n2/(q0*q1) x n0/p0 x n1/p1 -> n2/q0 x n0/p0 x n1/(p1*q1) */
+  /* for each q0, we are looking at a transpose of
+   * local_ni[1] x (local_nm[2] x local_ni[0]),
+   * The intial partition is along (local_nm[2] x local_ni[0]),
+   * by size iblk[2] x local_ni[0].
+   * The final partition is along local_ni[1], by size
+   * mblk[1].
+   *
+   * The math works out by referring to the table at the beginning of the code.
+   * */
   N0 = local_ni[1]; h0 = 1;
   N1 = local_nm[2]; h1 = local_ni[0];
   blk0 = mblk[1];
