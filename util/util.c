@@ -248,14 +248,3 @@ unsigned* PX(malloc_unsigned)(
   return (unsigned*) malloc(sizeof(unsigned) * size);
 }
 
-int PX(needs_3dto2d_remap)(
-    int rnk_n, MPI_Comm comm_cart
-    )
-{
-  int rnk_pm;
-
-  MPI_Cartdim_get(comm_cart, &rnk_pm);
-
-  return (rnk_n == 3) && (rnk_pm == 3);
-}
-

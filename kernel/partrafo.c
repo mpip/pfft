@@ -151,26 +151,26 @@ void PX(local_block_partrafo)(
       &lni_to, &lis_to, &lno_to, &los_to,
       &lni_ti, &lis_ti, &lno_ti, &los_ti);
 
-  /* overwrite input blocks if remap_3dto2d is used */
+  /* overwrite input blocks if remap_nd is used */
   if( ~transp_flag & PFFT_TRANSPOSED_IN ){
     PX(local_block_partrafo_transposed)(
         rnk_n, pni_to, pno_to, iblk, mblk, 
         rnk_pm, coords_pm, PFFT_TRANSPOSED_OUT, trafo_flags_to[rnk_pm],
         lni_to, lis_to, lno_to, los_to);
 
-    PX(local_block_remap_3dto2d_transposed)(
+    PX(local_block_remap_nd_transposed)(
         rnk_n, pni_to, comm_cart, pid, PFFT_TRANSPOSED_OUT, trafo_flags_to[rnk_pm],
         local_ni, local_i_start, dummy_ln, dummy_ls);
   }
 
-  /* overwrite input blocks if remap_3dto2d is used */
+  /* overwrite input blocks if remap_nd is used */
   if( ~transp_flag & PFFT_TRANSPOSED_OUT ){
     PX(local_block_partrafo_transposed)(
         rnk_n, pni_ti, pno_ti, mblk, oblk, 
         rnk_pm, coords_pm, PFFT_TRANSPOSED_IN, trafo_flags_ti[rnk_pm],
         lni_ti, lis_ti, lno_ti, los_ti);
 
-    PX(local_block_remap_3dto2d_transposed)(
+    PX(local_block_remap_nd_transposed)(
         rnk_n, pno_ti, comm_cart, pid, PFFT_TRANSPOSED_IN, trafo_flags_ti[rnk_pm],
         dummy_ln, dummy_ls, local_no, local_o_start);
   }
@@ -264,7 +264,7 @@ INT PX(local_size_partrafo)(
         lni_to, lis_to, lno_to, los_to);
     mem = MAX(mem, mem_tmp);
 
-    mem_tmp = PX(local_size_remap_3dto2d_transposed)(
+    mem_tmp = PX(local_size_remap_nd_transposed)(
         rnk_n, pni_to, howmany, comm_cart, PFFT_TRANSPOSED_OUT, trafo_flags_to[rnk_pm],
         lni_to, lis_to, dummy_ln, dummy_ls);
     mem = MAX(mem, mem_tmp);
@@ -278,7 +278,7 @@ INT PX(local_size_partrafo)(
         lni_ti, lis_ti, lno_ti, los_ti);
     mem = MAX(mem, mem_tmp);
 
-    mem_tmp = PX(local_size_remap_3dto2d_transposed)(
+    mem_tmp = PX(local_size_remap_nd_transposed)(
         rnk_n, pno_ti, howmany, comm_cart, PFFT_TRANSPOSED_IN, trafo_flags_ti[rnk_pm],
         dummy_ln, dummy_ls, lno_ti, los_ti);
     mem = MAX(mem, mem_tmp);
@@ -458,17 +458,17 @@ PX(plan) PX(plan_partrafo)(
 
   /* plan with transposed output */
   if(transp_flag & PFFT_TRANSPOSED_IN){
-    ths->remap_3dto2d[0] = NULL;
+    ths->remap_nd[0] = NULL;
     set_plans_to_null(rnk_pm, PFFT_TRANSPOSED_OUT,
         ths->serial_trafo, ths->global_remap);
   } else {
 
-    ths->remap_3dto2d[0] = PX(plan_remap_3dto2d_transposed)(
+    ths->remap_nd[0] = PX(plan_remap_nd_transposed)(
         rnk_n, pni_to, howmany, comm_cart, in, out,
         PFFT_TRANSPOSED_OUT, trafo_flags_to[rnk_pm], opt_flag, io_flag, fftw_flags);
 
-    /* If remap_3dto2d exists, go on with in-place transforms in order to preserve input. */
-    if( (ths->remap_3dto2d[0] != NULL) && (~io_flag & PFFT_DESTROY_INPUT) )
+    /* If remap_nd exists, go on with in-place transforms in order to preserve input. */
+    if( (ths->remap_nd[0] != NULL) && (~io_flag & PFFT_DESTROY_INPUT) )
       in = out;
 
     PX(plan_partrafo_transposed)(
@@ -486,7 +486,7 @@ PX(plan) PX(plan_partrafo)(
   if(transp_flag & PFFT_TRANSPOSED_OUT){
     set_plans_to_null(rnk_pm, PFFT_TRANSPOSED_IN,
         ths->serial_trafo, ths->global_remap);
-    ths->remap_3dto2d[1] = NULL;
+    ths->remap_nd[1] = NULL;
   } else {
     PX(plan_partrafo_transposed)(
         rnk_n, pn_ti, pni_ti, pno_ti, howmany, mblk, oblk,
@@ -498,7 +498,7 @@ PX(plan) PX(plan_partrafo)(
     if( ~io_flag & PFFT_DESTROY_INPUT )
       in = out;
 
-    ths->remap_3dto2d[1] = PX(plan_remap_3dto2d_transposed)(
+    ths->remap_nd[1] = PX(plan_remap_nd_transposed)(
         rnk_n, pno_ti, howmany, comm_cart, out, in,
         PFFT_TRANSPOSED_IN, trafo_flags_ti[rnk_pm], opt_flag, io_flag, fftw_flags);
 
@@ -535,18 +535,16 @@ static void malloc_and_split_cart_procmesh(
 {
   MPI_Cartdim_get(comm_cart, rnk_pm);
 
-  if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) )
-    *rnk_pm = 2;
+  if( PX(needs_remap_nd)(rnk_n, comm_cart) )
+    *rnk_pm = rnk_n - 1;
 
   *comms_pm = (MPI_Comm*) malloc(sizeof(MPI_Comm) * (size_t) *rnk_pm);
 
-  if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) ){
-    PX(split_cart_procmesh_3dto2d_p0q0)(comm_cart,
-        *comms_pm + 0);
-    PX(split_cart_procmesh_3dto2d_p1q1)(comm_cart,
-        *comms_pm + 1);
-  } else 
+  if( PX(needs_remap_nd)(rnk_n, comm_cart) ) {
+    PX(remap_nd_split_cart_procmesh)(rnk_n, comm_cart, *comms_pm);
+  } else {
     PX(split_cart_procmesh)(comm_cart, *comms_pm);
+  }
 }
 
 static void malloc_and_compute_cart_np_and_coords(
@@ -557,18 +555,14 @@ static void malloc_and_compute_cart_np_and_coords(
 {
   MPI_Cartdim_get(comm_cart, rnk_pm);
 
-  if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) )
-    *rnk_pm = 2;
+  if( PX(needs_remap_nd)(rnk_n, comm_cart) )
+    *rnk_pm = rnk_n - 1;
 
   *np_pm     = PX(malloc_int)(*rnk_pm);
   *coords_pm = PX(malloc_int)(*rnk_pm);
 
-  if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) ){
-    int p0, p1, q0, q1, coords_3d[3];
-    PX(get_procmesh_dims_2d)(comm_cart, &p0, &p1, &q0, &q1);
-    MPI_Cart_coords(comm_cart, pid, 3, coords_3d);
-    PX(coords_3dto2d)(q0, q1, coords_3d, *coords_pm);
-    (*np_pm)[0] = p0*q0; (*np_pm)[1] = p1*q1;
+  if( PX(needs_remap_nd)(rnk_n, comm_cart) ){
+    PX(remap_nd_get_coords)(rnk_n, pid, comm_cart, *coords_pm, *np_pm);
   } else {
     int *periods = PX(malloc_int)(*rnk_pm);
     MPI_Cart_get(comm_cart, *rnk_pm, *np_pm, periods, *coords_pm);
@@ -576,8 +570,6 @@ static void malloc_and_compute_cart_np_and_coords(
     free(periods);
   }
 }
-
-
 
 
 
@@ -930,7 +922,7 @@ void PX(rmplan)(
   free(ths->skip_trafos);
 
   for(int t=0; t<2; t++)
-    PX(remap_3dto2d_rmplan)(ths->remap_3dto2d[t]);
+    PX(remap_nd_rmplan)(ths->remap_nd[t]);
 
   PX(destroy_timer)(ths->timer);
 

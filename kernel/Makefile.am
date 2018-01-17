@@ -21,6 +21,7 @@ libkernel_la_SOURCES = \
 	partrafo.c \
 	sertrafo.c \
 	procmesh.c \
+	remap.c \
 	remap_3dto2d.c \
 	timer.c \
 	transpose.c

@@ -213,7 +213,7 @@ typedef struct PX(timer_s) {
   double whole;
   double *trafo;
   double *remap;
-  double remap_3dto2d[2];
+  double remap_nd[2];
   double itwiddle;
   double otwiddle;
 } PX(timer_s);
@@ -348,8 +348,8 @@ typedef struct{
   sertrafo_plan local_transp[2];
   int q0;
   int q1;
-} remap_3dto2d_plan_s;
-typedef remap_3dto2d_plan_s *remap_3dto2d_plan;
+} remap_nd_plan_s;
+typedef remap_nd_plan_s *remap_nd_plan;
 
 /* plan for parallel trafo */
 typedef struct PX(plan_s){
@@ -385,7 +385,7 @@ typedef struct PX(plan_s){
 
   gtransp_plan *global_remap;
   outrafo_plan *serial_trafo;
-  remap_3dto2d_plan remap_3dto2d[2];
+  remap_nd_plan remap_nd[2];
 
   /* save data pointers to input and output for for complex conjugation in the cases
    * PFFT_FORWARD & PFFTI_TRAFO_C2R and PFFT_BACKWARD & PFFTI_TRAFO_R2C              */
@@ -586,6 +586,82 @@ MPI_Comm PX(assure_cart_comm)(
 void PX(split_cart_procmesh)(
     MPI_Comm comm_cart,
     MPI_Comm *comms_1d);
+
+int PX(get_mpi_cart_coord_1d)(MPI_Comm comm_cart_1d, int *coord);
+int PX(get_mpi_cart_coords)(MPI_Comm comm_cart, int maxdims, int *coords);
+int PX(get_mpi_cart_dims)(MPI_Comm comm_cart, int maxdims, int *dims);
+
+
+/* remap.c */
+int PX(needs_remap_nd)(
+    int rnk_n, MPI_Comm comm_cart);
+
+void PX(local_block_remap_nd_transposed)(
+    int rnk_n, const INT *n, 
+    MPI_Comm comm_cart, int pid, 
+    unsigned transp_flag, unsigned trafo_flag,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start); 
+int PX(local_size_remap_nd_transposed)(
+    int rnk_n, const INT *n, INT howmany, 
+    MPI_Comm comm_cart, 
+    unsigned transp_flag, unsigned trafo_flag,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start);
+remap_nd_plan PX(plan_remap_nd_transposed)(
+    int rnk_n, const INT *n, INT howmany, 
+    MPI_Comm comm_cart, R *in, R *out, 
+    unsigned transp_flag, unsigned trafo_flag,
+    unsigned opt_flag, unsigned io_flag, unsigned fftw_flags);
+void PX(execute_remap_nd)(
+    remap_nd_plan ths, R *plannedin, R *plannedout, R *in, R *out);
+void PX(remap_nd_rmplan)(
+    remap_nd_plan ths);
+
+void PX(remap_nd_split_cart_procmesh)(
+    const INT rnk_n,
+    MPI_Comm comm_cart,
+    MPI_Comm * comms_pm);
+
+void PX(remap_nd_get_coords)(
+    const INT rnk_n,
+    const INT pid,
+    MPI_Comm comm_cart,
+    int *np_pm, int *coords_pm);
+
+void PX(remap_nd_calculate_blocks)(
+    const INT rnk_n,
+    const INT *n, MPI_Comm comm_cart,
+    INT *iblk
+    );
+
+/* remap_3dto2d.c */
+
+
+void PX(local_block_remap_3dto2d_transposed)(
+    int rnk_n, const INT *n, 
+    MPI_Comm comm_cart_3d, int pid, 
+    unsigned transp_flag, unsigned trafo_flag,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start); 
+int PX(local_size_remap_3dto2d_transposed)(
+    int rnk_n, const INT *n, INT howmany, 
+    MPI_Comm comm_cart_3d, 
+    unsigned transp_flag, unsigned trafo_flag,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start);
+
+remap_nd_plan PX(plan_remap_3dto2d_transposed)(
+    remap_nd_plan ths,
+    int rnk_n, const INT *n, INT howmany, 
+    MPI_Comm comm_cart_3d, R *in, R *out, 
+    unsigned transp_flag, unsigned trafo_flag,
+    unsigned opt_flag, unsigned io_flag, unsigned fftw_flags);
+
+void PX(default_block_size_3dto2d)(
+    const INT *n, int p0, int p1, int q0, int q1,
+    INT *iblk, INT *mblk, INT *oblk);
+
 void PX(coords_3dto2d)(
     int q0, int q1, const int *coords_3d,
     int *coords_2d);
@@ -604,46 +680,6 @@ void PX(split_cart_procmesh_for_3dto2d_remap_q0)(
 void PX(split_cart_procmesh_for_3dto2d_remap_q1)(
     MPI_Comm comm_cart_3d,
     MPI_Comm *comms_1d);
-int PX(get_mpi_cart_coord_1d)(MPI_Comm comm_cart_1d, int *coord);
-int PX(get_mpi_cart_coords)(MPI_Comm comm_cart, int maxdims, int *coords);
-int PX(get_mpi_cart_dims)(MPI_Comm comm_cart, int maxdims, int *dims);
-
-
-/* remap_3dto2d.c */
-
-void PX(local_block_remap_3dto2d_transposed)(
-    int rnk_n, const INT *n, 
-    MPI_Comm comm_cart_3d, int pid, 
-    unsigned transp_flag, unsigned trafo_flag,
-    INT *local_ni, INT *local_i_start,
-    INT *local_no, INT *local_o_start); 
-int PX(local_size_remap_3dto2d_transposed)(
-    int rnk_n, const INT *n, INT howmany, 
-    MPI_Comm comm_cart_3d, 
-    unsigned transp_flag, unsigned trafo_flag,
-    INT *local_ni, INT *local_i_start,
-    INT *local_no, INT *local_o_start);
-remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
-    int rnk_n, const INT *n, INT howmany, 
-    MPI_Comm comm_cart_3d, R *in, R *out, 
-    unsigned transp_flag, unsigned trafo_flag,
-    unsigned opt_flag, unsigned io_flag, unsigned fftw_flags);
-void PX(execute_remap_3dto2d)(
-    remap_3dto2d_plan ths, R *plannedin, R *plannedout, R *in, R *out);
-void PX(remap_3dto2d_rmplan)(
-    remap_3dto2d_plan ths);
-void PX(default_block_size_3dto2d)(
-    const INT *n, int p0, int p1, int q0, int q1,
-    INT *iblk, INT *mblk, INT *oblk);
-
-
-
-
-
-
-
-
-
 
 /* timer.c */
 

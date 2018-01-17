@@ -22,11 +22,6 @@
 #include "ipfft.h"
 #include "util.h"
 
-static void calculate_3dto2d_blocks(
-    const INT *n, MPI_Comm comm_cart_3d,
-    INT *iblk);
-
-
 INT PX(local_size_many_dft)(
     int rnk_n, const INT *n, const INT *ni, const INT *no,
     INT howmany, const INT *iblock, const INT *oblock,
@@ -238,7 +233,7 @@ PX(gcplan) PX(plan_many_rgc)(
     )
 {
   int rnk_pm;
-  INT blk_3dto2d[3];
+  INT blk_for_remap[3];
   MPI_Comm *comms_pm;
   PX(gcplan) ths;
   MPI_Comm comm_cart = PX(assure_cart_comm)(comm);
@@ -256,13 +251,13 @@ PX(gcplan) PX(plan_many_rgc)(
   comms_pm = (MPI_Comm*) malloc(sizeof(MPI_Comm) * (size_t) rnk_pm);
   PX(split_cart_procmesh)(comm_cart, comms_pm);
 
-  if( PX(needs_3dto2d_remap)(rnk_n, comm_cart) ){
+  if( PX(needs_remap_nd)(rnk_n, comm_cart) ){
     /* 3d to 2d remap results in complicated blocks.
      * We ignore users input and use default block size. */
-    calculate_3dto2d_blocks(pn, comm_cart,
-        blk_3dto2d);
+    PX(remap_nd_calculate_blocks)(rnk_n, pn, comm_cart,
+        blk_for_remap);
     ths = PX(plan_rgc_internal)(
-        rnk_n, pn, howmany, blk_3dto2d, gc_below, gc_above,
+        rnk_n, pn, howmany, blk_for_remap, gc_below, gc_above,
         data, rnk_pm, comms_pm, comm_cart, gc_flags);
   } else
     ths = PX(plan_rgc_internal)(
@@ -277,19 +272,6 @@ PX(gcplan) PX(plan_many_rgc)(
   free(pn);
 
   return ths;
-}
-
-static void calculate_3dto2d_blocks(
-    const INT *n, MPI_Comm comm_cart_3d,
-    INT *iblk
-    )
-{
-  int q0, q1, p0, p1;
-  INT mblk[3], oblk[3];
-
-  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
-  PX(default_block_size_3dto2d)(n, p0, p1, q0, q1,
-      iblk, mblk, oblk);
 }
 
 PX(gcplan) PX(plan_many_cgc)(
