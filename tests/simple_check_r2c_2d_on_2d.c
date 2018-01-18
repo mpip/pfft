@@ -40,7 +40,7 @@ int main(int argc, char **argv)
   MPI_Comm comm_cart_2d;
   
   /* Set size of FFT and process mesh */
-  n[0] = 4; n[1] = 2;
+  n[0] = 4; n[1] = 4;
   np[0] = 1; np[1] = 2;
   
   double *truein = calloc(sizeof(double), n[0] * n[1]);
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
       in);
 
   for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1]; l++) {
-  //  in[l] = 0;
+  //  in[l] = pid * 10 + l;
   //  if(l == 1)
   //      in[l] = 1;
   }
