@@ -87,6 +87,15 @@ int PX(local_size_remap_nd_transposed)(
     local_ni, local_i_start,
     local_no, local_o_start);
   }
+  if(rnk_n == 2) {
+    return
+      PX(local_size_remap_2dto1d_transposed)(
+    rnk_n, n, howmany, 
+    comm_cart, 
+    transp_flag, trafo_flag,
+    local_ni, local_i_start,
+    local_no, local_o_start);
+  }
   abort();
 }
 
@@ -101,6 +110,17 @@ remap_nd_plan PX(plan_remap_nd_transposed)(
 
     return
       PX(plan_remap_3dto2d_transposed)(
+        ths,
+        rnk_n, n, howmany, 
+        comm_cart, in, out, 
+        transp_flag, trafo_flag,
+        opt_flag, io_flag, fftw_flags);
+  }
+  if(rnk_n == 2) {
+    remap_nd_plan ths = remap_nd_mkplan();
+
+    return
+      PX(plan_remap_2dto1d_transposed)(
         ths,
         rnk_n, n, howmany, 
         comm_cart, in, out, 
@@ -168,7 +188,8 @@ void PX(execute_remap_nd)(
 //         }
 // #endif
 
-  PX(execute_gtransp)(ths->global_remap[0], plannedin, plannedout, in, out);
+  if(ths->global_remap[0])
+    PX(execute_gtransp)(ths->global_remap[0], plannedin, plannedout, in, out);
 
 // #if PFFT_DEBUG_GVARS 
 //   local_N[0] = 512/p0; local_N_start[0] = 0;
@@ -196,7 +217,8 @@ void PX(execute_remap_nd)(
 //         }
 // #endif
   
-  PX(execute_gtransp)(ths->global_remap[1], plannedin, plannedout, in, out);
+  if(ths->global_remap[1])
+    PX(execute_gtransp)(ths->global_remap[1], plannedin, plannedout, in, out);
 
 // #if PFFT_DEBUG_GVARS 
 //   local_N[0] = 512/p0/q0; local_N_start[0] = 0;
@@ -254,7 +276,8 @@ void PX(remap_nd_rmplan)(
 
   for(int t=0; t<2; t++){
     PX(sertrafo_rmplan)(ths->local_transp[t]);
-    PX(gtransp_rmplan)(ths->global_remap[t]);
+    if (ths->global_remap[t])
+      PX(gtransp_rmplan)(ths->global_remap[t]);
   }
 
   /* free memory */
@@ -275,6 +298,11 @@ void PX(remap_nd_split_cart_procmesh)(
         comms_pm + 1);
     return;
   }
+  if(rnk_n == 2) {
+    PX(split_cart_procmesh_2dto1d_p0q0)(comm_cart,
+        comms_pm + 0);
+    return;
+  }
   abort();
 }
 
@@ -290,6 +318,14 @@ void PX(remap_nd_get_coords)(
     MPI_Cart_coords(comm_cart, pid, 3, coords_3d);
     PX(coords_3dto2d)(q0, q1, coords_3d, coords_pm);
     (np_pm)[0] = p0*q0; (np_pm)[1] = p1*q1;
+    return;
+  }
+  if(rnk_n == 2) {
+    int p0, q0, coords_2d[3];
+    PX(get_procmesh_dims_1d)(comm_cart, &p0, &q0);
+    MPI_Cart_coords(comm_cart, pid, 2, coords_2d);
+    PX(coords_2dto1d)(q0, coords_2d, coords_pm);
+    (np_pm)[0] = p0*q0;
     return;
   }
   abort();
@@ -309,6 +345,15 @@ void PX(remap_nd_calculate_blocks)(
     PX(get_procmesh_dims_2d)(comm_cart, &p0, &p1, &q0, &q1);
     PX(default_block_size_3dto2d)(n, p0, p1, q0, q1,
           iblk, mblk, oblk);
+    return;
+  }
+  if(rnk_n == 3) {
+    int q0, p0;
+    INT oblk[3];
+
+    PX(get_procmesh_dims_1d)(comm_cart, &p0, &q0);
+    PX(default_block_size_2dto1d)(n, p0, q0,
+          iblk, oblk);
     return;
   }
   abort();
