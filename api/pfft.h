@@ -499,8 +499,19 @@ BEGIN_C_DECLS
   PFFT_EXTERN PX(gctimer) PX(convert_vec2gctimer)(                                      \
       const double *times);                                                             \
   PFFT_EXTERN void PX(destroy_gctimer)(                                                 \
-      PX(gctimer) ths);
-
+      PX(gctimer) ths); \
+  \
+  PFFT_EXTERN R * PX(gather_array)(const int rnk_n, const int howmany, \
+    const R * local, \
+    const INT* local_start, \
+    const INT * local_n, \
+    const INT * global_n, \
+    MPI_Comm comm); \
+  void PX(print_array)(int rnk_n, \
+    int howmany, \
+    R * a, \
+    const INT * ni, \
+    MPI_Comm comm); \
 
 
 #define PFFT_MANGLE_DOUBLE(name) PFFT_CONCAT(pfft_, name)
