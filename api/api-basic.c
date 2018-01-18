@@ -177,7 +177,6 @@ static R check_array(
       case PFFTI_ARRAYTYPE_HERMITIAN_COMPLEX:
         err = cabs( ((C*)data)[k] - 0.5 * (d1 + conj(d2))); break;
     }
-
     if( err > maxerr )
       maxerr = err;
   }
@@ -1085,7 +1084,8 @@ static void PX(execute_full)(
 
   execute_transposed(r, &ths->serial_trafo[r+1], &ths->global_remap[r],
       &ths->timer->trafo[r+1], &ths->timer->remap[r], ths->in, ths->out, in, out, ths->comm_cart);
-  
+
+
   PFFT_START_TIMING(ths->comm_cart, ths->timer->remap_nd[1]);
   PX(execute_remap_nd)(ths->remap_nd[1], ths->in, ths->out, in, out);
   PFFT_FINISH_TIMING(ths->timer->remap_nd[1]);

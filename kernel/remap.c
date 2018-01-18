@@ -160,7 +160,8 @@ void PX(execute_remap_nd)(
 // #endif
   
   /* execute all initialized plans */
-  PX(execute_sertrafo)(ths->local_transp[0], plannedin, plannedout, in, out);
+  if(ths->local_transp[0])
+    PX(execute_sertrafo)(ths->local_transp[0], plannedin, plannedout, in, out);
 
 // #if PFFT_DEBUG_GVARS 
 //   local_N[0] = 512/p0; local_N_start[0] = 0;
@@ -246,7 +247,8 @@ void PX(execute_remap_nd)(
 //         }
 // #endif
   
-  PX(execute_sertrafo)(ths->local_transp[1], plannedin, plannedout, in, out);
+  if(ths->local_transp[1])
+    PX(execute_sertrafo)(ths->local_transp[1], plannedin, plannedout, in, out);
 
 }
 

@@ -165,6 +165,7 @@ int PX(local_size_remap_2dto1d_transposed)(
         nb, 1, &nt, howmany, trafo_flag);
   mem = MAX(mem, mem_tmp);
 
+  pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp local1 = %td\n", mem_tmp);
   /* n1/q0 x n0/p0 -> n1 x n0/(p0*q0)
    * for each q0 ranks, a transpose of a matrix n1 x n0/p0,
    * from divided along n1, to along n0/p0
@@ -172,15 +173,19 @@ int PX(local_size_remap_2dto1d_transposed)(
    * */
   N0 = local_ni[0]; h0 = 1; /* n0 / p0 */
   N1 = local_no[1]; h1 = 1; /* n1 */
-  blk0 = oblk[1];  /* n0/(p0*q0) */
+  blk0 = oblk[0];  /* n0/(p0*q0) */
   blk1 = iblk[1];  /* n1 / q0 */
   hm = 1; /* set hm to 1 since mem will be in units of real/complex */
+
+  pfft_fprintf(MPI_COMM_WORLD, stderr, "sizing N0 = %td N1 = %td, blk0 = %td blk1 = %td\n", N0, N1, blk0, blk1);
 
   PX(split_cart_procmesh_for_2dto1d_remap_q0)(comm_cart_2d, &comm_q0);
   mem_tmp = PX(local_size_global_transp)(
       N0, N1, h0, h1, hm, blk0, blk1, comm_q0);
   mem = MAX(mem, mem_tmp);
   MPI_Comm_free(&comm_q0);
+
+  pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp global = %td\n", mem_tmp);
 
   /* n1 x n0/(p0*q0) -> n0/(p0*q0) x n1 */
   nb = local_no[1];
@@ -189,6 +194,8 @@ int PX(local_size_remap_2dto1d_transposed)(
   mem_tmp = PX(local_size_sertrafo)(
         nb, 1, &nt, howmany, trafo_flag);
   mem = MAX(mem, mem_tmp);
+
+  pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp local2 = %td\n", mem_tmp);
 
   /* take care of transposed data ordering */
   if(transp_flag & PFFT_TRANSPOSED_OUT){
@@ -244,67 +251,63 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
   /* n0/p0 x n1/p1 > n1/q0 x n0/p0 */
   nb = local_ni[0];
   nt = local_ni[1];
+
+  ths->local_transp[0] = NULL;
+  ths->local_transp[1] = NULL;
+  ths->global_remap[0] = NULL;
+  ths->global_remap[1] = NULL;
  
   /* plan TRANSPOSED_IN in opposite direction */
   if(transp_flag & PFFT_TRANSPOSED_IN){
-    if(~io_flag & PFFT_DESTROY_INPUT)
-      in = out; /* default: compute in-place plans on 'out' in order to preserve inputs */
-    ths->local_transp[1] = PX(plan_sertrafo)(
-        nb, 1, &nt, howmany, out, in, 0, NULL,
-        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
-        opt_flag, fftw_flags);
   } else {
-    ths->local_transp[0] = PX(plan_sertrafo)(
-        nb, 1, &nt, howmany, in, out, 0, NULL,
-        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
-        opt_flag, fftw_flags);
-    if(~io_flag & PFFT_DESTROY_INPUT)
-      in = out; /* default: compute in-place plans on 'out' in order to preserve inputs */
   }
 
-  if(transp_flag & PFFT_TRANSPOSED_IN)
-    ths->global_remap[1] = NULL;
-  else
-    ths->global_remap[0] = NULL;
-
-  /* n1/q0 x n0/p0 -> n1 x n0/(p0*q0) */
+  /* n1/q0 x n0/p0 -> n0/(p0*q0) x n1 */
   N0 = local_ni[0]; h0 = 1; /* n0 / p0 */
   N1 = local_no[1]; h1 = 1; /* n1 */
-  blk0 = oblk[1];  /* n0/(p0*q0) */
+  blk0 = oblk[0];  /* n0/(p0*q0) */
   blk1 = iblk[1];  /* n1 / q0 */
   hm = howmany * (trafo_flag & PFFTI_TRAFO_C2C ? 2 : 1);
 
+  pfft_fprintf(MPI_COMM_WORLD, stderr, "planning, local_ni = %td %td\n", local_ni[0], local_ni[1]);
+
+  pfft_fprintf(MPI_COMM_WORLD, stderr, "planning, local_no = %td %td\n", local_no[0], local_no[1]);
   PX(split_cart_procmesh_for_2dto1d_remap_q0)(comm_cart_2d, &comm_q0);
-  if(transp_flag & PFFT_TRANSPOSED_IN)
+
+  if(transp_flag & PFFT_TRANSPOSED_IN) {
+    R * tmp;
+    /* compute in-place plans on 'out' in order to preserve inputs,
+     * global transp is preferable outof place */
+
     ths->global_remap[0] = PX(plan_global_transp)(
         N1, N0, h1, h0, hm, blk1, blk0,
-        comm_q0, out, in, PFFT_TRANSPOSED_OUT, fftw_flags);
-  else
+        comm_q0, in, out, PFFT_TRANSPOSED_OUT, fftw_flags);
+
+    ths->local_transp[1] = PX(plan_sertrafo)(
+        nb, 1, &nt, howmany, out, out, 0, NULL,
+        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
+        opt_flag, fftw_flags);
+
+  } else {
+    R * tmp;
+    if(io_flag & PFFT_DESTROY_INPUT)
+      tmp = in; 
+    else;
+      /* default: compute in-place plans on 'out' in order to preserve inputs */
+      tmp = out;
+    ths->local_transp[0] = PX(plan_sertrafo)(
+        nb, 1, &nt, howmany, in, tmp, 0, NULL,
+        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
+        opt_flag, fftw_flags);
+
     ths->global_remap[1] = PX(plan_global_transp)(
         N0, N1, h0, h1, hm, blk0, blk1,
-        comm_q0, in, out, PFFT_TRANSPOSED_IN, fftw_flags);
+        comm_q0, tmp, out, PFFT_TRANSPOSED_IN, fftw_flags);
+
+  }
   MPI_Comm_free(&comm_q0);
 
-  /* n1 x n0/(p0*q0) -> n0/(p0*q0) x n1 */
-  nb = local_no[1];
-  nt = local_no[0];
-  
-  if(transp_flag & PFFT_TRANSPOSED_IN){
-    if(~io_flag & PFFT_DESTROY_INPUT){
-      /* restore pointers to 'in_user' and 'out_user' in order to compute the first step out-of-place */
-      in = in_user;
-    }
-
-    ths->local_transp[0] = PX(plan_sertrafo)(
-        nb, 1, &nt, howmany, in, out, 0, NULL,
-        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
-        opt_flag, fftw_flags);
-  } else {
-    ths->local_transp[1] = PX(plan_sertrafo)(
-        nb, 1, &nt, howmany, out, in, 0, NULL,
-        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
-        opt_flag, fftw_flags);
-  }
+  pfft_fprintf(MPI_COMM_WORLD, stderr, "planning, N0 = %td N1 = %td, blk0 = %td blk1 = %td hm=%td transp_flag %d\n", N0, N1, blk0, blk1, hm, transp_flag );
 
   /* free communicators */
   free_three_comms(icomms);
