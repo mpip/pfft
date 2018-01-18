@@ -4,7 +4,8 @@
 static void printarray(double * a, int n0, int n1)
 {
   for(ptrdiff_t l=0; l < n0 * n1; l++) {
-    pfft_fprintf(MPI_COMM_WORLD, stderr, "%4.2f ", a[l]);
+//    pfft_fprintf(MPI_COMM_WORLD, stderr, "%04.0f, ", a[l]);
+    pfft_fprintf(MPI_COMM_WORLD, stderr, "%05.1f, ", a[l]);
     if ((l + 1) % n1 == 0) {
        pfft_fprintf(MPI_COMM_WORLD, stderr, "\n", a[l]);
    }
@@ -13,10 +14,14 @@ static void printarray(double * a, int n0, int n1)
 static void gatherarray(double * a, double * in, int local_start0,
         int local_n0, int n0, int local_start1, int local_n1, int n1)
 {
+  int pid;
+  MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+
   memset(a, 0, sizeof(double) * n0 * n1);
   for(ptrdiff_t l=0; l < local_n0 * local_n1; l++) {
     int x = l / local_n1, y = l % local_n1;
     a[(local_start0 + x) * n1 + local_start1 + y] = in[l];
+// + pid * 1000;
   }
   MPI_Allreduce(MPI_IN_PLACE, a, n0 * n1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 }
@@ -35,15 +40,17 @@ int main(int argc, char **argv)
   
   /* Set size of FFT and process mesh */
   n[0] = 4; n[1] = 4;
-  np[0] = 1; np[1] = 1;
+  np[0] = 2; np[1] = 2;
   
   double *truein = calloc(sizeof(double), n[0] * n[1]);
   double *trueout = calloc(sizeof(double), n[0] * (n[1] / 2 + 1) * 2);
+  int pid;
 
   /* Initialize MPI and PFFT */
   MPI_Init(&argc, &argv);
   pfft_init();
 
+  MPI_Comm_rank(MPI_COMM_WORLD, &pid);
   /* Create three-dimensional process grid of size np[0] x np[1], if possible */
   if( pfft_create_procmesh(2, MPI_COMM_WORLD, np, &comm_cart_2d) ){
     pfft_fprintf(MPI_COMM_WORLD, stderr, "Error: This test file only works with %d processes.\n", np[0]*np[1]);
@@ -74,9 +81,9 @@ int main(int argc, char **argv)
       in);
 
   for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1]; l++) {
-    in[l] = l;
-//    if(l == 0)
-//        in[l] = 1;
+    in[l] = pid * 100 + l;
+  //  if(l == 0)
+  //      in[l] = 1;
   }
   gatherarray(truein, in, local_i_start[0], local_ni[0], n[0],
                           local_i_start[1], local_ni[1], n[1]);
@@ -86,16 +93,19 @@ int main(int argc, char **argv)
   /* execute parallel forward FFT */
   pfft_execute(plan_forw);
 
-  fprintf(stderr, "%td %td %td %td\n", local_o_start[0], local_no[0], local_o_start[1], local_no[1]);
 
+  pfft_fprintf(MPI_COMM_WORLD, stderr, "as real \n");
+  gatherarray(truein, out, local_i_start[0], local_ni[0], n[0],
+                          local_i_start[1], local_ni[1], n[1]);
+  printarray(truein, n[0], n[1]);
+
+
+  pfft_fprintf(MPI_COMM_WORLD, stderr, "as complex \n");
   gatherarray(trueout, out, local_o_start[0], local_no[0], n[0],
                             2 * local_o_start[1],
                             2 * local_no[1], 2 *(n[1] / 2 + 1));
 
   printarray(trueout, n[0], (n[1] / 2 + 1) * 2);
-  //gatherarray(truein, out, local_i_start[0], local_ni[0], n[0],
-  //                        local_i_start[1], local_ni[1], n[1]);
-  //printarray(truein, n[0], n[1]);
 
   pfft_fprintf(MPI_COMM_WORLD, stderr, "running backward\n");
   /* clear the old input */
@@ -112,13 +122,12 @@ int main(int argc, char **argv)
                           local_i_start[1], local_ni[1], n[1]);
   printarray(truein, n[0], n[1]);
 
-#if 0
   /* Print error of back transformed data */
   MPI_Barrier(MPI_COMM_WORLD);
   err = pfft_check_output_real(2, n, local_ni, local_i_start, in, comm_cart_2d);
   pfft_printf(comm_cart_2d, "Error after one forward and backward trafo of size n=(%td, %td):\n", n[0], n[1]); 
   pfft_printf(comm_cart_2d, "maxerror = %6.2e;\n", err);
- #endif 
+
   /* free mem and finalize */
   pfft_destroy_plan(plan_forw);
   pfft_destroy_plan(plan_back);
