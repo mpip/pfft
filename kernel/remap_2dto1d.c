@@ -248,10 +248,6 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
       iblk, oblk, icomms, ocomms,
       local_ni, local_no);
 
-  /* n0/p0 x n1/p1 > n1/q0 x n0/p0 */
-  nb = local_ni[0];
-  nt = local_ni[1];
-
   ths->local_transp[0] = NULL;
   ths->local_transp[1] = NULL;
   ths->global_remap[0] = NULL;
@@ -259,7 +255,14 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
  
   /* plan TRANSPOSED_IN in opposite direction */
 
-  /* n1/q0 x n0/p0 -> n0/(p0*q0) x n1 */
+  /* p1 == q0 */
+
+  /* n0/p0 x n1/p1 > n1/q0 x n0/p0 */
+
+  /* n1/q0 x n0/p0 -> n1 x n0/(p0*q0) */
+
+  /* n1 x n0/(p0*q0) -> n0 / (p0*q0) x n1 */
+
   N0 = local_ni[0]; h0 = 1; /* n0 / p0 */
   N1 = local_no[1]; h1 = 1; /* n1 */
   blk0 = oblk[0];  /* n0/(p0*q0) */
@@ -279,6 +282,10 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
     if(~io_flag & PFFT_DESTROY_INPUT)
       in = out; /* default: compute in-place plans on 'out' in order to preserve inputs */
 
+    nb = local_ni[0];
+    nt = local_ni[1];
+
+
     ths->local_transp[1] = PX(plan_sertrafo)(
         nb, 1, &nt, howmany, out, in, 0, NULL,
         trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
@@ -288,8 +295,23 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
         N1, N0, h1, h0, hm, blk1, blk0,
         comm_q0, in, out, PFFT_TRANSPOSED_OUT, fftw_flags);
 
+    if(~io_flag & PFFT_DESTROY_INPUT){
+      /* restore pointers to 'in_user' and 'out_user' in order to compute the first step out-of-place */
+      in = in_user;
+    }
+
+    nb = local_no[1];
+    nt = local_no[0];
+
+    ths->local_transp[0] = PX(plan_sertrafo)(
+        nb, 1, &nt, howmany, in, out, 0, NULL,
+        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
+        opt_flag, fftw_flags);
 
   } else {
+    nb = local_ni[0];
+    nt = local_ni[1];
+
     ths->local_transp[0] = PX(plan_sertrafo)(
         nb, 1, &nt, howmany, in, out, 0, NULL,
         trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
@@ -301,6 +323,19 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
     ths->global_remap[1] = PX(plan_global_transp)(
         N0, N1, h0, h1, hm, blk0, blk1,
         comm_q0, out, in, PFFT_TRANSPOSED_IN, fftw_flags);
+
+    ths->local_transp[0] = PX(plan_sertrafo)(
+        nb, 1, &nt, howmany, in, out, 0, NULL,
+        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
+        opt_flag, fftw_flags);
+
+    nb = local_no[1];
+    nt = local_no[0];
+
+    ths->local_transp[1] = PX(plan_sertrafo)(
+        nb, 1, &nt, howmany, out, in, 0, NULL,
+        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
+        opt_flag, fftw_flags);
 
   }
   MPI_Comm_free(&comm_q0);
