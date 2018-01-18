@@ -1297,7 +1297,6 @@ static void execute_transposed(
 {
   int t;
   
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "executing, rnk_pm = %d\nb", rnk_pm);
   for(t=0; t<rnk_pm; t++){
     PFFT_START_TIMING(comm_cart, timer_trafo[t]);
     PX(execute_outrafo)(trafos[t], plannedin, plannedout, in, out);
