@@ -415,7 +415,7 @@ void PX(default_block_size_2dto1d)(
 {
   /* n0/(p0*q0) x n1 */
   oblk[0] = PX(global_block_size)(n[0], PFFT_DEFAULT_BLOCK, p0*q0);
-  oblk[2] = n[2];
+  oblk[1] = n[1];
 
   /* n0/p0 x n1/q0 */
   iblk[0] = oblk[0]*q0;

@@ -367,9 +367,9 @@ PX(plan) PX(plan_partrafo)(
   if(rnk_n < rnk_pm)
     return NULL;
 
-  /* equal dimension of FFT and procmesh only implemented for 3 dimensions */
+  /* equal dimension of FFT and procmesh only implemented for 3 and 2dimensions */
   if(rnk_n == rnk_pm)
-    if(rnk_n != 3)
+    if(rnk_n != 3 && rnk_n != 2)
       return NULL;
   
   malloc_and_split_cart_procmesh(rnk_n, transp_flag, comm_cart,
