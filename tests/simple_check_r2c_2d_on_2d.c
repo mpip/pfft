@@ -5,9 +5,10 @@ static void printarray(double * a, int n0, int n1)
 {
   for(ptrdiff_t l=0; l < n0 * n1; l++) {
 //    pfft_fprintf(MPI_COMM_WORLD, stderr, "%04.0f, ", a[l]);
-    pfft_fprintf(MPI_COMM_WORLD, stderr, "%05.1f, ", a[l]);
+//    pfft_fprintf(MPI_COMM_WORLD, stderr, "%05.1f, ", a[l]);
+    fprintf(stderr, "%g, ", a[l]);
     if ((l + 1) % n1 == 0) {
-       pfft_fprintf(MPI_COMM_WORLD, stderr, "\n", a[l]);
+       fprintf(stderr, "\n", a[l]);
    }
   }
 }
@@ -39,8 +40,8 @@ int main(int argc, char **argv)
   MPI_Comm comm_cart_2d;
   
   /* Set size of FFT and process mesh */
-  n[0] = 4; n[1] = 4;
-  np[0] = 2; np[1] = 2;
+  n[0] = 4; n[1] = 2;
+  np[0] = 1; np[1] = 2;
   
   double *truein = calloc(sizeof(double), n[0] * n[1]);
   double *trueout = calloc(sizeof(double), n[0] * (n[1] / 2 + 1) * 2);
@@ -81,13 +82,14 @@ int main(int argc, char **argv)
       in);
 
   for(ptrdiff_t l=0; l < local_ni[0] * local_ni[1]; l++) {
-    in[l] = pid * 100 + l;
-  //  if(l == 0)
+  //  in[l] = 0;
+  //  if(l == 1)
   //      in[l] = 1;
   }
   gatherarray(truein, in, local_i_start[0], local_ni[0], n[0],
                           local_i_start[1], local_ni[1], n[1]);
-  printarray(truein, n[0], n[1]);
+  if(pid == 0)
+    printarray(truein, n[0], n[1]);
 
   pfft_fprintf(MPI_COMM_WORLD, stderr, "running forward\n");
   /* execute parallel forward FFT */
@@ -97,15 +99,34 @@ int main(int argc, char **argv)
   pfft_fprintf(MPI_COMM_WORLD, stderr, "as real \n");
   gatherarray(truein, out, local_i_start[0], local_ni[0], n[0],
                           local_i_start[1], local_ni[1], n[1]);
+  if(pid == 0)
   printarray(truein, n[0], n[1]);
 
 
   pfft_fprintf(MPI_COMM_WORLD, stderr, "as complex \n");
+
+  int kk = 0;
+  for(kk = 0; kk < n[1] * n[0]; kk++) {
+      MPI_Barrier(MPI_COMM_WORLD);
+      if(kk == pid) {
+          fprintf(stderr, "pid = %d, %td %td %td %td\n", pid,
+                local_o_start[0], local_o_start[1],
+                local_no[0], local_no[1]);
+
+          printarray(out, local_no[0], local_no[1] * 2);
+      }
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
   gatherarray(trueout, out, local_o_start[0], local_no[0], n[0],
                             2 * local_o_start[1],
                             2 * local_no[1], 2 *(n[1] / 2 + 1));
 
-  printarray(trueout, n[0], (n[1] / 2 + 1) * 2);
+
+  pfft_fprintf(MPI_COMM_WORLD, stderr, "global result\n");
+
+  if(pid == 0)
+      printarray(trueout, n[0], (n[1] / 2 + 1) * 2);
 
   pfft_fprintf(MPI_COMM_WORLD, stderr, "running backward\n");
   /* clear the old input */
@@ -120,7 +141,8 @@ int main(int argc, char **argv)
 
   gatherarray(truein, in, local_i_start[0], local_ni[0], n[0],
                           local_i_start[1], local_ni[1], n[1]);
-  printarray(truein, n[0], n[1]);
+  if(pid == 0)
+      printarray(truein, n[0], n[1]);
 
   /* Print error of back transformed data */
   MPI_Barrier(MPI_COMM_WORLD);

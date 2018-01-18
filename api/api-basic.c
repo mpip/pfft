@@ -1085,9 +1085,10 @@ static void PX(execute_full)(
   execute_transposed(r, &ths->serial_trafo[r+1], &ths->global_remap[r],
       &ths->timer->trafo[r+1], &ths->timer->remap[r], ths->in, ths->out, in, out, ths->comm_cart);
 
-
   PFFT_START_TIMING(ths->comm_cart, ths->timer->remap_nd[1]);
+
   PX(execute_remap_nd)(ths->remap_nd[1], ths->in, ths->out, in, out);
+
   PFFT_FINISH_TIMING(ths->timer->remap_nd[1]);
 
   /* twiddle outputs in order to get inputs shifted by n/2 */
@@ -1295,6 +1296,7 @@ static void execute_transposed(
 {
   int t;
   
+  pfft_fprintf(MPI_COMM_WORLD, stderr, "executing, rnk_pm = %d\nb", rnk_pm);
   for(t=0; t<rnk_pm; t++){
     PFFT_START_TIMING(comm_cart, timer_trafo[t]);
     PX(execute_outrafo)(trafos[t], plannedin, plannedout, in, out);

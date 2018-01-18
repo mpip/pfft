@@ -258,9 +258,6 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
   ths->global_remap[1] = NULL;
  
   /* plan TRANSPOSED_IN in opposite direction */
-  if(transp_flag & PFFT_TRANSPOSED_IN){
-  } else {
-  }
 
   /* n1/q0 x n0/p0 -> n0/(p0*q0) x n1 */
   N0 = local_ni[0]; h0 = 1; /* n0 / p0 */
@@ -279,30 +276,31 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
     /* compute in-place plans on 'out' in order to preserve inputs,
      * global transp is preferable outof place */
 
+    if(~io_flag & PFFT_DESTROY_INPUT)
+      in = out; /* default: compute in-place plans on 'out' in order to preserve inputs */
+
+    ths->local_transp[1] = PX(plan_sertrafo)(
+        nb, 1, &nt, howmany, out, in, 0, NULL,
+        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
+        opt_flag, fftw_flags);
+
     ths->global_remap[0] = PX(plan_global_transp)(
         N1, N0, h1, h0, hm, blk1, blk0,
         comm_q0, in, out, PFFT_TRANSPOSED_OUT, fftw_flags);
 
-    ths->local_transp[1] = PX(plan_sertrafo)(
-        nb, 1, &nt, howmany, out, out, 0, NULL,
+
+  } else {
+    ths->local_transp[0] = PX(plan_sertrafo)(
+        nb, 1, &nt, howmany, in, out, 0, NULL,
         trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
         opt_flag, fftw_flags);
 
-  } else {
-    R * tmp;
-    if(io_flag & PFFT_DESTROY_INPUT)
-      tmp = in; 
-    else;
-      /* default: compute in-place plans on 'out' in order to preserve inputs */
-      tmp = out;
-    ths->local_transp[0] = PX(plan_sertrafo)(
-        nb, 1, &nt, howmany, in, tmp, 0, NULL,
-        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
-        opt_flag, fftw_flags);
+    if(~io_flag & PFFT_DESTROY_INPUT)
+      in = out; /* default: compute in-place plans on 'out' in order to preserve inputs */
 
     ths->global_remap[1] = PX(plan_global_transp)(
         N0, N1, h0, h1, hm, blk0, blk1,
-        comm_q0, tmp, out, PFFT_TRANSPOSED_IN, fftw_flags);
+        comm_q0, out, in, PFFT_TRANSPOSED_IN, fftw_flags);
 
   }
   MPI_Comm_free(&comm_q0);

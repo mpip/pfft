@@ -107,7 +107,8 @@ check_PROGRAMS += \
 	simple_check_r2c_3d_on_3d_transposed_many
 
 check_PROGRAMS += \
-       	simple_check_r2c_2d_on_2d
+       	simple_check_r2c_2d_on_2d \
+       	simple_check_c2c_2d_on_2d
 
 check_PROGRAMS += \
 	simple_check_ousam_c2c simple_check_ousam_c2c_transposed \
