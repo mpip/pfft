@@ -681,6 +681,51 @@ void PX(split_cart_procmesh_for_3dto2d_remap_q1)(
     MPI_Comm comm_cart_3d,
     MPI_Comm *comms_1d);
 
+/* remap_2dto1d.c */
+
+void PX(local_block_remap_2dto1d_transposed)(
+    int rnk_n, const INT *n, 
+    MPI_Comm comm_cart_3d, int pid, 
+    unsigned transp_flag, unsigned trafo_flag,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start);
+int PX(local_size_remap_2dto1d_transposed)(
+    int rnk_n, const INT *n, INT howmany, 
+    MPI_Comm comm_cart_3d, 
+    unsigned transp_flag, unsigned trafo_flag,
+    INT *local_ni, INT *local_i_start,
+    INT *local_no, INT *local_o_start);
+
+remap_nd_plan PX(plan_remap_2dto1d_transposed)(
+    remap_nd_plan ths,
+    int rnk_n, const INT *n, INT howmany, 
+    MPI_Comm comm_cart_3d, R *in, R *out, 
+    unsigned transp_flag, unsigned trafo_flag,
+    unsigned opt_flag, unsigned io_flag, unsigned fftw_flags);
+
+void PX(default_block_size_2dto1d)(
+    const INT *n, int p0, int q0,
+    INT *iblk, INT *oblk);
+
+void PX(coords_2dto1d)(
+    int q0, const int *coords_2d,
+    int *coords_1d);
+void PX(split_cart_procmesh_2dto1d_p0q0)(
+    MPI_Comm comm_cart_2d,
+    MPI_Comm *comm_1d);
+void PX(split_cart_procmesh_2dto1d_p1q1)(
+    MPI_Comm comm_cart_2d,
+    MPI_Comm *comm_1d);
+void PX(get_procmesh_dims_1d)(
+    MPI_Comm comm_cart_2d,
+    int *p0, int *q0);
+void PX(split_cart_procmesh_for_2dto1d_remap_q0)(
+    MPI_Comm comm_cart_2d,
+    MPI_Comm *comm_1d);
+void PX(split_cart_procmesh_for_2dto1d_remap_q1)(
+    MPI_Comm comm_cart_2d,
+    MPI_Comm *comms_1d);
+
 /* timer.c */
 
 PX(timer) PX(mktimer)(
