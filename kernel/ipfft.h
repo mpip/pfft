@@ -252,11 +252,12 @@ typedef sertrafo_dbg_s *sertrafo_dbg;
 /* a fftw plan */
 typedef void (* PX(fftw_execute))(const X(plan) , R * in, R * out);
 typedef struct {
-  X(plan) plan;
-  R *planned_in;  /* in and out array used at the time of plannning */
-  R *planned_out;
+  X(plan) fftw;
+  R *in;  /* in and out array used at the time of plannning */
+  R *out;
   PX(fftw_execute) execute;
 } PX(fftw_plan);
+
 /* this function is put in sertrafo.c, it should be in a different
  * file; as it is also used in transpose.c */
 void PX(execute_fftw_plan)(
