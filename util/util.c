@@ -248,3 +248,69 @@ unsigned* PX(malloc_unsigned)(
   return (unsigned*) malloc(sizeof(unsigned) * size);
 }
 
+R * PX(gather_array)(const int rnk_n, const int howmany,
+    const R * local,
+    const INT* local_start,
+    const INT * local_n,
+    const INT * global_n,
+    MPI_Comm comm)
+{
+    INT * global_strides = malloc(sizeof(INT) * rnk_n);
+    INT * offset = malloc(sizeof(INT) * rnk_n);
+    INT * local_strides = malloc(sizeof(INT) * rnk_n);
+
+    size_t gn = 1, ln = 1;
+    int i;
+    for(i = rnk_n - 1; i >=0 ; i --) {
+        global_strides[i] = gn;
+        local_strides[i] = ln;
+        gn *= global_n[i];
+        ln *= local_n[i];
+    }
+    R * r = PX(malloc)(sizeof(R) * gn * howmany);
+    memset(r, 0, (sizeof(R) * gn * howmany));
+    for(i = 0; i < ln; i ++) {
+        INT gi = 0;
+        INT li = i;
+        int d;
+        for(d = 0; d < rnk_n ; d++) {
+            offset[d] = 0;
+            offset[d] = (li / local_strides[d]) % local_n[d];
+            gi += (offset[d] + local_start[d]) * global_strides[d];
+        }
+
+        for(d = 0; d < howmany; d ++) {
+            r[gi * howmany + d] = local[li * howmany + d];
+        }
+    //    printf("%td -> %td (%td) %g\n", li, gi, gn, local[li * howmany]);
+    }
+    MPI_Allreduce(MPI_IN_PLACE, r, gn * howmany, PFFT_MPI_REAL_TYPE, MPI_SUM, comm);
+    free(local_strides);
+    free(offset);
+    return r;
+}
+
+void PX(print_array)(int rnk_n,
+    int howmany,
+    R * a,
+    const INT * ni,
+    MPI_Comm comm)
+{
+    int i;
+    size_t gn = 1;
+    for(i = 0; i < rnk_n; i ++) {
+        gn *= ni[i];
+    }
+    size_t nl = gn / ni[0]; /* line break after first dim */
+
+    for(ptrdiff_t l=0; l < gn; l++) {
+        int d;
+        for(d = 0; d < howmany; d ++) {
+            pfft_fprintf(comm, stderr, "%g, ", a[l * howmany + d]);
+        }
+        if ((l + 1) % nl == 0) {
+            pfft_fprintf(MPI_COMM_WORLD, stderr, "\n");
+        }
+    }
+}
+
