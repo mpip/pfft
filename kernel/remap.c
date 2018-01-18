@@ -60,6 +60,15 @@ void PX(local_block_remap_nd_transposed)(
     local_no, local_o_start);
     return;
   }
+  if(rnk_n == 2) {
+    PX(local_block_remap_2dto1d_transposed)(
+    rnk_n, n,
+    comm_cart, pid, 
+    transp_flag, trafo_flag,
+    local_ni, local_i_start,
+    local_no, local_o_start);
+    return;
+  }
   abort();
 }
 
@@ -286,6 +295,7 @@ void PX(remap_nd_get_coords)(
   abort();
 }
 
+/* used in API as a short cut to pin the block size; notice that only iblk is needed. */
 void PX(remap_nd_calculate_blocks)(
     const INT rnk_n,
     const INT *n, MPI_Comm comm_cart,

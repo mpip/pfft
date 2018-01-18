@@ -23,5 +23,6 @@ libkernel_la_SOURCES = \
 	procmesh.c \
 	remap.c \
 	remap_3dto2d.c \
+	remap_2dto1d.c \
 	timer.c \
 	transpose.c

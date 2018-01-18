@@ -284,7 +284,7 @@ remap_nd_plan PX(plan_remap_3dto2d_transposed)(
   }
 
   /* n2/(q0*q1) x n0/p0 x n1/p1 -> n2/q0 x n0/p0 x n1/(p1*q1) */
-  /* for each q0, we are looking at a transpose of
+  /* for each q1 ranks, we are looking at a transpose of
    * local_ni[1] x (local_nm[2] x local_ni[0]),
    * The intial partition is along (local_nm[2] x local_ni[0]),
    * by size iblk[2] x local_ni[0].
