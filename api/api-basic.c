@@ -257,7 +257,7 @@ static INT plain_index(
   INT k=0;
 
   for(INT t=0; t<rnk; t++)
-    k += k*n[t] + kvec[t];
+    k = k*n[t] + kvec[t];
 
   return k;
 }
