@@ -24,11 +24,11 @@
 #include "util.h"
 
 /*
- * useful table of i, o, and m.
+ * useful table of i, o, and m. p = q0*q1
  *
  * i : n0 / p0 x n1 / p1 x n2 / p2
- * o : n0 / (p0 * q0) x n1 / (p1 * q1) x n2 / 1
  * m : n0 / p0 x n1 / (p1 * q1) x n2 / q0
+ * o : n0 / (p0 * q0) x n1 / (p1 * q1) x n2 / 1
  *
  * */
 
