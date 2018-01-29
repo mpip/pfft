@@ -31,14 +31,6 @@
   extern MPI_Comm *gdbg_comms_pm;
 #endif
 
-static void factorize(
-    int q, 
-    int *ptr_q0, int *ptr_q1);
-static void factorize_equal(
-    int p0, int p1, int q, 
-    int *ptr_q0, int *ptr_q1);
-
-
 /* TODO: think about order of in and out for T_IN */
 /* TODO: implement user blocksize */
 
@@ -115,7 +107,7 @@ void PX(local_block_remap_2dto1d_transposed)(
   }
 } 
 
-static void free_three_comms(MPI_Comm *comms)
+static void free_two_comms(MPI_Comm *comms)
 {
   const int num_comms = 2;
   for(int t=0; t<num_comms; ++t){
@@ -136,9 +128,9 @@ int PX(local_size_remap_2dto1d_transposed)(
   INT mem=1, mem_tmp;
   int p0, q0, rnk_pm;
   INT nb, nt, N0, N1, h0, h1, hm, blk0, blk1;
-  INT iblk[3], oblk[3];
-  MPI_Comm icomms[3], ocomms[3];
-  MPI_Comm comm_q0, comm_q1;
+  INT iblk[2], oblk[2];
+  MPI_Comm icomms[2], ocomms[2];
+  MPI_Comm comm_q0;
 
   /* remap only works for 2d data on 2d procmesh */
   if(rnk_n != 2)
@@ -166,10 +158,13 @@ int PX(local_size_remap_2dto1d_transposed)(
   mem = MAX(mem, mem_tmp);
 
   pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp local1 = %td\n", mem_tmp);
+
+  /* N1/P x h1 x N0 x h0 -> N1 x h1 x N0/P x h0 
+   * with P = q0, N1 = n1, h1 = 1, N0 = n0/p0, h0 = 1
+   * */
   /* n1/q0 x n0/p0 -> n1 x n0/(p0*q0)
    * for each q0 ranks, a transpose of a matrix n1 x n0/p0,
    * from divided along n1, to along n0/p0
-   *  
    * */
   N0 = local_ni[0]; h0 = 1; /* n0 / p0 */
   N1 = local_no[1]; h1 = 1; /* n1 */
@@ -207,8 +202,8 @@ int PX(local_size_remap_2dto1d_transposed)(
   }
 
   /* free communicators */
-  free_three_comms(icomms);
-  free_three_comms(ocomms);
+  free_two_comms(icomms);
+  free_two_comms(ocomms);
 
   return mem;
 } 
@@ -225,10 +220,10 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
 {
   int p0, p1, rnk_pm;
   INT nb, nt, N0, N1, h0, h1, hm, blk0, blk1;
-  INT local_ni[3], local_no[3];
-  INT iblk[3],oblk[3];
-  MPI_Comm icomms[3], ocomms[3];
-  MPI_Comm comm_q0, comm_q1;
+  INT local_ni[2], local_no[2];
+  INT iblk[2],oblk[2];
+  MPI_Comm icomms[2], ocomms[2];
+  MPI_Comm comm_q0;
   R *in=in_user, *out=out_user;
 
   /* remap only works for 2d data on 2d procmesh */
@@ -257,11 +252,10 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
 
   /* p1 == q0 */
 
-  /* n0/p0 x n1/p1 > n1/q0 x n0/p0 */
+  /* n0/p0 x n1/p1 -> n1/q0 x n0/p0 */
 
   /* n1/q0 x n0/p0 -> n1 x n0/(p0*q0) */
 
-  /* n1 x n0/(p0*q0) -> n0 / (p0*q0) x n1 */
 
   N0 = local_ni[0]; h0 = 1; /* n0 / p0 */
   N1 = local_no[1]; h1 = 1; /* n1 */
@@ -279,13 +273,11 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
     /* compute in-place plans on 'out' in order to preserve inputs,
      * global transp is preferable outof place */
 
-    if(~io_flag & PFFT_DESTROY_INPUT)
-      in = out; /* default: compute in-place plans on 'out' in order to preserve inputs */
-
     nb = local_ni[0];
     nt = local_ni[1];
 
-
+    if(~io_flag & PFFT_DESTROY_INPUT)
+      in = out; /* default: compute in-place plans on 'out' in order to preserve inputs */
     ths->local_transp[1] = PX(plan_sertrafo)(
         nb, 1, &nt, howmany, out, in, 0, NULL,
         trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
@@ -316,18 +308,12 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
         nb, 1, &nt, howmany, in, out, 0, NULL,
         trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
         opt_flag, fftw_flags);
-
     if(~io_flag & PFFT_DESTROY_INPUT)
       in = out; /* default: compute in-place plans on 'out' in order to preserve inputs */
 
     ths->global_remap[1] = PX(plan_global_transp)(
         N0, N1, h0, h1, hm, blk0, blk1,
         comm_q0, out, in, PFFT_TRANSPOSED_IN, fftw_flags);
-
-    ths->local_transp[0] = PX(plan_sertrafo)(
-        nb, 1, &nt, howmany, in, out, 0, NULL,
-        trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
-        opt_flag, fftw_flags);
 
     nb = local_no[1];
     nt = local_no[0];
@@ -343,8 +329,8 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
   pfft_fprintf(MPI_COMM_WORLD, stderr, "planning, N0 = %td N1 = %td, blk0 = %td blk1 = %td hm=%td transp_flag %d\n", N0, N1, blk0, blk1, hm, transp_flag );
 
   /* free communicators */
-  free_three_comms(icomms);
-  free_three_comms(ocomms);
+  free_two_comms(icomms);
+  free_two_comms(ocomms);
 
   return ths;
 } 
@@ -459,7 +445,7 @@ void PX(default_block_size_2dto1d)(
 }
 
 
-/* allocate array of length 3 for communicators */
+/* allocate array of length 2 for communicators */
 static void split_comms_2dto1d(
     MPI_Comm comm_cart_2d,
     MPI_Comm *icomms, MPI_Comm *ocomms
@@ -492,7 +478,7 @@ void PX(split_cart_procmesh_2dto1d_p0q0)(
     )
 {
   int p0, q0=0;
-  int ndims, coords_2d[3];
+  int ndims, coords_2d[2];
   int dim_1d, period_1d, reorder=0;
   int color, key;
   MPI_Comm comm;
