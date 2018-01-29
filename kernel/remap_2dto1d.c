@@ -296,7 +296,7 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
     nt = local_no[0];
 
     ths->local_transp[0] = PX(plan_sertrafo)(
-        nb, 1, &nt, howmany, in, out, 0, NULL,
+        nb, 1, &nt, howmany, in, in, 0, NULL,
         trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
         opt_flag, fftw_flags);
 
@@ -305,7 +305,7 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
     nt = local_ni[1];
 
     ths->local_transp[0] = PX(plan_sertrafo)(
-        nb, 1, &nt, howmany, in, out, 0, NULL,
+        nb, 1, &nt, howmany, in, in, 0, NULL,
         trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
         opt_flag, fftw_flags);
     if(~io_flag & PFFT_DESTROY_INPUT)
@@ -313,7 +313,7 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
 
     ths->global_remap[1] = PX(plan_global_transp)(
         N0, N1, h0, h1, hm, blk0, blk1,
-        comm_q0, out, in, PFFT_TRANSPOSED_IN, fftw_flags);
+        comm_q0, in, out, PFFT_TRANSPOSED_IN, fftw_flags);
 
     nb = local_no[1];
     nt = local_no[0];
