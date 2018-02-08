@@ -264,10 +264,12 @@ INT PX(local_size_partrafo)(
         lni_to, lis_to, lno_to, los_to);
     mem = MAX(mem, mem_tmp);
 
-    mem_tmp = PX(local_size_remap_nd_transposed)(
-        rnk_n, pni_to, howmany, comm_cart, PFFT_TRANSPOSED_OUT, trafo_flags_to[rnk_pm],
-        lni_to, lis_to, dummy_ln, dummy_ls);
-    mem = MAX(mem, mem_tmp);
+    if( PX(needs_remap_nd)(rnk_n, comm_cart) ) {
+      mem_tmp = PX(local_size_remap_nd_transposed)(
+          rnk_n, pni_to, howmany, comm_cart, PFFT_TRANSPOSED_OUT, trafo_flags_to[rnk_pm],
+          lni_to, lis_to, dummy_ln, dummy_ls);
+      mem = MAX(mem, mem_tmp);
+    }
   }
 
   /* plan with transposed input */
@@ -278,10 +280,12 @@ INT PX(local_size_partrafo)(
         lni_ti, lis_ti, lno_ti, los_ti);
     mem = MAX(mem, mem_tmp);
 
-    mem_tmp = PX(local_size_remap_nd_transposed)(
-        rnk_n, pno_ti, howmany, comm_cart, PFFT_TRANSPOSED_IN, trafo_flags_ti[rnk_pm],
-        dummy_ln, dummy_ls, lno_ti, los_ti);
-    mem = MAX(mem, mem_tmp);
+    if( PX(needs_remap_nd)(rnk_n, comm_cart) ) {
+      mem_tmp = PX(local_size_remap_nd_transposed)(
+          rnk_n, pno_ti, howmany, comm_cart, PFFT_TRANSPOSED_IN, trafo_flags_ti[rnk_pm],
+          dummy_ln, dummy_ls, lno_ti, los_ti);
+      mem = MAX(mem, mem_tmp);
+    }
   }
 
   if(pfft_flags & PFFT_SHIFTED_IN){
@@ -463,10 +467,13 @@ PX(plan) PX(plan_partrafo)(
         ths->serial_trafo, ths->global_remap);
   } else {
 
-    ths->remap_nd[0] = PX(plan_remap_nd_transposed)(
-        rnk_n, pni_to, howmany, comm_cart, in, out,
-        PFFT_TRANSPOSED_OUT, trafo_flags_to[rnk_pm], opt_flag, io_flag, fftw_flags);
-
+    if( PX(needs_remap_nd)(rnk_n, comm_cart) ) {
+      ths->remap_nd[0] = PX(plan_remap_nd_transposed)(
+          rnk_n, pni_to, howmany, comm_cart, in, out,
+          PFFT_TRANSPOSED_OUT, trafo_flags_to[rnk_pm], opt_flag, io_flag, fftw_flags);
+    } else {
+      ths->remap_nd[0] = NULL;
+    }
     /* If remap_nd exists, go on with in-place transforms in order to preserve input. */
     if( (ths->remap_nd[0] != NULL) && (~io_flag & PFFT_DESTROY_INPUT) )
       in = out;
@@ -498,9 +505,13 @@ PX(plan) PX(plan_partrafo)(
     if( ~io_flag & PFFT_DESTROY_INPUT )
       in = out;
 
-    ths->remap_nd[1] = PX(plan_remap_nd_transposed)(
-        rnk_n, pno_ti, howmany, comm_cart, out, in,
-        PFFT_TRANSPOSED_IN, trafo_flags_ti[rnk_pm], opt_flag, io_flag, fftw_flags);
+    if( PX(needs_remap_nd)(rnk_n, comm_cart) ) {
+      ths->remap_nd[1] = PX(plan_remap_nd_transposed)(
+          rnk_n, pno_ti, howmany, comm_cart, out, in,
+          PFFT_TRANSPOSED_IN, trafo_flags_ti[rnk_pm], opt_flag, io_flag, fftw_flags);
+    } else {
+      ths->remap_nd[1] = NULL;
+    }
 
   }
 
