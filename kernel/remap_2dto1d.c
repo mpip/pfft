@@ -157,7 +157,7 @@ int PX(local_size_remap_2dto1d_transposed)(
         nb, 1, &nt, howmany, trafo_flag);
   mem = MAX(mem, mem_tmp);
 
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp local1 = %td\n", mem_tmp);
+  // pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp local1 = %td\n", mem_tmp);
 
   /* N1/P x h1 x N0 x h0 -> N1 x h1 x N0/P x h0 
    * with P = q0, N1 = n1, h1 = 1, N0 = n0/p0, h0 = 1
@@ -172,7 +172,7 @@ int PX(local_size_remap_2dto1d_transposed)(
   blk1 = iblk[1];  /* n1 / q0 */
   hm = 1; /* set hm to 1 since mem will be in units of real/complex */
 
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "sizing N0 = %td N1 = %td, blk0 = %td blk1 = %td\n", N0, N1, blk0, blk1);
+  // pfft_fprintf(MPI_COMM_WORLD, stderr, "sizing N0 = %td N1 = %td, blk0 = %td blk1 = %td\n", N0, N1, blk0, blk1);
 
   PX(split_cart_procmesh_for_2dto1d_remap_q0)(comm_cart_2d, &comm_q0);
   mem_tmp = PX(local_size_global_transp)(
@@ -180,7 +180,7 @@ int PX(local_size_remap_2dto1d_transposed)(
   mem = MAX(mem, mem_tmp);
   MPI_Comm_free(&comm_q0);
 
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp global = %td\n", mem_tmp);
+  // pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp global = %td\n", mem_tmp);
 
   /* n1 x n0/(p0*q0) -> n0/(p0*q0) x n1 */
   nb = local_no[1];
@@ -190,7 +190,7 @@ int PX(local_size_remap_2dto1d_transposed)(
         nb, 1, &nt, howmany, trafo_flag);
   mem = MAX(mem, mem_tmp);
 
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp local2 = %td\n", mem_tmp);
+  // pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp local2 = %td\n", mem_tmp);
 
   /* take care of transposed data ordering */
   if(transp_flag & PFFT_TRANSPOSED_OUT){
@@ -263,9 +263,9 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
   blk1 = iblk[1];  /* n1 / q0 */
   hm = howmany * (trafo_flag & PFFTI_TRAFO_C2C ? 2 : 1);
 
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "planning, local_ni = %td %td\n", local_ni[0], local_ni[1]);
+  // pfft_fprintf(MPI_COMM_WORLD, stderr, "planning, local_ni = %td %td\n", local_ni[0], local_ni[1]);
 
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "planning, local_no = %td %td\n", local_no[0], local_no[1]);
+  // pfft_fprintf(MPI_COMM_WORLD, stderr, "planning, local_no = %td %td\n", local_no[0], local_no[1]);
   PX(split_cart_procmesh_for_2dto1d_remap_q0)(comm_cart_2d, &comm_q0);
 
   if(transp_flag & PFFT_TRANSPOSED_IN) {
@@ -326,7 +326,7 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
   }
   MPI_Comm_free(&comm_q0);
 
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "planning, N0 = %td N1 = %td, blk0 = %td blk1 = %td hm=%td transp_flag %d\n", N0, N1, blk0, blk1, hm, transp_flag );
+  // pfft_fprintf(MPI_COMM_WORLD, stderr, "planning, N0 = %td N1 = %td, blk0 = %td blk1 = %td hm=%td transp_flag %d\n", N0, N1, blk0, blk1, hm, transp_flag );
 
   /* free communicators */
   free_two_comms(icomms);
@@ -342,7 +342,7 @@ static void init_blks_comms_local_size(
     INT *local_ni, INT *local_no
     )
 {
-  int p0, p1, q0, q1;
+  int p0, q0;
 
   PX(get_procmesh_dims_1d)(comm_cart_2d, &p0, &q0);
 
