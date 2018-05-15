@@ -176,8 +176,6 @@ int PX(local_size_remap_3dto2d_transposed)(
         nb, 1, &nt, howmany, trafo_flag);
   mem = MAX(mem, mem_tmp);
 
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp local1 = %td\n", mem_tmp);
-
   /* n2/(q0*q1) x n0/p0 x n1/p1 -> n2/q0 x n0/p0 x n1/(p1*q1) */
   N0 = local_ni[1]; h0 = 1;
   N1 = local_nm[2]; h1 = local_ni[0];
@@ -190,8 +188,6 @@ int PX(local_size_remap_3dto2d_transposed)(
       N0, N1, h0, h1, hm, blk0, blk1, comm_q1);
   mem = MAX(mem, mem_tmp);
   MPI_Comm_free(&comm_q1);
-
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp global1 = %td\n", mem_tmp);
 
   /* n2/q0 x n0/p0 x n1/(p1*q1) -> n2 x n0/(p0*q0) x n1/(p1*q1) */
   N0 = local_nm[0]; h0 = local_nm[1];
@@ -206,8 +202,6 @@ int PX(local_size_remap_3dto2d_transposed)(
   mem = MAX(mem, mem_tmp);
   MPI_Comm_free(&comm_q0);
 
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp global2 = %td\n", mem_tmp);
-
   /* n2 x n0/(p0*q0) x n1/(p1*q1) -> n0/(p0*q0) x n1/(p1*q1) x n2 */
   nb = local_no[2];
   nt = local_no[0] * local_no[1];
@@ -215,8 +209,6 @@ int PX(local_size_remap_3dto2d_transposed)(
   mem_tmp = PX(local_size_sertrafo)(
         nb, 1, &nt, howmany, trafo_flag);
   mem = MAX(mem, mem_tmp);
-
-  pfft_fprintf(MPI_COMM_WORLD, stderr, "mem_tmp local2 = %td\n", mem_tmp);
 
   /* take care of transposed data ordering */
   if(transp_flag & PFFT_TRANSPOSED_OUT){
