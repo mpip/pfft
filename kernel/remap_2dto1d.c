@@ -266,38 +266,29 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
   if(transp_flag & PFFT_TRANSPOSED_IN) {
     R * tmp;
 
-    nb = local_ni[0];
-    nt = local_ni[1];
-
     if(~io_flag & PFFT_DESTROY_INPUT) {
         /* preserve input means the result is written in the output */
+        nb = local_no[1];
+        nt = local_no[0];
+
+        ths->local_transp[0] = PX(plan_sertrafo)(
+            nb, 1, &nt, howmany, in, out, 0, NULL,
+            trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
+            opt_flag, fftw_flags | FFTW_PRESERVE_INPUT);
+
+        nb = local_ni[0];
+        nt = local_ni[1];
+
+        ths->global_remap[0] = PX(plan_global_transp)(
+            N1, N0, h1, h0, hm, blk1, blk0,
+            comm_q0, out, out, PFFT_TRANSPOSED_OUT, fftw_flags);
+
         ths->local_transp[1] = PX(plan_sertrafo)(
             nb, 1, &nt, howmany, out, out, 0, NULL,
             trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
             opt_flag, fftw_flags);
-
-        ths->global_remap[0] = PX(plan_global_transp)(
-            N1, N0, h1, h0, hm, blk1, blk0,
-            comm_q0, out, out, PFFT_TRANSPOSED_OUT, fftw_flags);
-
-        nb = local_no[1];
-        nt = local_no[0];
-
-        ths->local_transp[0] = PX(plan_sertrafo)(
-            nb, 1, &nt, howmany, in, out, 0, NULL,
-            trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
-            opt_flag, fftw_flags | FFTW_PRESERVE_INPUT);
     } else {
         /* destroy input means the result is written in the input */
-        ths->local_transp[1] = PX(plan_sertrafo)(
-            nb, 1, &nt, howmany, out, in, 0, NULL,
-            trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
-            opt_flag, fftw_flags);
-
-        ths->global_remap[0] = PX(plan_global_transp)(
-            N1, N0, h1, h0, hm, blk1, blk0,
-            comm_q0, out, out, PFFT_TRANSPOSED_OUT, fftw_flags);
-
         nb = local_no[1];
         nt = local_no[0];
 
@@ -305,6 +296,19 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
             nb, 1, &nt, howmany, in, out, 0, NULL,
             trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
             opt_flag, fftw_flags | FFTW_PRESERVE_INPUT);
+
+        nb = local_ni[0];
+        nt = local_ni[1];
+
+        /* keep the global out of place to make it 'faster'? */
+        ths->global_remap[0] = PX(plan_global_transp)(
+            N1, N0, h1, h0, hm, blk1, blk0,
+            comm_q0, out, in, PFFT_TRANSPOSED_OUT, fftw_flags);
+
+        ths->local_transp[1] = PX(plan_sertrafo)(
+            nb, 1, &nt, howmany, in, in, 0, NULL,
+            trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
+            opt_flag, fftw_flags);
     }
 
   } else {
@@ -337,16 +341,16 @@ remap_nd_plan PX(plan_remap_2dto1d_transposed)(
         ths->local_transp[0] = PX(plan_sertrafo)(
             nb, 1, &nt, howmany, in, out, 0, NULL,
             trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
-            opt_flag, fftw_flags | FFTW_PRESERVE_INPUT);
+            opt_flag, fftw_flags);
 
         ths->global_remap[1] = PX(plan_global_transp)(
             N0, N1, h0, h1, hm, blk0, blk1,
-            comm_q0, out, out, PFFT_TRANSPOSED_IN, fftw_flags);
+            comm_q0, out, in, PFFT_TRANSPOSED_IN, fftw_flags);
 
         nb = local_no[1];
         nt = local_no[0];
         ths->local_transp[1] = PX(plan_sertrafo)(
-            nb, 1, &nt, howmany, out, in, 0, NULL,
+            nb, 1, &nt, howmany, in, in, 0, NULL,
             trafo_flag| PFFTI_TRAFO_SKIP, transp_flag, 0,
             opt_flag, fftw_flags);
     }
