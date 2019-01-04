@@ -6,23 +6,23 @@
 
 
 % Shortcuts for math symbols.
-\newcommand{\N}{\ensuremath{\mathbb{N}}}
-\newcommand{\T}{\ensuremath{\mathbb{T}}}
-\renewcommand{\S}{\ensuremath{\mathbb{S}}}
-\newcommand{\NZ}{\ensuremath{\mathbb{N}_{0}}}
-\newcommand{\Z}{\ensuremath{\mathbb{Z}}}
-\newcommand{\R}{\ensuremath{\mathbb{R}}}
-\newcommand{\Rp}{\ensuremath{\mathbb{R}_{+}}}
-\newcommand{\Rn}{\ensuremath{\mathbb{R}^n}} 
-\newcommand{\Rnn}{\ensuremath{\mathbb{R}^{n \times n}}}
-\newcommand{\C}{\ensuremath{\mathbb{C}}}
-\newcommand{\cO}{\ensuremath{\mathcal{O}}}
-\newcommand{\tT}{\ensuremath{\text{\tiny{T}}}}
-\newcommand{\ti}{\ensuremath{\text{\scriptsize{i}}}}
-\newcommand{\e}{{\ensuremath{\mathrm{e}}}}
-\newcommand{\eim}[1]{\ensuremath{\mathrm{e}^{-2\pi{\ti} #1}}}
-\newcommand{\eip}[1]{\ensuremath{\mathrm{e}^{+2\pi{\ti} #1}}}
-\renewcommand{\mathbf}[1]{\ensuremath{\boldsymbol{#1}}}
+\newcommand{\N}{{\mathbb{N}}}
+\newcommand{\T}{{\mathbb{T}}}
+\renewcommand{\S}{{\mathbb{S}}}
+\newcommand{\NZ}{{\mathbb{N}_{0}}}
+\newcommand{\Z}{{\mathbb{Z}}}
+\newcommand{\R}{{\mathbb{R}}}
+\newcommand{\Rp}{{\mathbb{R}_{+}}}
+\newcommand{\Rn}{{\mathbb{R}^n}} 
+\newcommand{\Rnn}{{\mathbb{R}^{n \times n}}}
+\newcommand{\C}{{\mathbb{C}}}
+\newcommand{\cO}{{\mathcal{O}}}
+\newcommand{\tT}{{\text{T}}}
+\newcommand{\ti}{{\text{i}}}
+\newcommand{\e}{{{\mathrm{e}}}}
+\newcommand{\eim}[1]{{\mathrm{e}^{-2\pi{\ti} #1}}}
+\newcommand{\eip}[1]{{\mathrm{e}^{+2\pi{\ti} #1}}}
+\renewcommand{\mathbf}[1]{{\boldsymbol{#1}}}
 \newcommand{\ds}{\displaystyle}
 \newcommand{\sinc}{\textrm{sinc}}
 \newcommand{\dist}{\textrm{dist}}
@@ -44,9 +44,9 @@
 {\raise-0.05em\hbox{\Large $#1$}}{\hbox{\large $#1$}}{#1}}}
 \newcommand{\bigtimes}{\BIGOP{\times}}
 \def\invisible#1{\textcolor{white}{#1}}
-\newcommand{\Vect}[1]{\ensuremath{\mathbf{#1}}}
-\newcommand{\Mat}[1]{\ensuremath{\mathbf{#1}}}
-\newcommand{\Cal}[1]{\ensuremath{\mathcal{#1}}}
+\newcommand{\Vect}[1]{{\mathbf{#1}}}
+\newcommand{\Mat}[1]{{\mathbf{#1}}}
+\newcommand{\Cal}[1]{{\mathcal{#1}}}
 \newcommand{\fft}{\textsf{FFT}}
 
 \newcommand{\ousetarrow}[2]{\overset{\textsf{#1}}{\underset{\textsf{#2}}{\rightarrow}}}
@@ -183,7 +183,8 @@
   %       belowskip= -2ex}
   % 
 %   \newcommand{\code}[1]{\linebreak[2]{\ttfamily #1}}
-  \newcommand{\code}[2][\empty]{\ifthenelse{\equal{#1}{\empty}}{\lstinline!#2!}{\lstinline[#1]!#2!}}
+   \newcommand{\code}[1]{:code:`#1`}
+%  \newcommand{\code}[2][\empty]{\ifthenelse{\equal{#1}{\empty}}{\lstinline!#2!}{\lstinline[#1]!#2!}}
 }
 
 %% own enviroment for case differentiation
