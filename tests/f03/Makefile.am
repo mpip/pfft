@@ -22,6 +22,7 @@ check_PROGRAMS =
 # do not compile checks
 #else
 check_PROGRAMS += \
+	pfft_simple_test.F03 \
 	simple_check_c2c \
 	simple_check_c2c_transposed \
 	simple_check_r2c_4d_on_3d \
