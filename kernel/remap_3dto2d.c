@@ -23,13 +23,30 @@
 #include "ipfft.h"
 #include "util.h"
 
+/*
+ * useful table of i, o, and m. p = q0*q1
+ *
+ * i : n0 / p0 x n1 / p1 x n2 / p2
+ * m : n0 / p0 x n1 / (p1 * q1) x n2 / q0
+ * o : n0 / (p0 * q0) x n1 / (p1 * q1) x n2 / 1
+ *
+ * */
+
 /* Global infos about procmesh are only enabled in debug mode
  * Otherwise we do not use any global variables. */
+
 #if PFFT_DEBUG_GVARS
   extern MPI_Comm *gdbg_comm_cart;
   extern int gdbg_rnk_pm;
   extern MPI_Comm *gdbg_comms_pm;
 #endif
+
+static void factorize(
+    int q, 
+    int *ptr_q0, int *ptr_q1);
+static void factorize_equal(
+    int p0, int p1, int q, 
+    int *ptr_q0, int *ptr_q1);
 
 
 /* TODO: think about order of in and out for T_IN */
@@ -67,10 +84,6 @@ static void get_local_n_3d_by_coords(
 static void get_local_start_3d_by_coords(
     const INT *n, const INT *blks, const int *coords,
     INT *local_start);
-
-static remap_3dto2d_plan remap_3dto2d_mkplan(
-    void);
-
 
 void PX(local_block_remap_3dto2d_transposed)(
     int rnk_n, const INT *pn, 
@@ -216,7 +229,8 @@ int PX(local_size_remap_3dto2d_transposed)(
 
 
 /* ouput is written to 'in', also for outofplace */
-remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
+remap_nd_plan PX(plan_remap_3dto2d_transposed)(
+    remap_nd_plan ths,
     int rnk_n, const INT *pn, INT howmany, 
     MPI_Comm comm_cart_3d, R *in_user, R *out_user, 
     unsigned transp_flag, unsigned trafo_flag,
@@ -230,7 +244,6 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
   MPI_Comm icomms[3], mcomms[3], ocomms[3];
   MPI_Comm comm_q0, comm_q1;
   R *in=in_user, *out=out_user;
-  remap_3dto2d_plan ths;
 
   /* remap only works for 3d data on 3d procmesh */
   if(rnk_n != 3)
@@ -239,8 +252,6 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
   MPI_Cartdim_get(comm_cart_3d, &rnk_pm);
   if(rnk_pm != 3)
     return NULL;
-
-  ths = remap_3dto2d_mkplan();
 
   /* Handle r2c input and c2r output like r2r. For complex data we use the C2C flag. */
   if(trafo_flag & PFFTI_TRAFO_RDFT)
@@ -273,6 +284,15 @@ remap_3dto2d_plan PX(plan_remap_3dto2d_transposed)(
   }
 
   /* n2/(q0*q1) x n0/p0 x n1/p1 -> n2/q0 x n0/p0 x n1/(p1*q1) */
+  /* for each q1 ranks, we are looking at a transpose of
+   * local_ni[1] x (local_nm[2] x local_ni[0]),
+   * The intial partition is along (local_nm[2] x local_ni[0]),
+   * by size iblk[2] x local_ni[0].
+   * The final partition is along local_ni[1], by size
+   * mblk[1].
+   *
+   * The math works out by referring to the table at the beginning of the code.
+   * */
   N0 = local_ni[1]; h0 = 1;
   N1 = local_nm[2]; h1 = local_ni[0];
   blk0 = mblk[1];
@@ -481,165 +501,206 @@ static void split_comms_3dto2d(
   PX(split_cart_procmesh_for_3dto2d_remap_q0)(comm_cart_3d, &mcomms[2]);
 }
 
-
-
-
-
-
-
-
-
-
-void PX(execute_remap_3dto2d)(
-    remap_3dto2d_plan ths, R * plannedin, R * plannedout, R * in, R * out
+void PX(coords_3dto2d)(
+    int q0, int q1, const int *coords_3d,
+    int *coords_2d
     )
 {
-  if(ths==NULL)
-    return;
-
-// #if PFFT_DEBUG_GVARS 
-//   int np, myrank;
-//   int np0, np1, rnk0, rnk1;
-//   MPI_Comm_size(*gdbg_comm_cart, &np);
-//   MPI_Comm_rank(*gdbg_comm_cart, &myrank);
-//   MPI_Comm_size(gdbg_comms_pm[0], &np0);
-//   MPI_Comm_size(gdbg_comms_pm[1], &np1);
-//   MPI_Comm_rank(gdbg_comms_pm[0], &rnk0);
-//   MPI_Comm_rank(gdbg_comms_pm[1], &rnk1);
-// 
-//   int dims[3], periods[3], coords[3];
-//   MPI_Cart_get(*gdbg_comm_cart, 3,
-//       dims, periods, coords);
-//   
-//   INT local_N[3], local_N_start[3];
-// 
-//   int p0, p1, q0, q1;
-//   p0 = dims[0]; p1 = dims[1];
-//   q0 = np0/p0;  q1 = np1/p1;
-// 
-//   int lerr, m;
-// #endif
-  
-  /* execute all initialized plans */
-  PX(execute_sertrafo)(ths->local_transp[0], plannedin, plannedout, in, out);
-
-// #if PFFT_DEBUG_GVARS 
-//   local_N[0] = 512/p0; local_N_start[0] = 0;
-//   local_N[1] = 512/p1; local_N_start[1] = 0;
-//   local_N[2] = 512/q0/q1; local_N_start[2] = 0;
-//   
-//   if(!myrank) fprintf(stderr, "!!! Before 1st remap: check all coefficients !!!\n");
-//   if(!myrank) fprintf(stderr, "!!! local_N=[%td, %td, %td], local_N_start = [%td, %td, %td]\n",
-//       local_N[0], local_N[1], local_N[2], local_N_start[0], local_N_start[1], local_N_start[2]);
-// 
-//   lerr=0; 
-//   m=0;
-//   for(INT k2=local_N_start[2]; k2<local_N_start[2]+local_N[2]; k2++)
-//     for(INT k0=local_N_start[0]; k0<local_N_start[0]+local_N[0]; k0++)
-//       for(INT k1=local_N_start[1]; k1<local_N_start[1]+local_N[1]; k1++)
-//         for(INT h=0; h<2; h++, m++){
-//           R ind = h + 2*(k2 + 512*(k1 + 512*k0));
-//           R data = ths->global_remap[0]->dbg->in[m];
-//           if( (data - ind) > 1e-13){
-//             if(!lerr)
-//               if(!myrank)
-//                 fprintf(stderr, "data[%td] = %e, ind = %e, k0=%td, k1=%td, k2=%td\n", data, m, ind, k0, k1, k2);
-//             lerr = 1;
-//           }
-//         }
-// #endif
-
-  PX(execute_gtransp)(ths->global_remap[0], plannedin, plannedout, in, out);
-
-// #if PFFT_DEBUG_GVARS 
-//   local_N[0] = 512/p0; local_N_start[0] = 0;
-//   local_N[1] = 512/p1/q1; local_N_start[1] = 0;
-//   local_N[2] = 512/q0; local_N_start[2] = 0;
-//   
-//   if(!myrank) fprintf(stderr, "!!! Before 2nd remap: check all coefficients !!!\n");
-//   if(!myrank) fprintf(stderr, "!!! local_N=[%td, %td, %td], local_N_start = [%td, %td, %td]\n",
-//       local_N[0], local_N[1], local_N[2], local_N_start[0], local_N_start[1], local_N_start[2]);
-// 
-//   lerr=0; 
-//   m=0;
-//   for(INT k2=local_N_start[2]; k2<local_N_start[2]+local_N[2]; k2++)
-//     for(INT k0=local_N_start[0]; k0<local_N_start[0]+local_N[0]; k0++)
-//       for(INT k1=local_N_start[1]; k1<local_N_start[1]+local_N[1]; k1++)
-//         for(INT h=0; h<2; h++, m++){
-//           R ind = h + 2*(k2 + 512*(k1 + 512*k0));
-//           R data = ths->global_remap[1]->dbg->in[m];
-//           if( (data - ind) > 1e-13){
-//             if(!lerr)
-//               if(!myrank)
-//                 fprintf(stderr, "data[%td] = %e, ind = %e, k0=%td, k1=%td, k2=%td\n", data, m, ind, k0, k1, k2);
-//             lerr = 1;
-//           }
-//         }
-// #endif
-  
-  PX(execute_gtransp)(ths->global_remap[1], plannedin, plannedout, in, out);
-
-// #if PFFT_DEBUG_GVARS 
-//   local_N[0] = 512/p0/q0; local_N_start[0] = 0;
-//   local_N[1] = 512/p1/q1; local_N_start[1] = 0;
-//   local_N[2] = 512; local_N_start[2] = 0;
-//   
-//   if(!myrank) fprintf(stderr, "!!! After 2nd remap: check all coefficients !!!\n");
-//   if(!myrank) fprintf(stderr, "!!! local_N=[%td, %td, %td], local_N_start = [%td, %td, %td]\n",
-//       local_N[0], local_N[1], local_N[2], local_N_start[0], local_N_start[1], local_N_start[2]);
-// 
-//   lerr=0; 
-//   m=0;
-//   for(INT k2=local_N_start[2]; k2<local_N_start[2]+local_N[2]; k2++)
-//     for(INT k0=local_N_start[0]; k0<local_N_start[0]+local_N[0]; k0++)
-//       for(INT k1=local_N_start[1]; k1<local_N_start[1]+local_N[1]; k1++)
-//         for(INT h=0; h<2; h++, m++){
-//           R ind = h + 2*(k2 + 512*(k1 + 512*k0));
-//           R data = ths->global_remap[1]->dbg->out[m];
-//           if( (data - ind) > 1e-13){
-//             if(!lerr)
-//               if(!myrank)
-//                 fprintf(stderr, "data[%td] = %e, ind = %e, k0=%td, k1=%td, k2=%td\n", data, m, ind, k0, k1, k2);
-//             lerr = 1;
-//           }
-//         }
-// #endif
-  
-  PX(execute_sertrafo)(ths->local_transp[1], plannedin, plannedout, in, out);
+  coords_2d[0] = coords_3d[0]*q0 + coords_3d[2]/q1;
+  coords_2d[1] = coords_3d[1]*q1 + coords_3d[2]%q1;
 }
 
-static remap_3dto2d_plan remap_3dto2d_mkplan(
-    void
+void PX(split_cart_procmesh_3dto2d_p0q0)(
+    MPI_Comm comm_cart_3d,
+    MPI_Comm *comm_1d
     )
 {
-  remap_3dto2d_plan ths = (remap_3dto2d_plan) malloc(sizeof(remap_3dto2d_plan_s));
+  int p0, p1, q0=0, q1=0;
+  int ndims, coords_3d[3];
+  int dim_1d, period_1d, reorder=0;
+  int color, key;
+  MPI_Comm comm;
 
-  /* initialize to NULL for easy checks */
-  for(int t=0; t<2; t++){
-    ths->local_transp[t] = NULL;
-    ths->global_remap[t] = NULL;
-  }
-  
-  return ths;
+  if( !PX(is_cart_procmesh)(comm_cart_3d) )
+    return;
+
+  MPI_Cartdim_get(comm_cart_3d, &ndims);
+  if(ndims != 3)
+    return;
+
+  PX(get_mpi_cart_coords)(comm_cart_3d, ndims, coords_3d);
+  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+
+  /* split into p1*q1 comms of size p0*q0 */
+  key   = coords_3d[0]*q0 + coords_3d[2]/q1;
+  color = coords_3d[1]*q1 + coords_3d[2]%q1;
+  MPI_Comm_split(comm_cart_3d, color, key, &comm);
+
+  dim_1d = p0*q0; period_1d = 1;
+  MPI_Cart_create(comm, ndims=1, &dim_1d, &period_1d, reorder,
+      comm_1d);
+
+  MPI_Comm_free(&comm);
 }
 
 
-void PX(remap_3dto2d_rmplan)(
-    remap_3dto2d_plan ths
+void PX(split_cart_procmesh_3dto2d_p1q1)(
+    MPI_Comm comm_cart_3d,
+    MPI_Comm *comm_1d
     )
 {
-  /* plan was already destroyed or never initialized */
-  if(ths==NULL)
+  int p0, p1, q0=0, q1=0;
+  int ndims, coords_3d[3];
+  int dim_1d, period_1d, reorder=0;
+  int color, key;
+  MPI_Comm comm;
+
+  if( !PX(is_cart_procmesh)(comm_cart_3d) )
     return;
 
-  for(int t=0; t<2; t++){
-    PX(sertrafo_rmplan)(ths->local_transp[t]);
-    PX(gtransp_rmplan)(ths->global_remap[t]);
+  MPI_Cartdim_get(comm_cart_3d, &ndims);
+  if(ndims != 3)
+    return;
+
+  PX(get_mpi_cart_coords)(comm_cart_3d, ndims, coords_3d);
+  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+
+  /* split into p0*q0 comms of size p1*q1 */
+  color = coords_3d[0]*q0 + coords_3d[2]/q1;
+  key   = coords_3d[1]*q1 + coords_3d[2]%q1;
+  MPI_Comm_split(comm_cart_3d, color, key, &comm);
+
+  dim_1d = p1*q1; period_1d = 1;
+  MPI_Cart_create(comm, ndims=1, &dim_1d, &period_1d, reorder,
+      comm_1d);
+
+  MPI_Comm_free(&comm);
+}
+
+
+/* implement the splitting to create p0*p1*q0 comms of size q1
+ * and p0*p1*q1 comms of size q0 */
+void PX(split_cart_procmesh_for_3dto2d_remap_q0)(
+    MPI_Comm comm_cart_3d,
+    MPI_Comm *comm_1d
+    )
+{
+  int p0, p1, q0=0, q1=0;
+  int ndims, coords_3d[3];
+  int dim_1d, period_1d, reorder=0;
+  int color, key;
+  MPI_Comm comm;
+
+  if( !PX(is_cart_procmesh)(comm_cart_3d) )
+    return;
+
+  MPI_Cartdim_get(comm_cart_3d, &ndims);
+  if(ndims != 3)
+    return;
+
+  PX(get_mpi_cart_coords)(comm_cart_3d, ndims, coords_3d);
+  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+
+  /* split into p0*p1*q1 comms of size q0 */
+  color = coords_3d[0]*p1*q1 + coords_3d[1]*q1 + coords_3d[2]%q1;
+  key = coords_3d[2]/q1;
+  MPI_Comm_split(comm_cart_3d, color, key, &comm);
+
+  dim_1d = q0; period_1d = 1;
+  MPI_Cart_create(comm, ndims=1, &dim_1d, &period_1d, reorder,
+      comm_1d);
+
+  MPI_Comm_free(&comm);
+}
+
+
+void PX(split_cart_procmesh_for_3dto2d_remap_q1)(
+    MPI_Comm comm_cart_3d,
+    MPI_Comm *comm_1d
+    )
+{
+  int p0, p1, q0=0, q1=0;
+  int ndims, coords_3d[3];
+  int dim_1d, period_1d, reorder=0;
+  int color, key;
+  MPI_Comm comm;
+
+  if( !PX(is_cart_procmesh)(comm_cart_3d) )
+    return;
+
+  MPI_Cartdim_get(comm_cart_3d, &ndims);
+  if(ndims != 3)
+    return;
+
+  PX(get_mpi_cart_coords)(comm_cart_3d, ndims, coords_3d);
+  PX(get_procmesh_dims_2d)(comm_cart_3d, &p0, &p1, &q0, &q1);
+
+  /* split into p0*p1*q0 comms of size q1 */
+  color = coords_3d[0]*p1*q0 + coords_3d[1]*q0 + coords_3d[2]/q1;
+  key = coords_3d[2]%q1;
+//   key = coords_3d[2]/q0; /* TODO: delete this line after several tests */
+  MPI_Comm_split(comm_cart_3d, color, key, &comm);
+
+  dim_1d = q1; period_1d = 1;
+  MPI_Cart_create(comm, ndims=1, &dim_1d, &period_1d, reorder,
+      comm_1d);
+
+  MPI_Comm_free(&comm);
+}
+
+void PX(get_procmesh_dims_2d)(
+    MPI_Comm comm_cart_3d,
+    int *p0, int *p1, int *q0, int *q1
+    )
+{
+  int ndims=3, dims[3];
+
+  PX(get_mpi_cart_dims)(comm_cart_3d, ndims, dims);
+  *p0 = dims[0]; *p1 = dims[1];
+//   factorize(dims[2], q0, q1);
+  factorize_equal(dims[0], dims[1], dims[2], q0, q1);
+}
+
+/* factorize an integer q into q0*q1 with
+ * q1 <= q0 and q0-q1 -> min */
+static void factorize(
+    int q, 
+    int *ptr_q0, int *ptr_q1
+    )
+{
+  for(int t = 1; t <= sqrt(q); t++)
+    if(t * (q/t) == q)
+      *ptr_q1 = t;
+
+  *ptr_q0 = q / (*ptr_q1);
+}
+
+/* factorize an integer q into q0*q1 with
+ * abs(p0*q0 - p1*q1) -> min */
+static void factorize_equal(
+    int p0, int p1, int q, 
+    int *ptr_q0, int *ptr_q1
+    )
+{
+  int q0, q1;
+  int opt_q0  = 1;
+  int opt_q1  = q;
+  R   min_err = pfft_fabs(p0 * q - p1 * 1.0);
+
+  for(q1 = 1; q1 <= sqrt(q); q1++){
+    q0 = q/q1;
+    if(q0*q1 == q){
+      R err = pfft_fabs(p0*q0 - p1*q1);
+      if(err < min_err){
+        min_err = err;
+        opt_q0 = q0;
+        opt_q1 = q1;
+      }
+    }
   }
 
-  /* free memory */
-  free(ths);
-  /* ths=NULL; would be senseless, since we can not change the pointer itself */
+  *ptr_q0 = opt_q0;
+  *ptr_q1 = opt_q1;
 }
 
 

@@ -19,12 +19,18 @@ AM_CPPFLAGS = -I$(top_srcdir)/kernel
 
 # Directory of pfft.h
 AM_CPPFLAGS += -I$(top_srcdir)/api
+#
+# Directory of fftw3
+AM_CPPFLAGS += -I$(top_srcdir)/fftw3/api
+AM_CPPFLAGS += -I$(top_srcdir)/fftw3/mpi
 
 # OpenMP support
 AM_CFLAGS = $(OPENMP_CFLAGS)
 
 # Libraries to add to all programs that are built.
-LDADD = $(top_builddir)/lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@.la $(fftw3_openmp_LIBS) $(fftw3_mpi_LIBS) $(fftw3_LIBS)
+LDADD = $(top_builddir)/lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@.la
+LDADD += $(top_builddir)/fftw3/libfftw3@PREC_SUFFIX@@OPENMP_SUFFIX@.la
+LDADD += $(top_builddir)/fftw3/mpi/libfftw3@PREC_SUFFIX@_mpi.la
 
 
 EXTRA_DIST = \
@@ -99,6 +105,10 @@ check_PROGRAMS += \
 
 check_PROGRAMS += \
 	simple_check_r2c_3d_on_3d_transposed_many
+
+check_PROGRAMS += \
+       	simple_check_r2c_2d_on_2d \
+       	simple_check_c2c_2d_on_2d
 
 check_PROGRAMS += \
 	simple_check_ousam_c2c simple_check_ousam_c2c_transposed \
