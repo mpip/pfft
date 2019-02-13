@@ -6,6 +6,10 @@ AM_CPPFLAGS += -I$(top_srcdir)/api
 
 # Directory of util.h
 AM_CPPFLAGS += -I$(top_srcdir)/util
+#
+# Directory of fftw
+AM_CPPFLAGS += -I$(top_srcdir)/fftw3/api
+AM_CPPFLAGS += -I$(top_srcdir)/fftw3/mpi
 
 noinst_LTLIBRARIES = libkernel.la
 
@@ -21,6 +25,8 @@ libkernel_la_SOURCES = \
 	partrafo.c \
 	sertrafo.c \
 	procmesh.c \
+	remap.c \
 	remap_3dto2d.c \
+	remap_2dto1d.c \
 	timer.c \
 	transpose.c

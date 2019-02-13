@@ -61,8 +61,5 @@ int* PX(malloc_int)(
 unsigned* PX(malloc_unsigned)(
     size_t size);
 
-int PX(needs_3dto2d_remap)(
-    int rnk_n, MPI_Comm comm_cart);
-
 
 #endif /* !PFFT_UTIL_H */

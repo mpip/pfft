@@ -14,8 +14,8 @@ int main(int argc, char **argv)
   MPI_Comm comm_cart_3d;
   
   /* Set size of FFT and process mesh */
-  n[0] = 29; n[1] = 27; n[2] = 31;
-  np[0] = 2; np[1] = 2; np[2] = 2;
+  n[0] = 4; n[1] = 4; n[2] = 2;
+  np[0] = 1; np[1] = 1; np[2] = 2;
  
   /* Initialize MPI and PFFT */
   MPI_Init(&argc, &argv);
@@ -54,7 +54,11 @@ int main(int argc, char **argv)
   /* clear the old input */
   pfft_clear_input_complex_3d(n, local_ni, local_i_start,
       in);
-  
+
+  double * gout = pfft_gather_array(3, 2, (double*) out, local_i_start, local_ni, n, MPI_COMM_WORLD);
+  pfft_print_array(3, 2, gout, n, MPI_COMM_WORLD);
+  pfft_free(gout);
+
   /* execute parallel backward FFT */
   pfft_execute(plan_back);
   

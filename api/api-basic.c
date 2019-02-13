@@ -177,7 +177,6 @@ static R check_array(
       case PFFTI_ARRAYTYPE_HERMITIAN_COMPLEX:
         err = cabs( ((C*)data)[k] - 0.5 * (d1 + conj(d2))); break;
     }
-
     if( err > maxerr )
       maxerr = err;
   }
@@ -258,7 +257,7 @@ static INT plain_index(
   INT k=0;
 
   for(INT t=0; t<rnk; t++)
-    k += k*n[t] + kvec[t];
+    k = k*n[t] + kvec[t];
 
   return k;
 }
@@ -1076,19 +1075,22 @@ static void PX(execute_full)(
     twiddle_input(ths, ths->in, ths->out, in, out);
   PFFT_FINISH_TIMING(ths->timer->itwiddle);
 
-  PFFT_START_TIMING(ths->comm_cart, ths->timer->remap_3dto2d[0]);
-  PX(execute_remap_3dto2d)(ths->remap_3dto2d[0], ths->in, ths->out, in, out);
-  PFFT_FINISH_TIMING(ths->timer->remap_3dto2d[0]);
+  PFFT_START_TIMING(ths->comm_cart, ths->timer->remap_nd[0]);
+  PX(execute_remap_nd)(ths->remap_nd[0], ths->in, ths->out, in, out);
+  PFFT_FINISH_TIMING(ths->timer->remap_nd[0]);
+
 
   execute_transposed(r, ths->serial_trafo, ths->global_remap,
       ths->timer->trafo, ths->timer->remap, ths->in, ths->out, in, out, ths->comm_cart);
 
   execute_transposed(r, &ths->serial_trafo[r+1], &ths->global_remap[r],
       &ths->timer->trafo[r+1], &ths->timer->remap[r], ths->in, ths->out, in, out, ths->comm_cart);
-  
-  PFFT_START_TIMING(ths->comm_cart, ths->timer->remap_3dto2d[1]);
-  PX(execute_remap_3dto2d)(ths->remap_3dto2d[1], ths->in, ths->out, in, out);
-  PFFT_FINISH_TIMING(ths->timer->remap_3dto2d[1]);
+
+  PFFT_START_TIMING(ths->comm_cart, ths->timer->remap_nd[1]);
+
+  PX(execute_remap_nd)(ths->remap_nd[1], ths->in, ths->out, in, out);
+
+  PFFT_FINISH_TIMING(ths->timer->remap_nd[1]);
 
   /* twiddle outputs in order to get inputs shifted by n/2 */
   PFFT_START_TIMING(ths->comm_cart, ths->timer->otwiddle);

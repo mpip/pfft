@@ -35,12 +35,12 @@
 alias libtoolize=$(type -p glibtoolize libtoolize | head -1)
 
 touch ChangeLog
+touch fftw3/ChangeLog
 
 echo "PLEASE IGNORE WARNINGS AND ERRORS"
-
 rm -rf autom4te.cache
 libtoolize
-autoreconf --verbose --install --force
+autoreconf --verbose --install --symlink --force
 
 rm -f config.cache
 

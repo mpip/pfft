@@ -16,7 +16,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS = \
   "LDFLAGS=@LDFLAGS@"
 
 # Traverse these subdirectories, the current one first (for config.h).
-SUBDIRS = kernel gcell util api .
+SUBDIRS = fftw3 kernel gcell util api .
 
 if ENABLE_TESTS
 SUBDIRS += tests
@@ -46,7 +46,7 @@ lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@_la_LIBADD = \
 	gcell/libgcell.la
 
 lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@_la_LDFLAGS = -no-undefined -version-info @SHARED_VERSION_INFO@
-lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@_la_CFLAGS = $(OPENMP_CFLAGS)
+lib@PFFT_PREFIX@pfft@PREC_SUFFIX@@OPENMP_SUFFIX@_la_CFLAGS = $(OPENMP_CFLAGS) -I $(top_srcdir)/mpi -I $(top_srcdir)/api
 
 # Get Fortran compile rules that include preprocessing.
 include $(top_srcdir)/build-aux/fortran-rules.am
@@ -57,6 +57,8 @@ pfft1@PREC_SUFFIX@@OPENMP_SUFFIX@.pc: pfft.pc
 # Install pkg-config file in correct location.
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = pfft.pc
+
+DISTCHECK_CONFIGURE_FLAGS=--disable-shared --disable-doc --enable-mpi --enable-fortran
 
 #################################################################
 # Documentation

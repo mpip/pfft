@@ -31,7 +31,7 @@
 AC_PREREQ(2.64)
 
 # autoconf initialization
-AC_INIT([PFFT],[1.0.8-alpha],[michael.pippig@mathematik.tu-chemnitz.de],[pfft],[http://www.tu-chemnitz.de/~mpip/software/])
+AC_INIT([PFFT],[1.0.8-alpha3-fftw3-2don2d],[michael.pippig@mathematik.tu-chemnitz.de],[pfft],[http://www.tu-chemnitz.de/~mpip/software/])
 m4_ifndef([AC_PACKAGE_URL],
 	  [AC_SUBST([PACKAGE_URL], [http://www.tu-chemnitz.de/~mpip/software/])])
 
@@ -263,6 +263,7 @@ SHARED_VERSION_INFO="0:0:0"
 # substitute SHARED_VERSION_INFO in generated Makefiles
 AC_SUBST(SHARED_VERSION_INFO)
 
+AC_DISABLE_SHARED dnl to hell with shared libraries
 
 ################################################################################
 # program checks
@@ -279,37 +280,6 @@ AC_SUBST(SHARED_VERSION_INFO)
 
 # May need sincos from libm.
 AC_CHECK_LIB([m], [sincos])
-
-# Check for FFTW3, MPI FFTW and threaded FFTW.
-if test "x$PRECISION" = "xs" ; then
-  AX_LIB_FFTW3F
-elif test "x$PRECISION" = "xl" ; then
-  AX_LIB_FFTW3L
-else
-  AX_LIB_FFTW3
-fi
-
-if test "x$ax_lib_fftw3" = "xno"; then
-  AC_MSG_ERROR([You do not seem to have the FFTW-3.3 library installed.]
-      [You can download it from http://www.fftw.org. If you have installed FFTW-3.3, ]
-      [make sure that this configure script can find it. See ./configure ]
-      [--help for more information.])
-fi
-
-if test "x$ax_lib_fftw3_mpi" = "xno"; then
-  AC_MSG_ERROR([You do not seem to have the MPI part of the  FFTW-3.3 library installed.]
-      [You can download it from http://www.fftw.org. If you have installed FFTW-3.3, ]
-      [make sure that this configure script can find it. See ./configure --help]
-      [for more information.])
-fi
-
-if  test "x$enable_openmp" = "xyes" -a "x$ax_lib_fftw3_openmp" = "xno"; then
-  AC_MSG_ERROR([You do not seem to have the OpenMP part of the FFTW-3.3 library installed.]
-      [You can download it from http://www.fftw.org. If you have installed FFTW-3.3, ]
-      [make sure that this configure script can find it. See ./configure --help]
-      [for more information.])
-fi
-
 
 ################################################################################
 # compiler options
@@ -481,5 +451,7 @@ AC_CONFIG_FILES([Makefile \
 AC_CONFIG_LINKS([tests/build_checks.sh:tests/build_checks.sh
                  tests/run_checks.sh:tests/run_checks.sh
                  tests/manual_c2c_3d.c:tests/manual_c2c_3d.c])
+
+AC_CONFIG_SUBDIRS([fftw3])
 
 AC_OUTPUT
